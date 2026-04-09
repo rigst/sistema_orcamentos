@@ -103,6 +103,10 @@ a {
   color: var(--text-soft);
 }
 
+.header-separator {
+  color: var(--muted);
+}
+
 .user-role {
   display: inline-flex;
   align-items: center;
@@ -299,6 +303,20 @@ button:focus-visible {
 
 .btn-primary:hover {
   box-shadow: 0 18px 34px rgba(118, 169, 255, 0.28);
+}
+
+.btn-soft {
+  min-height: 36px;
+  padding: 0 0.8rem;
+  background: rgba(47, 120, 219, 0.08);
+  color: var(--accent);
+  border-color: rgba(47, 120, 219, 0.14);
+  box-shadow: none;
+}
+
+.btn-soft:hover {
+  box-shadow: none;
+  background: rgba(47, 120, 219, 0.12);
 }
 
 .btn-icon {
@@ -862,6 +880,14 @@ tr:hover td {
   gap: 0.65rem;
 }
 
+.report-export-list-compact {
+  justify-items: center;
+}
+
+.report-export-list-compact .btn {
+  min-width: 140px;
+}
+
 .pagination {
   margin-top: 1rem;
   display: flex;
@@ -976,6 +1002,16 @@ tr:hover td {
   gap: 1rem;
 }
 
+.manual-status-flow {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.manual-status-flow p {
+  margin-top: 0.35rem;
+}
+
 .manual-role-card {
   padding: 1rem 1.1rem;
   border-radius: 18px;
@@ -1045,7 +1081,8 @@ tr:hover td {
   }
 
   .manual-layout,
-  .manual-roles {
+  .manual-roles,
+  .manual-status-flow {
     grid-template-columns: 1fr;
   }
 

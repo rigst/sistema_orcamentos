@@ -72,12 +72,9 @@
         <aside class="editor-sidebar">
             <div class="panel">
                 <h3>Exportar</h3>
-                <p>Escolha o formato conforme o uso do documento.</p>
-                <div class="report-export-list">
-                    <a class="btn btn-primary" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
-                    <small>Apresentação pronta para envio e impressão.</small>
-                    <a class="btn btn-primary" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>
-                    <small>Planilha para análise, conferência e manipulação comercial.</small>
+                <div class="report-export-list report-export-list-compact">
+                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
+                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>
                 </div>
             </div>
         </aside>

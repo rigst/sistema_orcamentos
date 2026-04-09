@@ -54,6 +54,32 @@
     </div>
 
     <div class="panel">
+        <h3>Fluxo dos status do orçamento</h3>
+        <div class="manual-status-flow">
+            <div>
+                <strong>Criar</strong>
+                <p>O orçamento nasce em rascunho. Esse é o momento de montar itens, ajustar valores, revisar descrição e conferir totais.</p>
+            </div>
+            <div>
+                <strong>Enviar</strong>
+                <p>Use quando o orçamento já estiver pronto para apresentação ao cliente. Ele passa a indicar que saiu da montagem interna e foi encaminhado.</p>
+            </div>
+            <div>
+                <strong>Aprovar</strong>
+                <p>Use quando o cliente confirmar a proposta ou quando o processo interno registrar aceite formal do orçamento.</p>
+            </div>
+            <div>
+                <strong>Rejeitar</strong>
+                <p>Use quando o cliente recusar a proposta ou quando o orçamento não seguir adiante comercialmente.</p>
+            </div>
+            <div>
+                <strong>Cancelar</strong>
+                <p>Use quando o orçamento perder a validade operacional, for substituído por outra versão ou precisar sair do fluxo sem ser aprovado nem rejeitado. O cancelamento serve mais para encerrar o documento no histórico.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
         <h3>Perfis e autorizações</h3>
         <div class="manual-roles">
             {% for perfil in perfis_manual %}

@@ -81,25 +81,25 @@
                                             {% if orcamento.status != "enviado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Enviado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-primary" type="submit">Enviar</button>
+                                                    <button class="btn btn-soft" type="submit">Enviar</button>
                                                 </form>
                                             {% endif %}
                                             {% if orcamento.status != "aprovado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Aprovado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-primary" type="submit">Aprovar</button>
+                                                    <button class="btn btn-soft" type="submit">Aprovar</button>
                                                 </form>
                                             {% endif %}
                                             {% if orcamento.status != "rejeitado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Rejeitado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-primary" type="submit">Rejeitar</button>
+                                                    <button class="btn btn-soft" type="submit">Rejeitar</button>
                                                 </form>
                                             {% endif %}
                                             {% if orcamento.status != "cancelado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Cancelado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-primary" type="submit">Cancelar</button>
+                                                    <button class="btn btn-soft" type="submit">Cancelar</button>
                                                 </form>
                                             {% endif %}
                                         </div>
