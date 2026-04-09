@@ -194,8 +194,8 @@ def obter_estilos_pdf():
             "Hero",
             parent=base["Heading1"],
             fontName=FONT_BOLD,
-            fontSize=22,
-            leading=28,
+            fontSize=20,
+            leading=24,
             textColor=colors.HexColor("#17304A"),
             alignment=TA_LEFT,
             spaceAfter=4,
@@ -204,8 +204,8 @@ def obter_estilos_pdf():
             "Title",
             parent=base["Heading2"],
             fontName=FONT_BOLD,
-            fontSize=14,
-            leading=18,
+            fontSize=16,
+            leading=20,
             textColor=colors.HexColor("#17304A"),
             spaceAfter=8,
         ),
@@ -213,32 +213,32 @@ def obter_estilos_pdf():
             "Body",
             parent=base["BodyText"],
             fontName=FONT_REGULAR,
-            fontSize=10.2,
-            leading=14,
+            fontSize=12,
+            leading=16,
             textColor=colors.HexColor("#48627E"),
         ),
         "body_strong": ParagraphStyle(
             "BodyStrong",
             parent=base["BodyText"],
             fontName=FONT_BOLD,
-            fontSize=10.2,
-            leading=14,
+            fontSize=12,
+            leading=16,
             textColor=colors.HexColor("#17304A"),
         ),
         "small": ParagraphStyle(
             "Small",
             parent=base["BodyText"],
             fontName=FONT_REGULAR,
-            fontSize=8.8,
-            leading=12,
+            fontSize=10,
+            leading=13,
             textColor=colors.HexColor("#617A95"),
         ),
         "label": ParagraphStyle(
             "Label",
             parent=base["BodyText"],
             fontName=FONT_BOLD,
-            fontSize=7.8,
-            leading=10,
+            fontSize=9,
+            leading=11,
             textColor=colors.HexColor("#617A95"),
         ),
     }
@@ -257,19 +257,12 @@ def cor_status(nivel: str):
 def desenhar_fundo(canvas, doc):
     canvas.saveState()
     width, height = A4
-    canvas.setFillColor(colors.HexColor("#F7FBFF"))
+    canvas.setFillColor(colors.HexColor("#F6FAFE"))
     canvas.rect(0, 0, width, height, fill=1, stroke=0)
-    canvas.setFillColor(colors.HexColor("#EEF5FF"))
-    canvas.circle(40 * mm, height - 20 * mm, 34 * mm, fill=1, stroke=0)
-    canvas.setFillColor(colors.HexColor("#F4F9FF"))
-    canvas.circle(width - 18 * mm, height - 8 * mm, 28 * mm, fill=1, stroke=0)
-    canvas.setStrokeColor(colors.HexColor("#D9E5F2"))
-    canvas.roundRect(10 * mm, 10 * mm, width - 20 * mm, height - 20 * mm, 10 * mm, stroke=1, fill=0)
-    canvas.setStrokeColor(colors.HexColor("#D9E5F2"))
+    canvas.setStrokeColor(colors.HexColor("#DCE7F3"))
     canvas.line(doc.leftMargin, 15 * mm, width - doc.rightMargin, 15 * mm)
     canvas.setFont(FONT_REGULAR, 8.5)
     canvas.setFillColor(colors.HexColor("#617A95"))
-    canvas.drawString(doc.leftMargin, 10.5 * mm, "Sistema de Orçamentos")
     canvas.drawRightString(width - doc.rightMargin, 10.5 * mm, f"Página {doc.page}")
     canvas.restoreState()
 
@@ -290,7 +283,7 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
         topMargin=18 * mm,
         bottomMargin=22 * mm,
         title=f"Orçamento {orcamento.numero}",
-        author=configuracao.nome_empresa if configuracao else "Sistema de Orçamentos",
+        author=configuracao.nome_empresa if configuracao and configuracao.nome_empresa else "",
         pageCompression=0,
     )
 
@@ -314,14 +307,13 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
     topo.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
-                ("ROUNDEDCORNERS", [8, 8, 8, 8]),
-                ("LEFTPADDING", (0, 0), (-1, -1), 16),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 16),
-                ("TOPPADDING", (0, 0), (-1, -1), 16),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
-                ("BACKGROUND", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#F9FBFE")),
+                ("LINEBELOW", (0, 0), (-1, -1), 1, colors.HexColor("#DCE7F3")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 0),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
             ]
         )
     )
@@ -334,7 +326,7 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
         TableStyle(
             [
                 ("BACKGROUND", (0, 0), (-1, -1), status_bg),
-                ("BOX", (0, 0), (-1, -1), 0.8, status_bg),
+                ("LINEBEFORE", (0, 0), (0, -1), 3, status_fg),
                 ("LEFTPADDING", (0, 0), (-1, -1), 14),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 14),
                 ("TOPPADDING", (0, 0), (-1, -1), 12),
@@ -361,9 +353,9 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
     resumo.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#E7EFF8")),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
+                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#E7EFF8")),
                 ("LEFTPADDING", (0, 0), (-1, -1), 12),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 12),
                 ("TOPPADDING", (0, 0), (-1, -1), 11),
@@ -383,8 +375,8 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
                     colWidths=[166 * mm],
                     style=TableStyle(
                         [
-                            ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                            ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
+                            ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
                             ("LEFTPADDING", (0, 0), (-1, -1), 14),
                             ("RIGHTPADDING", (0, 0), (-1, -1), 14),
                             ("TOPPADDING", (0, 0), (-1, -1), 12),
@@ -437,10 +429,10 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
             [
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EAF3FF")),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#17304A")),
-                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
-                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FBFF")]),
-                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#E7EFF8")),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.HexColor("#FCFDFF")),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.HexColor("#FCFDFF"), colors.white]),
+                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#E7EFF8")),
                 ("LEFTPADDING", (0, 0), (-1, -1), 10),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 10),
                 ("TOPPADDING", (0, 0), (-1, -1), 10),
@@ -472,9 +464,9 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
         TableStyle(
             [
                 ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EAF3FF")),
-                ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#EEF5FF")),
-                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#E7EFF8")),
+                ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#F0F7FF")),
+                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#E7EFF8")),
                 ("FONTNAME", (0, 0), (-1, 0), FONT_BOLD),
                 ("FONTNAME", (0, -1), (-1, -1), FONT_BOLD),
                 ("FONTNAME", (0, 1), (-1, -2), FONT_REGULAR),
@@ -497,8 +489,8 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
                 colWidths=[166 * mm],
                 style=TableStyle(
                     [
-                        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
+                        ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
                         ("LEFTPADDING", (0, 0), (-1, -1), 14),
                         ("RIGHTPADDING", (0, 0), (-1, -1), 14),
                         ("TOPPADDING", (0, 0), (-1, -1), 12),
@@ -516,8 +508,8 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
                 colWidths=[166 * mm],
                 style=TableStyle(
                     [
-                        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
+                        ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
                         ("LEFTPADDING", (0, 0), (-1, -1), 14),
                         ("RIGHTPADDING", (0, 0), (-1, -1), 14),
                         ("TOPPADDING", (0, 0), (-1, -1), 12),

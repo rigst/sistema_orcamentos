@@ -2,10 +2,13 @@
     {% if item %}
         <div class="section-heading section-heading-compact" style="margin-bottom: 1rem;">
             <div>
-                <h3>{{ titulo|default:"Editar item" }}</h3>
+                <h3>{{ titulo|default:"Editar item do orçamento" }}</h3>
             </div>
             <div>
-                <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}">Fechar edição</a>
+                <a class="btn btn-secondary btn-icon-action" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}" title="Fechar edição" aria-label="Fechar edição">
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    <span class="visually-hidden">Fechar edição</span>
+                </a>
             </div>
         </div>
     {% else %}
@@ -33,12 +36,23 @@
         <div class="item-builder-grid">
             <section class="item-block">
                 <div class="item-block-header">
-                    <h4>Base do item</h4>
+                    <h4>Item do catálogo</h4>
                 </div>
 
                 <div class="catalog-picker">
                     <div class="full">
-                        <label for="{{ item_form.item_catalogo.id_for_label }}">Item do catálogo</label>
+                        <label for="catalog-search-{{ item.pk|default:'novo' }}">Buscar item do catálogo</label>
+                        <div class="inline-actions">
+                            <input type="text" id="catalog-search-{{ item.pk|default:'novo' }}" placeholder="Buscar por código ou nome" data-catalog-search>
+                            <button class="btn btn-secondary btn-icon-action" type="button" data-catalog-search-button title="Buscar item do catálogo" aria-label="Buscar item do catálogo">
+                                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>
+                                <span class="visually-hidden">Buscar item do catálogo</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ item_form.item_catalogo.id_for_label }}">Item do catálogo{% if item_form.item_catalogo.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         <select name="item_catalogo" id="{{ item_form.item_catalogo.id_for_label }}" data-catalog-select>
                             <option value="">---------</option>
                             {% for catalogo_item in item_form.item_catalogo.field.queryset %}
@@ -49,6 +63,8 @@
                                     data-descricao="{{ catalogo_item.descricao_padrao }}"
                                     data-unidade="{{ catalogo_item.unidade_medida }}"
                                     data-valor="{{ catalogo_item.valor_unitario_padrao }}"
+                                    data-categoria="{{ catalogo_item.categoria.nome|default:'' }}"
+                                    data-categoria-cor="{{ catalogo_item.categoria.cor|default:'' }}"
                                     {% if item_form.item_catalogo.value|stringformat:'s' == catalogo_item.pk|stringformat:'s' %}selected{% endif %}>
                                     {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
                                 </option>
@@ -57,43 +73,39 @@
                         {{ item_form.item_catalogo.errors }}
                     </div>
 
-                    <div class="inline-actions">
-                        <button class="btn btn-primary" type="button" data-apply-catalog>Aplicar dados do catálogo</button>
-                    </div>
-
                     <div class="catalog-summary" data-catalog-summary>
-                        <strong data-catalog-title>Nenhum item do catálogo selecionado.</strong>
-                        <small data-catalog-meta>Selecione um item para receber sugestões automáticas de preenchimento.</small>
+                        <strong data-catalog-title></strong>
+                        <small data-catalog-meta></small>
                     </div>
                 </div>
 
                 <div class="form-grid">
                     <div>
-                        <label for="{{ item_form.ordem.id_for_label }}">Ordem</label>
+                        <label for="{{ item_form.ordem.id_for_label }}">Ordem{% if item_form.ordem.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.ordem }}
                         {{ item_form.ordem.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.codigo_item.id_for_label }}">Código</label>
+                        <label for="{{ item_form.codigo_item.id_for_label }}">Código{% if item_form.codigo_item.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.codigo_item }}
                         {{ item_form.codigo_item.errors }}
                     </div>
 
                     <div class="full">
-                        <label for="{{ item_form.nome.id_for_label }}">Nome</label>
+                        <label for="{{ item_form.nome.id_for_label }}">Nome{% if item_form.nome.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.nome }}
                         {{ item_form.nome.errors }}
                     </div>
 
                     <div class="full">
-                        <label for="{{ item_form.descricao.id_for_label }}">Descrição</label>
+                        <label for="{{ item_form.descricao.id_for_label }}">Descrição{% if item_form.descricao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.descricao }}
                         {{ item_form.descricao.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.unidade_medida.id_for_label }}">Unidade</label>
+                        <label for="{{ item_form.unidade_medida.id_for_label }}">Unidade{% if item_form.unidade_medida.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.unidade_medida }}
                         {{ item_form.unidade_medida.errors }}
                     </div>
@@ -107,13 +119,13 @@
 
                 <div class="form-grid">
                     <div>
-                        <label for="{{ item_form.quantidade.id_for_label }}">Quantidade</label>
+                        <label for="{{ item_form.quantidade.id_for_label }}">Quantidade{% if item_form.quantidade.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.quantidade }}
                         {{ item_form.quantidade.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.valor_unitario.id_for_label }}">Valor unitário (R$)</label>
+                        <label for="{{ item_form.valor_unitario.id_for_label }}">Valor unitário (R$){% if item_form.valor_unitario.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.valor_unitario }}
                         {{ item_form.valor_unitario.errors }}
                     </div>
@@ -127,31 +139,31 @@
 
                 <div class="form-grid">
                     <div>
-                        <label for="{{ item_form.desconto_valor.id_for_label }}">Desconto em valor (R$)</label>
+                        <label for="{{ item_form.desconto_valor.id_for_label }}">Desconto em valor (R$){% if item_form.desconto_valor.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.desconto_valor }}
                         {{ item_form.desconto_valor.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.desconto_percentual.id_for_label }}">Desconto em %</label>
+                        <label for="{{ item_form.desconto_percentual.id_for_label }}">Desconto em %{% if item_form.desconto_percentual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.desconto_percentual }}
                         {{ item_form.desconto_percentual.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.acrescimo_valor.id_for_label }}">Acréscimo em valor (R$)</label>
+                        <label for="{{ item_form.acrescimo_valor.id_for_label }}">Acréscimo em valor (R$){% if item_form.acrescimo_valor.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.acrescimo_valor }}
                         {{ item_form.acrescimo_valor.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.acrescimo_percentual.id_for_label }}">Acréscimo em %</label>
+                        <label for="{{ item_form.acrescimo_percentual.id_for_label }}">Acréscimo em %{% if item_form.acrescimo_percentual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.acrescimo_percentual }}
                         {{ item_form.acrescimo_percentual.errors }}
                     </div>
 
                     <div class="full">
-                        <label for="{{ item_form.observacoes.id_for_label }}">Observações</label>
+                        <label for="{{ item_form.observacoes.id_for_label }}">Observações{% if item_form.observacoes.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.observacoes }}
                         {{ item_form.observacoes.errors }}
                     </div>
@@ -160,9 +172,20 @@
         </div>
 
         <div class="inline-actions" style="margin-top: 1rem;">
-            <button class="btn btn-primary" type="submit">{% if item %}Salvar item{% else %}Adicionar item{% endif %}</button>
+            <button class="btn btn-primary btn-icon-action" type="submit" title="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}" aria-label="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}">
+                {% if item %}
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
+                    <span class="visually-hidden">Salvar item</span>
+                {% else %}
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                    <span class="visually-hidden">Adicionar item ao orçamento</span>
+                {% endif %}
+            </button>
             {% if item %}
-                <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}">Cancelar</a>
+                <a class="btn btn-secondary btn-icon-action" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}" title="Cancelar edição" aria-label="Cancelar edição">
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                    <span class="visually-hidden">Cancelar edição</span>
+                </a>
             {% endif %}
         </div>
     </form>

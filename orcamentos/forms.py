@@ -63,6 +63,7 @@ class OrcamentoForm(forms.ModelForm):
             "acrescimo_global_valor",
             "acrescimo_global_percentual",
         ]:
+            self.fields[nome_campo].required = False
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor"))
 
         self.fields["mostrar_ajustes_no_relatorio"].required = False
@@ -107,6 +108,8 @@ class ItemOrcamentoForm(forms.ModelForm):
             "acrescimo_valor",
             "acrescimo_percentual",
         ]:
+            if nome_campo != "quantidade" and nome_campo != "valor_unitario":
+                self.fields[nome_campo].required = False
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor") or nome_campo == "valor_unitario")
 
         self.fields["codigo_item"].required = False
@@ -176,4 +179,5 @@ class ItemOrcamentoForm(forms.ModelForm):
                 erro_validacao = str(exc)
 
         item.subtotal = item.calcular_subtotal()
+        item.divergencias_catalogo = item.campos_divergentes_catalogo()
         return item, erro_validacao

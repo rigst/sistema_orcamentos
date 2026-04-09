@@ -11,8 +11,8 @@ from orcamentos.models import Orcamento
 @login_required
 def dashboard(request):
     periodo = request.GET.get("periodo", "30")
-    ultimos_orcamentos = Orcamento.objects.select_related("cliente").order_by("-criado_em")
-    orcamentos = Orcamento.objects.all()
+    ultimos_orcamentos = Orcamento.objects.select_related("cliente").filter(ativo=True).order_by("-criado_em")
+    orcamentos = Orcamento.objects.filter(ativo=True)
 
     if periodo != "todos":
         try:

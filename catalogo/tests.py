@@ -63,7 +63,6 @@ class CatalogoValidacaoTests(TestCase):
         response = self.client.post(
             reverse("catalogo:item_criar"),
             {
-                "codigo": "",
                 "nome": "",
                 "unidade_medida": "un",
                 "valor_unitario_padrao": "-1",
@@ -72,7 +71,6 @@ class CatalogoValidacaoTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Informe o código do item.")
         self.assertContains(response, "Informe o nome do item.")
         self.assertContains(response, "Informe um valor maior ou igual a zero.")
         self.assertEqual(ItemCatalogo.objects.count(), 0)
@@ -81,7 +79,7 @@ class CatalogoValidacaoTests(TestCase):
         response = self.client.post(
             reverse("catalogo:item_criar"),
             {
-                "codigo": "SERV-150",
+                "codigo": "",
                 "nome": "Servico premium",
                 "unidade_medida": "un",
                 "valor_unitario_padrao": "R$ 15.000,00",
@@ -90,8 +88,47 @@ class CatalogoValidacaoTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 302)
-        item = ItemCatalogo.objects.get(codigo="SERV-150")
+        item = ItemCatalogo.objects.get(nome="Servico premium")
+        self.assertEqual(item.codigo, "CAT-ITEM-0001")
         self.assertEqual(str(item.valor_unitario_padrao), "15000.00")
+
+    def test_codigo_do_catalogo_e_mantido_na_edicao(self):
+        item = ItemCatalogo.objects.create(
+            codigo="IGNORAR",
+            nome="Servico base",
+            unidade_medida="un",
+            valor_unitario_padrao="10.00",
+        )
+
+        response = self.client.post(
+            reverse("catalogo:item_editar", args=[item.pk]),
+            {
+                "codigo": "TENTATIVA-MUDANCA",
+                "nome": "Servico base ajustado",
+                "unidade_medida": "un",
+                "valor_unitario_padrao": "12.00",
+                "ativo": "on",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        item.refresh_from_db()
+        self.assertEqual(item.codigo, "CAT-ITEM-0001")
+
+    def test_categoria_aceita_cor_predefinida(self):
+        response = self.client.post(
+            reverse("catalogo:categoria_criar"),
+            {
+                "nome": "Categoria colorida",
+                "descricao": "Teste",
+                "cor": "#EA580C",
+                "ativo": "on",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        categoria = CategoriaItem.objects.get(nome="Categoria colorida")
+        self.assertEqual(categoria.cor, "#EA580C")
 
 
 class CatalogoListaTests(TestCase):
@@ -155,6 +192,22 @@ class CatalogoListaTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["page_obj"].has_previous())
         self.assertContains(response, "Extra 12")
+
+    def test_lista_exibe_categoria_com_cor(self):
+        categoria = CategoriaItem.objects.create(nome="Colorida", cor="#DB2777")
+        ItemCatalogo.objects.create(
+            codigo="COR-01",
+            nome="Item colorido",
+            categoria=categoria,
+            unidade_medida="un",
+            valor_unitario_padrao="5.00",
+        )
+
+        response = self.client.get(reverse("catalogo:item_lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Colorida")
+        self.assertContains(response, "#DB2777")
 
 
 class CatalogoInativacaoTests(TestCase):

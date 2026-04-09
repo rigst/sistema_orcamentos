@@ -418,6 +418,11 @@ label {
   font-weight: 600;
 }
 
+.required-mark {
+  color: #b63e3e;
+  margin-left: 0.2rem;
+}
+
 input,
 select,
 textarea {
@@ -574,6 +579,41 @@ tr:hover td {
   background: rgba(209, 69, 69, 0.1);
   border-color: rgba(209, 69, 69, 0.16);
   color: #b63e3e;
+}
+
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.34rem 0.62rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--category-color, #2563eb) 12%, white);
+  border: 1px solid color-mix(in srgb, var(--category-color, #2563eb) 18%, white);
+  color: var(--text);
+  font-size: 0.82rem;
+  line-height: 1.1;
+}
+
+.category-chip-inline {
+  padding: 0.22rem 0.5rem;
+  font-size: 0.76rem;
+}
+
+.category-chip-dot,
+.category-color-preview {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: var(--category-color, #2563eb);
+  flex: 0 0 auto;
+}
+
+.category-color-preview {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 0 1px rgba(71, 101, 138, 0.14);
 }
 
 .status-rascunho { color: #445f7d; }
@@ -735,6 +775,11 @@ tr:hover td {
 .table-subline-muted {
   font-size: 0.83rem;
   color: var(--muted);
+}
+
+.table-subline-warning {
+  font-size: 0.83rem;
+  color: #a16b18;
 }
 
 .budget-main-cell,
@@ -1073,6 +1118,17 @@ tr:hover td {
   padding-left: 0.15rem;
 }
 
+.manual-icon-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.manual-icon-label .action-icon {
+  width: 18px;
+  height: 18px;
+}
+
 .manual-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1084,6 +1140,10 @@ tr:hover td {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.inline-actions-end {
+  justify-content: flex-end;
 }
 
 .manual-status-flow {

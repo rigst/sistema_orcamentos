@@ -114,13 +114,26 @@
         const places = Number.parseInt(input.dataset.decimalPlaces || "2", 10);
 
         const applyDisplayFormat = () => {
+          if (!input.value && input.dataset.zeroCleared === "1") {
+            input.value = isCurrency ? formatCurrency("0", places) : formatDecimal("0", places);
+            input.dataset.zeroCleared = "0";
+            return;
+          }
           if (!input.value) return;
           input.value = isCurrency ? formatCurrency(input.value, places) : formatDecimal(input.value, places);
+          input.dataset.zeroCleared = "0";
         };
 
         const applyEditFormat = () => {
           if (!input.value) return;
-          input.value = normalizeDecimal(input.value);
+          const normalized = normalizeDecimal(input.value);
+          if (normalized === `0,${"0".repeat(places)}`) {
+            input.value = "";
+            input.dataset.zeroCleared = "1";
+            return;
+          }
+          input.value = normalized;
+          input.dataset.zeroCleared = "0";
         };
 
         input.addEventListener("focus", applyEditFormat);

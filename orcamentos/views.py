@@ -406,6 +406,7 @@ def item_orcamento_excluir(request, orcamento_pk, item_pk):
 def item_orcamento_duplicar(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     with transaction.atomic():
         (
@@ -418,7 +419,15 @@ def item_orcamento_duplicar(request, orcamento_pk, item_pk):
         item.save()
 
     normalizar_ordens_itens(orcamento)
-    messages.success(request, f"Item '{item.nome}' duplicado.")
+    mensagem = f"Item '{item.nome}' duplicado."
+    if is_ajax:
+        return responder_ajax_item(
+            request,
+            orcamento,
+            item_form=ItemOrcamentoForm(),
+            mensagem=mensagem,
+        )
+    messages.success(request, mensagem)
     return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
 
 
@@ -427,6 +436,7 @@ def item_orcamento_duplicar(request, orcamento_pk, item_pk):
 def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     with transaction.atomic():
         (
@@ -439,7 +449,17 @@ def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
         item.save()
 
     normalizar_ordens_itens(orcamento)
-    messages.success(request, f"Item '{item.nome}' duplicado para edição.")
+    mensagem = f"Item '{item.nome}' duplicado para edição."
+    if is_ajax:
+        return responder_ajax_item(
+            request,
+            orcamento,
+            item_form=ItemOrcamentoForm(),
+            item_editando=item,
+            item_form_edicao=ItemOrcamentoForm(instance=item),
+            mensagem=mensagem,
+        )
+    messages.success(request, mensagem)
     return redirect(f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao")
 
 
@@ -448,6 +468,7 @@ def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
 def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
     orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     itens = list(orcamento.itens.all().order_by("ordem", "id"))
     indice_atual = next((indice for indice, atual in enumerate(itens) if atual.pk == item.pk), None)
@@ -468,7 +489,15 @@ def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
             if atual.ordem != ordem:
                 ItemOrcamento.objects.filter(pk=atual.pk).update(ordem=ordem)
 
-    messages.success(request, f"Item '{item.nome}' movido.")
+    mensagem = f"Item '{item.nome}' movido."
+    if is_ajax:
+        return responder_ajax_item(
+            request,
+            orcamento,
+            item_form=ItemOrcamentoForm(),
+            mensagem=mensagem,
+        )
+    messages.success(request, mensagem)
     return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
 
 

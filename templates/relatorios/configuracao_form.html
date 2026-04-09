@@ -10,9 +10,15 @@
         </div>
         <div class="inline-actions">
             {% if configuracao and not somente_leitura and user.pode_gerenciar_relatorios %}
-                <a class="btn btn-secondary" href="{% url 'relatorios:configuracao_visualizar' configuracao.pk %}">Ver empresa</a>
+                <a class="btn btn-secondary btn-icon-action" href="{% url 'relatorios:configuracao_visualizar' configuracao.pk %}" title="Ver empresa" aria-label="Ver empresa">
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span class="visually-hidden">Ver empresa</span>
+                </a>
             {% endif %}
-            <a class="btn btn-secondary" href="{% url 'relatorios:configuracao_lista' %}">Voltar para a lista</a>
+            <a class="btn btn-secondary btn-icon-action" href="{% url 'relatorios:configuracao_lista' %}" title="Voltar para empresa" aria-label="Voltar para empresa">
+                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                <span class="visually-hidden">Voltar para empresa</span>
+            </a>
         </div>
     </div>
 
@@ -31,84 +37,84 @@
             <fieldset {% if somente_leitura %}disabled{% endif %}>
                 <div class="form-grid">
                     <div>
-                        <label for="{{ form.nome_empresa.id_for_label }}">Nome da empresa</label>
+                        <label for="{{ form.nome_empresa.id_for_label }}">Nome da empresa{% if form.nome_empresa.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.nome_empresa }}
                         {{ form.nome_empresa.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia</label>
+                        <label for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia{% if form.nome_fantasia.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.nome_fantasia }}
                         {{ form.nome_fantasia.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.cpf_cnpj.id_for_label }}">CPF/CNPJ</label>
+                        <label for="{{ form.cpf_cnpj.id_for_label }}">CPF/CNPJ{% if form.cpf_cnpj.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.cpf_cnpj }}
                         {{ form.cpf_cnpj.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.email.id_for_label }}">E-mail</label>
+                        <label for="{{ form.email.id_for_label }}">E-mail{% if form.email.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.email }}
                         {{ form.email.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.telefone.id_for_label }}">Telefone</label>
+                        <label for="{{ form.telefone.id_for_label }}">Telefone{% if form.telefone.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.telefone }}
                         {{ form.telefone.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.site.id_for_label }}">Site</label>
+                        <label for="{{ form.site.id_for_label }}">Site{% if form.site.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.site }}
                         {{ form.site.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.cep.id_for_label }}">CEP</label>
+                        <label for="{{ form.cep.id_for_label }}">CEP{% if form.cep.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.cep }}
                         {{ form.cep.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.logradouro.id_for_label }}">Logradouro</label>
+                        <label for="{{ form.logradouro.id_for_label }}">Logradouro{% if form.logradouro.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.logradouro }}
                         {{ form.logradouro.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.numero.id_for_label }}">Número</label>
+                        <label for="{{ form.numero.id_for_label }}">Número{% if form.numero.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.numero }}
                         {{ form.numero.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.complemento.id_for_label }}">Complemento</label>
+                        <label for="{{ form.complemento.id_for_label }}">Complemento{% if form.complemento.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.complemento }}
                         {{ form.complemento.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.bairro.id_for_label }}">Bairro</label>
+                        <label for="{{ form.bairro.id_for_label }}">Bairro{% if form.bairro.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.bairro }}
                         {{ form.bairro.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.cidade.id_for_label }}">Cidade</label>
+                        <label for="{{ form.cidade.id_for_label }}">Cidade{% if form.cidade.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.cidade }}
                         {{ form.cidade.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.estado.id_for_label }}">UF</label>
+                        <label for="{{ form.estado.id_for_label }}">UF{% if form.estado.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.estado }}
                         {{ form.estado.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.logo.id_for_label }}">Logo</label>
+                        <label for="{{ form.logo.id_for_label }}">Logo{% if form.logo.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.logo }}
                         {{ form.logo.errors }}
                     </div>
 
                     <div class="full">
-                        <label for="{{ form.rodape_relatorio.id_for_label }}">Rodapé do relatório</label>
+                        <label for="{{ form.rodape_relatorio.id_for_label }}">Rodapé do relatório{% if form.rodape_relatorio.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ form.rodape_relatorio }}
                         {{ form.rodape_relatorio.errors }}
                     </div>
@@ -117,7 +123,10 @@
 
             {% if not somente_leitura %}
                 <div class="inline-actions">
-                    <button class="btn btn-primary" type="submit">Salvar</button>
+                    <button class="btn btn-primary btn-icon-action" type="submit" title="Salvar empresa" aria-label="Salvar empresa">
+                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
+                        <span class="visually-hidden">Salvar empresa</span>
+                    </button>
                 </div>
             {% endif %}
         </form>

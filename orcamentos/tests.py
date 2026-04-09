@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
-from catalogo.models import ItemCatalogo
+from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
 from .models import ItemOrcamento, Orcamento
 
@@ -110,6 +110,36 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(item.unidade_medida, "sv")
         self.assertEqual(item.valor_unitario, Decimal("125.50"))
 
+    def test_item_vinculado_ao_catalogo_marca_divergencia_quando_nome_ou_valor_mudam(self):
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="CAT-ORIG",
+            nome="Servico original",
+            descricao_padrao="Descricao base",
+            unidade_medida="sv",
+            valor_unitario_padrao=Decimal("125.50"),
+        )
+        item = ItemOrcamento.objects.create(
+            orcamento=self.orcamento,
+            item_catalogo=item_catalogo,
+            ordem=1,
+            nome="Servico customizado",
+            unidade_medida="sv",
+            valor_unitario=Decimal("150.00"),
+            quantidade=Decimal("1.00"),
+        )
+
+        self.assertTrue(item.diverge_catalogo)
+        self.assertEqual(item.campos_divergentes_catalogo(), ["nome", "valor"])
+
+    def test_campos_de_ajuste_nao_sao_obrigatorios_no_formulario(self):
+        response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Desconto global em valor<span class=\"required-mark\">*</span>", html=True)
+        self.assertNotContains(response, "Desconto global em %<span class=\"required-mark\">*</span>", html=True)
+        self.assertNotContains(response, "Acréscimo global em valor<span class=\"required-mark\">*</span>", html=True)
+        self.assertNotContains(response, "Acréscimo global em %<span class=\"required-mark\">*</span>", html=True)
+
     def test_orcamento_novo_recebe_numero_automatico(self):
         response = self.client.post(
             reverse("orcamentos:criar"),
@@ -169,6 +199,20 @@ class OrcamentoViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "modo somente leitura")
+
+    def test_visualizador_nao_ve_botoes_de_edicao_na_lista(self):
+        visualizador = get_user_model().objects.create_user(
+            username="visualizador_lista",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        self.client.force_login(visualizador)
+
+        response = self.client.get(reverse("orcamentos:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse("orcamentos:criar"))
+        self.assertNotContains(response, reverse("orcamentos:excluir", args=[self.orcamento.pk]))
 
     def test_visualizador_nao_pode_salvar_orcamento(self):
         visualizador = get_user_model().objects.create_user(
@@ -395,6 +439,42 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertIn("?item_edit=", response.url)
         self.assertEqual(ItemOrcamento.objects.count(), 2)
+
+    def test_orcamento_inativo_nao_exibe_acoes_de_status(self):
+        self.orcamento.ativo = False
+        self.orcamento.save(update_fields=["ativo", "atualizado_em"])
+
+        response = self.client.get(reverse("orcamentos:lista"), {"ativo": "inativos"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Inativo")
+        self.assertNotContains(response, "title=\"Aprovar\"")
+        self.assertNotContains(response, "title=\"Enviar\"")
+
+    def test_orcamento_exibe_cor_da_categoria_do_item(self):
+        categoria = CategoriaItem.objects.create(nome="Eletrica", cor="#0F766E")
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="ELE-01",
+            nome="Ponto eletrico",
+            categoria=categoria,
+            unidade_medida="sv",
+            valor_unitario_padrao=Decimal("80.00"),
+        )
+        ItemOrcamento.objects.create(
+            orcamento=self.orcamento,
+            item_catalogo=item_catalogo,
+            ordem=1,
+            nome="Ponto eletrico",
+            unidade_medida="sv",
+            quantidade=Decimal("1.00"),
+            valor_unitario=Decimal("80.00"),
+        )
+
+        response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Eletrica")
+        self.assertContains(response, "#0F766E")
 
     def test_item_criar_via_ajax_retorna_fragments_sem_reload(self):
         response = self.client.post(
@@ -659,3 +739,39 @@ class OrcamentoDomainTests(TestCase):
         self.orcamento.refresh_from_db()
         self.assertEqual(self.orcamento.subtotal_itens, Decimal("0.00"))
         self.assertEqual(self.orcamento.total_final, Decimal("0.00"))
+
+
+class DashboardTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="dashboard_user",
+            password="senha-forte-123",
+        )
+        self.client.force_login(self.user)
+        cliente = Cliente.objects.create(nome_razao_social="Cliente Dashboard")
+        Orcamento.objects.create(
+            numero="ORC-ATIVO-0001",
+            cliente=cliente,
+            titulo="Ativo",
+            ativo=True,
+            data_emissao=date(2026, 4, 9),
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+        Orcamento.objects.create(
+            numero="ORC-INATIVO-0001",
+            cliente=cliente,
+            titulo="Inativo",
+            ativo=False,
+            data_emissao=date(2026, 4, 9),
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+
+    def test_dashboard_nao_lista_orcamentos_inativos(self):
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        ultimos = list(response.context["ultimos_orcamentos"])
+        self.assertEqual(len(ultimos), 1)
+        self.assertEqual(ultimos[0].titulo, "Ativo")

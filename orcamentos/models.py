@@ -281,6 +281,23 @@ class ItemOrcamento(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.orcamento.numero})"
 
+    def campos_divergentes_catalogo(self):
+        if not self.item_catalogo_id:
+            return []
+
+        divergencias = []
+        if (self.nome or "").strip() != (self.item_catalogo.nome or "").strip():
+            divergencias.append("nome")
+        if self.unidade_medida != self.item_catalogo.unidade_medida:
+            divergencias.append("unidade")
+        if self.valor_unitario != self.item_catalogo.valor_unitario_padrao:
+            divergencias.append("valor")
+        return divergencias
+
+    @property
+    def diverge_catalogo(self):
+        return bool(self.campos_divergentes_catalogo())
+
     def gerar_codigo_item(self) -> str:
         prefixo = f"{self.orcamento.numero}-ITEM-"
         codigos = (

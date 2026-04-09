@@ -32,6 +32,19 @@ class ClientePermissaoTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_visualizador_nao_ve_atalho_de_novo_cliente(self):
+        user = get_user_model().objects.create_user(
+            username="visualizador_sem_atalho",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("clientes:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, reverse("clientes:criar"))
+
 
 class ClienteValidacaoTests(TestCase):
     def setUp(self):

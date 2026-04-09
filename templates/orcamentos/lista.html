@@ -10,9 +10,12 @@
             <h2>Orçamentos</h2>
             <p>Gerencie, filtre e altere rapidamente os orçamentos do sistema.</p>
         </div>
-        <div>
+        <div class="inline-actions">
             {% if user.pode_gerenciar_orcamentos %}
-                <a class="btn btn-primary-lite" href="{% url 'orcamentos:criar' %}">Novo orçamento</a>
+                <a class="btn btn-primary-lite btn-icon-action" href="{% url 'orcamentos:criar' %}" title="Novo orçamento" aria-label="Novo orçamento">
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                    <span class="visually-hidden">Novo orçamento</span>
+                </a>
             {% endif %}
         </div>
     </div>
@@ -37,7 +40,10 @@
             <option value="valor_maior" {% if sort == "valor_maior" %}selected{% endif %}>Maior valor</option>
             <option value="valor_menor" {% if sort == "valor_menor" %}selected{% endif %}>Menor valor</option>
         </select>
-        <button class="btn btn-secondary" type="submit">Buscar</button>
+        <button class="btn btn-secondary btn-icon-action" type="submit" title="Buscar orçamentos" aria-label="Buscar orçamentos">
+            <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>
+            <span class="visually-hidden">Buscar orçamentos</span>
+        </button>
     </form>
 
     {% if orcamentos %}

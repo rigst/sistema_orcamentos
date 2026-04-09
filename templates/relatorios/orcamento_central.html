@@ -11,7 +11,10 @@
             <p>Exporte um documento profissional em PDF ou Excel com base no estado atual do orçamento.</p>
         </div>
         <div class="inline-actions">
-            <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Voltar ao orçamento</a>
+            <a class="btn btn-secondary btn-icon-action" href="{% url 'orcamentos:editar' orcamento.pk %}" title="Voltar ao orçamento" aria-label="Voltar ao orçamento">
+                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                <span class="visually-hidden">Voltar ao orçamento</span>
+            </a>
         </div>
     </div>
 
