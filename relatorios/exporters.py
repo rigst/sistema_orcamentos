@@ -4,12 +4,26 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 from io import BytesIO
-from textwrap import wrap
+from pathlib import Path
 from xml.sax.saxutils import escape
 
-from PIL import Image
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_LEFT
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+from PIL import Image as PILImage
 
 from core.formatting import formatar_decimal_br, formatar_moeda_br
+
+
+FONT_ROOT = Path("/usr/share/fonts/truetype/dejavu")
+FONT_REGULAR = "DejaVuSans"
+FONT_BOLD = "DejaVuSans-Bold"
 
 
 @dataclass
@@ -66,6 +80,17 @@ def formatar_data(valor: date | None) -> str:
     if not valor:
         return "-"
     return valor.strftime("%d/%m/%Y")
+
+
+def registrar_fontes_pdf():
+    try:
+        pdfmetrics.getFont(FONT_REGULAR)
+    except KeyError:
+        pdfmetrics.registerFont(TTFont(FONT_REGULAR, str(FONT_ROOT / "DejaVuSans.ttf")))
+    try:
+        pdfmetrics.getFont(FONT_BOLD)
+    except KeyError:
+        pdfmetrics.registerFont(TTFont(FONT_BOLD, str(FONT_ROOT / "DejaVuSans-Bold.ttf")))
 
 
 def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio) -> bytes:
@@ -147,224 +172,360 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
     return xml.encode("utf-8")
 
 
-class SimplePDF:
-    def __init__(self):
-        self.pages: list[list[str]] = [[]]
-        self.page_images: list[list[dict]] = [[]]
-        self.page_width = 595
-        self.page_height = 842
-        self.margin = 48
-        self.current_y = self.page_height - self.margin
-
-    def _escape(self, text: str) -> str:
-        return text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
-
-    def _append(self, command: str):
-        self.pages[-1].append(command)
-
-    def new_page(self):
-        self.pages.append([])
-        self.page_images.append([])
-        self.current_y = self.page_height - self.margin
-
-    def rect(self, x, y, w, h, fill_rgb=None, stroke_rgb=None):
-        if fill_rgb:
-            self._append(f"{fill_rgb[0]} {fill_rgb[1]} {fill_rgb[2]} rg")
-        if stroke_rgb:
-            self._append(f"{stroke_rgb[0]} {stroke_rgb[1]} {stroke_rgb[2]} RG")
-        self._append(f"{x} {y} {w} {h} re B")
-
-    def text(self, x, y, text, size=10):
-        self._append(f"BT /F1 {size} Tf 1 0 0 1 {x} {y} Tm ({self._escape(text)}) Tj ET")
-
-    def paragraph(self, text, size=10, leading=14):
-        lines = []
-        for raw_line in str(text).splitlines() or [""]:
-            wrapped = wrap(raw_line, width=88) or [""]
-            lines.extend(wrapped)
-        for line in lines:
-            if self.current_y < 80:
-                self.new_page()
-            self.text(self.margin, self.current_y, line, size=size)
-            self.current_y -= leading
-
-    def spacer(self, height=10):
-        self.current_y -= height
-        if self.current_y < 80:
-            self.new_page()
-
-    def image(self, jpeg_bytes: bytes, width_px: int, height_px: int, x: int, y: int, width: int, height: int):
-        image_name = f"Im{sum(len(page) for page in self.page_images) + 1}"
-        self.page_images[-1].append(
-            {
-                "name": image_name,
-                "bytes": jpeg_bytes,
-                "width_px": width_px,
-                "height_px": height_px,
-            }
-        )
-        self._append(f"q {width} 0 0 {height} {x} {y} cm /{image_name} Do Q")
-
-    def render(self) -> bytes:
-        objects = []
-        objects.append("<< /Type /Catalog /Pages 2 0 R >>")
-        kids = " ".join(f"{index} 0 R" for index in range(3, 3 + len(self.pages) * 2, 2))
-        objects.append(f"<< /Type /Pages /Count {len(self.pages)} /Kids [{kids}] >>")
-
-        image_entries = [image for page in self.page_images for image in page]
-        image_object_start = 3 + len(self.pages) * 2
-        for idx, image in enumerate(image_entries):
-            image["object_number"] = image_object_start + idx
-
-        for idx, commands in enumerate(self.pages):
-            stream = "q\n" + "\n".join(commands) + "\nQ"
-            content_obj_num = 4 + idx * 2
-            page_obj_num = 3 + idx * 2
-            page_images = self.page_images[idx]
-            xobject_resources = ""
-            if page_images:
-                entries = " ".join(f"/{image['name']} {image['object_number']} 0 R" for image in page_images)
-                xobject_resources = f" /XObject << {entries} >>"
-            objects.append(
-                f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {self.page_width} {self.page_height}] "
-                f"/Contents {content_obj_num} 0 R /Resources << /Font << /F1 {image_object_start + len(image_entries)} 0 R >>{xobject_resources} >> >>"
-            )
-            objects.append(f"<< /Length {len(stream.encode('latin-1'))} >>\nstream\n{stream}\nendstream")
-
-        for image in image_entries:
-            image_header = (
-                f"<< /Type /XObject /Subtype /Image /Width {image['width_px']} /Height {image['height_px']} "
-                f"/ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length {len(image['bytes'])} >>\nstream\n"
-            ).encode("latin-1")
-            objects.append(image_header + image["bytes"] + b"\nendstream")
-
-        objects.append("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
-
-        buffer = BytesIO()
-        buffer.write(b"%PDF-1.4\n")
-        offsets = [0]
-        for idx, obj in enumerate(objects, start=1):
-            offsets.append(buffer.tell())
-            buffer.write(f"{idx} 0 obj\n".encode("latin-1"))
-            if isinstance(obj, bytes):
-                buffer.write(obj)
-                buffer.write(b"\n")
-            else:
-                buffer.write(f"{obj}\n".encode("latin-1"))
-            buffer.write(b"endobj\n")
-
-        xref_pos = buffer.tell()
-        buffer.write(f"xref\n0 {len(objects) + 1}\n".encode("latin-1"))
-        buffer.write(b"0000000000 65535 f \n")
-        for offset in offsets[1:]:
-            buffer.write(f"{offset:010d} 00000 n \n".encode("latin-1"))
-        buffer.write(
-            f"trailer\n<< /Size {len(objects) + 1} /Root 1 0 R >>\nstartxref\n{xref_pos}\n%%EOF".encode("latin-1")
-        )
-        return buffer.getvalue()
-
-
-def carregar_logo_pdf(configuracao, max_width=120, max_height=42):
+def carregar_logo_pdf(configuracao, largura_maxima=140, altura_maxima=48):
     if not configuracao or not configuracao.logo:
         return None
-
     try:
-        with Image.open(configuracao.logo.path) as image:
-            image = image.convert("RGB")
-            image.thumbnail((max_width * 4, max_height * 4))
-            output = BytesIO()
-            image.save(output, format="JPEG", quality=88)
-            return {
-                "bytes": output.getvalue(),
-                "width_px": image.width,
-                "height_px": image.height,
-                "draw_width": min(max_width, image.width / 4),
-                "draw_height": min(max_height, image.height / 4),
-            }
+        with PILImage.open(configuracao.logo.path) as image:
+            convertido = image.convert("RGB")
+            convertido.thumbnail((largura_maxima * 4, altura_maxima * 4))
+            buffer = BytesIO()
+            convertido.save(buffer, format="PNG")
+            buffer.seek(0)
+            return buffer, min(largura_maxima, convertido.width / 4), min(altura_maxima, convertido.height / 4)
     except Exception:
         return None
 
 
+def obter_estilos_pdf():
+    base = getSampleStyleSheet()
+    return {
+        "hero": ParagraphStyle(
+            "Hero",
+            parent=base["Heading1"],
+            fontName=FONT_BOLD,
+            fontSize=22,
+            leading=28,
+            textColor=colors.HexColor("#17304A"),
+            alignment=TA_LEFT,
+            spaceAfter=4,
+        ),
+        "title": ParagraphStyle(
+            "Title",
+            parent=base["Heading2"],
+            fontName=FONT_BOLD,
+            fontSize=14,
+            leading=18,
+            textColor=colors.HexColor("#17304A"),
+            spaceAfter=8,
+        ),
+        "body": ParagraphStyle(
+            "Body",
+            parent=base["BodyText"],
+            fontName=FONT_REGULAR,
+            fontSize=10.2,
+            leading=14,
+            textColor=colors.HexColor("#48627E"),
+        ),
+        "body_strong": ParagraphStyle(
+            "BodyStrong",
+            parent=base["BodyText"],
+            fontName=FONT_BOLD,
+            fontSize=10.2,
+            leading=14,
+            textColor=colors.HexColor("#17304A"),
+        ),
+        "small": ParagraphStyle(
+            "Small",
+            parent=base["BodyText"],
+            fontName=FONT_REGULAR,
+            fontSize=8.8,
+            leading=12,
+            textColor=colors.HexColor("#617A95"),
+        ),
+        "label": ParagraphStyle(
+            "Label",
+            parent=base["BodyText"],
+            fontName=FONT_BOLD,
+            fontSize=7.8,
+            leading=10,
+            textColor=colors.HexColor("#617A95"),
+        ),
+    }
+
+
+def cor_status(nivel: str):
+    if nivel == "success":
+        return colors.HexColor("#E6F6EB"), colors.HexColor("#3D8F56")
+    if nivel == "warning":
+        return colors.HexColor("#FBF1E4"), colors.HexColor("#A16B18")
+    if nivel == "danger":
+        return colors.HexColor("#FBEAEA"), colors.HexColor("#BE4444")
+    return colors.HexColor("#EAF3FF"), colors.HexColor("#2F78DB")
+
+
+def desenhar_fundo(canvas, doc):
+    canvas.saveState()
+    width, height = A4
+    canvas.setFillColor(colors.HexColor("#F7FBFF"))
+    canvas.rect(0, 0, width, height, fill=1, stroke=0)
+    canvas.setFillColor(colors.HexColor("#EEF5FF"))
+    canvas.circle(40 * mm, height - 20 * mm, 34 * mm, fill=1, stroke=0)
+    canvas.setFillColor(colors.HexColor("#F4F9FF"))
+    canvas.circle(width - 18 * mm, height - 8 * mm, 28 * mm, fill=1, stroke=0)
+    canvas.setStrokeColor(colors.HexColor("#D9E5F2"))
+    canvas.roundRect(10 * mm, 10 * mm, width - 20 * mm, height - 20 * mm, 10 * mm, stroke=1, fill=0)
+    canvas.setStrokeColor(colors.HexColor("#D9E5F2"))
+    canvas.line(doc.leftMargin, 15 * mm, width - doc.rightMargin, 15 * mm)
+    canvas.setFont(FONT_REGULAR, 8.5)
+    canvas.setFillColor(colors.HexColor("#617A95"))
+    canvas.drawString(doc.leftMargin, 10.5 * mm, "Sistema de Orçamentos")
+    canvas.drawRightString(width - doc.rightMargin, 10.5 * mm, f"Página {doc.page}")
+    canvas.restoreState()
+
+
+def bloco_info(styles, label: str, valor: str):
+    return Paragraph(f"<font name='{FONT_BOLD}' color='#617A95'>{label}</font><br/>{valor}", styles["body"])
+
+
 def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio) -> bytes:
-    pdf = SimplePDF()
+    registrar_fontes_pdf()
+    styles = obter_estilos_pdf()
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=22 * mm,
+        title=f"Orçamento {orcamento.numero}",
+        author=configuracao.nome_empresa if configuracao else "Sistema de Orçamentos",
+        pageCompression=0,
+    )
+
     empresa = configuracao.nome_empresa if configuracao else "Sua empresa"
+    nome_fantasia = configuracao.nome_fantasia if configuracao and configuracao.nome_fantasia else "Proposta comercial"
     logo = carregar_logo_pdf(configuracao)
+    status_bg, status_fg = cor_status(alerta_status.nivel)
 
-    pdf.rect(40, 760, 515, 54, fill_rgb=(0.48, 0.69, 1.0), stroke_rgb=(0.48, 0.69, 1.0))
-    title_x = 52
+    header_text = [
+        Paragraph(empresa, styles["hero"]),
+        Paragraph(nome_fantasia, styles["body"]),
+        Spacer(1, 4),
+        Paragraph(f"<font name='{FONT_BOLD}'>Orçamento {orcamento.numero}</font><br/>{orcamento.titulo}", styles["body"]),
+    ]
     if logo:
-        pdf.image(
-            logo["bytes"],
-            logo["width_px"],
-            logo["height_px"],
-            52,
-            768,
-            int(logo["draw_width"]),
-            int(logo["draw_height"]),
+        image_buffer, width, height = logo
+        logo_flow = Image(image_buffer, width=width * mm, height=height * mm)
+        topo = Table([[logo_flow, header_text]], colWidths=[44 * mm, 122 * mm])
+    else:
+        topo = Table([[header_text]], colWidths=[166 * mm])
+    topo.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                ("ROUNDEDCORNERS", [8, 8, 8, 8]),
+                ("LEFTPADDING", (0, 0), (-1, -1), 16),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 16),
+                ("TOPPADDING", (0, 0), (-1, -1), 16),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 16),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.white),
+            ]
         )
-        title_x = 190
+    )
 
-    pdf.text(title_x, 792, empresa, size=18)
-    pdf.text(title_x, 772, f"Orçamento {orcamento.numero}", size=12)
-    pdf.current_y = 736
+    status_card = Table(
+        [[Paragraph(f"<font name='{FONT_BOLD}' color='#{status_fg.hexval()[2:]}'> {alerta_status.titulo}</font><br/>{alerta_status.detalhe}", styles["body"])]],
+        colWidths=[166 * mm],
+    )
+    status_card.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), status_bg),
+                ("BOX", (0, 0), (-1, -1), 0.8, status_bg),
+                ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+                ("TOPPADDING", (0, 0), (-1, -1), 12),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+            ]
+        )
+    )
 
-    pdf.paragraph(f"Título: {orcamento.titulo}", size=14, leading=18)
-    pdf.paragraph(f"Cliente: {orcamento.cliente}", size=11)
-    pdf.paragraph(f"Status: {orcamento.get_status_display()}", size=11)
-    pdf.paragraph(f"Emissão: {formatar_data(orcamento.data_emissao)}   Validade: {formatar_data(orcamento.validade_em)}", size=11)
-    pdf.spacer(8)
-    pdf.paragraph(f"{alerta_status.titulo}: {alerta_status.detalhe}", size=11, leading=16)
-    pdf.spacer(12)
+    resumo = Table(
+        [
+            [
+                bloco_info(styles, "CLIENTE", str(orcamento.cliente)),
+                bloco_info(styles, "STATUS", orcamento.get_status_display()),
+                bloco_info(styles, "EMISSÃO", formatar_data(orcamento.data_emissao)),
+            ],
+            [
+                bloco_info(styles, "VALIDADE", formatar_data(orcamento.validade_em)),
+                bloco_info(styles, "SUBTOTAL", formatar_moeda(orcamento.subtotal_itens)),
+                bloco_info(styles, "TOTAL FINAL", formatar_moeda(orcamento.total_final)),
+            ],
+        ],
+        colWidths=[55 * mm, 55 * mm, 56 * mm],
+    )
+    resumo.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#E7EFF8")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING", (0, 0), (-1, -1), 11),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 11),
+            ]
+        )
+    )
+
+    story = [topo, Spacer(1, 10), status_card, Spacer(1, 10), resumo, Spacer(1, 12)]
 
     if orcamento.descricao_inicial:
-        pdf.paragraph("Descrição inicial", size=12, leading=16)
-        pdf.paragraph(orcamento.descricao_inicial, size=10, leading=14)
-        pdf.spacer(10)
-
-    pdf.paragraph("Itens do orçamento", size=12, leading=16)
-    for item in orcamento.itens.all().order_by("ordem", "id"):
-        linha = (
-            f"{item.ordem}. {item.nome} | {formatar_decimal_br(item.quantidade)} {item.get_unidade_medida_display()} | "
-            f"Unit. {formatar_moeda(item.valor_unitario)} | Subtotal {formatar_moeda(item.subtotal)}"
+        story.extend(
+            [
+                Paragraph("Descrição inicial", styles["title"]),
+                Table(
+                    [[Paragraph(orcamento.descricao_inicial.replace("\n", "<br/>"), styles["body"])]],
+                    colWidths=[166 * mm],
+                    style=TableStyle(
+                        [
+                            ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                            ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                            ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                            ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+                            ("TOPPADDING", (0, 0), (-1, -1), 12),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                        ]
+                    ),
+                ),
+                Spacer(1, 12),
+            ]
         )
-        pdf.paragraph(linha, size=10, leading=14)
-        if item.descricao:
-            pdf.paragraph(f"Descrição: {item.descricao}", size=9, leading=13)
-        ajustes = []
-        if item.desconto_valor or item.desconto_percentual:
-            ajustes.append(
-                f"Desconto: {formatar_moeda(item.desconto_valor)} + {formatar_decimal_br(item.desconto_percentual)}%"
-            )
-        if item.acrescimo_valor or item.acrescimo_percentual:
-            ajustes.append(
-                f"Acréscimo: {formatar_moeda(item.acrescimo_valor)} + {formatar_decimal_br(item.acrescimo_percentual)}%"
-            )
-        if ajustes:
-            pdf.paragraph(" | ".join(ajustes), size=9, leading=13)
-        pdf.spacer(6)
 
-    pdf.spacer(10)
-    pdf.paragraph("Resumo financeiro", size=12, leading=16)
-    pdf.paragraph(f"Subtotal dos itens: {formatar_moeda(orcamento.subtotal_itens)}", size=10)
-    pdf.paragraph(f"Desconto global em valor: {formatar_moeda(orcamento.desconto_global_valor)}", size=10)
-    pdf.paragraph(
-        f"Desconto global em percentual: {formatar_decimal_br(orcamento.desconto_global_percentual)}%",
-        size=10,
+    story.append(Paragraph("Itens do orçamento", styles["title"]))
+    mostrar_ajustes = orcamento.mostrar_ajustes_no_relatorio
+    linhas_itens = [
+        [
+            Paragraph("<b>Ordem</b>", styles["small"]),
+            Paragraph("<b>Item</b>", styles["small"]),
+            Paragraph("<b>Qtd.</b>", styles["small"]),
+            Paragraph("<b>Valor unitário</b>", styles["small"]),
+            Paragraph("<b>Subtotal</b>", styles["small"]),
+        ]
+    ]
+    for item in orcamento.itens.all().order_by("ordem", "id"):
+        detalhes = [f"<b>{item.nome}</b>", item.codigo_item or "Sem código"]
+        if item.descricao:
+            detalhes.append(item.descricao)
+        if mostrar_ajustes:
+            if item.desconto_valor or item.desconto_percentual:
+                detalhes.append(
+                    f"Desconto: {formatar_moeda(item.desconto_valor)} + {formatar_decimal_br(item.desconto_percentual)}%"
+                )
+            if item.acrescimo_valor or item.acrescimo_percentual:
+                detalhes.append(
+                    f"Acréscimo: {formatar_moeda(item.acrescimo_valor)} + {formatar_decimal_br(item.acrescimo_percentual)}%"
+                )
+
+        linhas_itens.append(
+            [
+                Paragraph(str(item.ordem), styles["body"]),
+                Paragraph("<br/>".join(detalhes), styles["body"]),
+                Paragraph(f"{formatar_decimal_br(item.quantidade)}<br/>{item.get_unidade_medida_display()}", styles["body"]),
+                Paragraph(formatar_moeda(item.valor_unitario), styles["body"]),
+                Paragraph(f"<b>{formatar_moeda(item.subtotal)}</b>", styles["body"]),
+            ]
+        )
+
+    tabela_itens = Table(linhas_itens, colWidths=[16 * mm, 78 * mm, 22 * mm, 25 * mm, 25 * mm], repeatRows=1)
+    tabela_itens.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EAF3FF")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#17304A")),
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FBFF")]),
+                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#E7EFF8")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                ("TOPPADDING", (0, 0), (-1, -1), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ]
+        )
     )
-    pdf.paragraph(f"Acréscimo global em valor: {formatar_moeda(orcamento.acrescimo_global_valor)}", size=10)
-    pdf.paragraph(
-        f"Acréscimo global em percentual: {formatar_decimal_br(orcamento.acrescimo_global_percentual)}%",
-        size=10,
+    story.extend([tabela_itens, Spacer(1, 12), Paragraph("Resumo financeiro", styles["title"])])
+
+    linhas_totais = [["Campo", "Valor"]]
+    linhas_totais.append(["Subtotal dos itens", formatar_moeda(orcamento.subtotal_itens)])
+    if mostrar_ajustes:
+        linhas_totais.append(
+            [
+                "Desconto global",
+                f"{formatar_moeda(orcamento.desconto_global_valor)} | {formatar_decimal_br(orcamento.desconto_global_percentual)}%",
+            ]
+        )
+        linhas_totais.append(
+            [
+                "Acréscimo global",
+                f"{formatar_moeda(orcamento.acrescimo_global_valor)} | {formatar_decimal_br(orcamento.acrescimo_global_percentual)}%",
+            ]
+        )
+    linhas_totais.append(["Total final", formatar_moeda(orcamento.total_final)])
+    tabela_totais = Table(linhas_totais, colWidths=[90 * mm, 76 * mm])
+    tabela_totais.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#EAF3FF")),
+                ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#EEF5FF")),
+                ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.7, colors.HexColor("#E7EFF8")),
+                ("FONTNAME", (0, 0), (-1, 0), FONT_BOLD),
+                ("FONTNAME", (0, -1), (-1, -1), FONT_BOLD),
+                ("FONTNAME", (0, 1), (-1, -2), FONT_REGULAR),
+                ("FONTSIZE", (0, 0), (-1, -1), 9.5),
+                ("TEXTCOLOR", (0, 0), (-1, -1), colors.HexColor("#17304A")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING", (0, 0), (-1, -1), 10),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+            ]
+        )
     )
-    pdf.paragraph(f"Total final: {formatar_moeda(orcamento.total_final)}", size=12, leading=16)
+    story.append(tabela_totais)
 
     if orcamento.observacoes_gerais:
-        pdf.spacer(10)
-        pdf.paragraph("Observações gerais", size=12, leading=16)
-        pdf.paragraph(orcamento.observacoes_gerais, size=10, leading=14)
+        story.extend([Spacer(1, 12), Paragraph("Observações gerais", styles["title"])])
+        story.append(
+            Table(
+                [[Paragraph(orcamento.observacoes_gerais.replace("\n", "<br/>"), styles["body"])]],
+                colWidths=[166 * mm],
+                style=TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+                        ("TOPPADDING", (0, 0), (-1, -1), 12),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                    ]
+                ),
+            )
+        )
 
     if configuracao and configuracao.rodape_relatorio:
-        pdf.spacer(12)
-        pdf.paragraph(configuracao.rodape_relatorio, size=9, leading=13)
+        story.extend([Spacer(1, 12), Paragraph("Rodapé institucional", styles["title"])])
+        story.append(
+            Table(
+                [[Paragraph(configuracao.rodape_relatorio.replace("\n", "<br/>"), styles["body"])]],
+                colWidths=[166 * mm],
+                style=TableStyle(
+                    [
+                        ("BACKGROUND", (0, 0), (-1, -1), colors.white),
+                        ("BOX", (0, 0), (-1, -1), 1, colors.HexColor("#D9E5F2")),
+                        ("LEFTPADDING", (0, 0), (-1, -1), 14),
+                        ("RIGHTPADDING", (0, 0), (-1, -1), 14),
+                        ("TOPPADDING", (0, 0), (-1, -1), 12),
+                        ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                    ]
+                ),
+            )
+        )
 
-    return pdf.render()
+    doc.build(story, onFirstPage=desenhar_fundo, onLaterPages=desenhar_fundo)
+    return buffer.getvalue()

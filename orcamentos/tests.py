@@ -104,11 +104,58 @@ class OrcamentoViewsTests(TestCase):
         self.assertRedirects(response, reverse("orcamentos:editar", args=[self.orcamento.pk]))
 
         item = ItemOrcamento.objects.get()
-        self.assertEqual(item.codigo_item, "SERV-01")
+        self.assertEqual(item.codigo_item, "ORC-2026-0001-ITEM-001")
         self.assertEqual(item.nome, "Servico")
         self.assertEqual(item.descricao, "Descricao padrao")
         self.assertEqual(item.unidade_medida, "sv")
         self.assertEqual(item.valor_unitario, Decimal("125.50"))
+
+    def test_orcamento_novo_recebe_numero_automatico(self):
+        response = self.client.post(
+            reverse("orcamentos:criar"),
+            {
+                "numero": "",
+                "cliente": self.cliente.pk,
+                "titulo": "Novo orçamento automático",
+                "descricao_inicial": "",
+                "observacoes_gerais": "",
+                "status": "rascunho",
+                "data_emissao": "2026-04-09",
+                "validade_em": "",
+                "desconto_global_valor": "0.00",
+                "desconto_global_percentual": "0.00",
+                "acrescimo_global_valor": "0.00",
+                "acrescimo_global_percentual": "0.00",
+                "mostrar_ajustes_no_relatorio": "",
+            },
+        )
+
+        novo = Orcamento.objects.exclude(pk=self.orcamento.pk).get()
+        self.assertRedirects(response, reverse("orcamentos:editar", args=[novo.pk]))
+        self.assertEqual(novo.numero, "ORC-2026-0002")
+
+    def test_item_recebe_codigo_automatico_mesmo_sem_codigo_informado(self):
+        response = self.client.post(
+            reverse("orcamentos:item_criar", args=[self.orcamento.pk]),
+            {
+                "ordem": 1,
+                "codigo_item": "",
+                "nome": "Item automático",
+                "descricao": "",
+                "unidade_medida": "un",
+                "quantidade": "1",
+                "valor_unitario": "10.00",
+                "desconto_valor": "0",
+                "desconto_percentual": "0",
+                "acrescimo_valor": "0",
+                "acrescimo_percentual": "0",
+                "observacoes": "",
+            },
+        )
+
+        item = ItemOrcamento.objects.get(nome="Item automático")
+        self.assertRedirects(response, reverse("orcamentos:editar", args=[self.orcamento.pk]))
+        self.assertEqual(item.codigo_item, "ORC-2026-0001-ITEM-001")
 
     def test_visualizador_pode_ver_orcamento_em_modo_somente_leitura(self):
         visualizador = get_user_model().objects.create_user(
@@ -197,6 +244,8 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(itens[1].ordem, 2)
         self.assertEqual(itens[1].nome, "Servico base")
         self.assertNotEqual(itens[0].pk, itens[1].pk)
+        self.assertEqual(itens[0].codigo_item, "ORC-2026-0001-ITEM-001")
+        self.assertEqual(itens[1].codigo_item, "ORC-2026-0001-ITEM-002")
 
     def test_redirect_de_acao_em_item_preserva_filtros_com_encoding_seguro(self):
         item = ItemOrcamento.objects.create(
@@ -427,6 +476,25 @@ class OrcamentoViewsTests(TestCase):
         self.assertContains(response, "Aprovado")
         self.assertNotContains(response, "Orcamento teste")
 
+    def test_lista_de_orcamentos_filtra_por_ativo(self):
+        Orcamento.objects.create(
+            numero="ORC-2026-0002",
+            cliente=self.cliente,
+            titulo="Inativo",
+            ativo=False,
+            data_emissao=date(2026, 4, 9),
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+
+        response = self.client.get(reverse("orcamentos:lista"), {"ativo": "ativos"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Orcamento teste")
+        orcamentos = list(response.context["orcamentos"])
+        self.assertEqual(len(orcamentos), 1)
+        self.assertEqual(orcamentos[0].titulo, "Orcamento teste")
+
     def test_lista_de_orcamentos_e_paginada(self):
         for indice in range(13):
             Orcamento.objects.create(
@@ -472,6 +540,45 @@ class OrcamentoViewsTests(TestCase):
         data = response.json()
         self.assertIn('data-unsaved-warning="1"', data["novo_item_html"])
         self.assertIn(f'data-draft-key="orcamento:{self.orcamento.pk}:item:novo"', data["novo_item_html"])
+
+    def test_edicao_nao_permite_alterar_numero_existente(self):
+        response = self.client.post(
+            reverse("orcamentos:editar", args=[self.orcamento.pk]),
+            {
+                "numero": "ORC-2099-9999",
+                "cliente": self.cliente.pk,
+                "titulo": "Titulo mantido",
+                "descricao_inicial": "",
+                "observacoes_gerais": "",
+                "status": self.orcamento.status,
+                "data_emissao": self.orcamento.data_emissao.isoformat(),
+                "validade_em": "",
+                "desconto_global_valor": "0.00",
+                "desconto_global_percentual": "0.00",
+                "acrescimo_global_valor": "0.00",
+                "acrescimo_global_percentual": "0.00",
+                "mostrar_ajustes_no_relatorio": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.orcamento.refresh_from_db()
+        self.assertEqual(self.orcamento.numero, "ORC-2026-0001")
+
+    def test_orcamento_pode_ser_inativado_e_reativado(self):
+        response = self.client.post(reverse("orcamentos:excluir", args=[self.orcamento.pk]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Orçamento inativado com sucesso.")
+        self.orcamento.refresh_from_db()
+        self.assertFalse(self.orcamento.ativo)
+
+        response = self.client.post(reverse("orcamentos:excluir", args=[self.orcamento.pk]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Orçamento reativado com sucesso.")
+        self.orcamento.refresh_from_db()
+        self.assertTrue(self.orcamento.ativo)
 
 
 class OrcamentoDomainTests(TestCase):

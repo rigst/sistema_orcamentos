@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Excluir orçamento{% endblock %}
+{% block title %}{{ acao|capfirst }} orçamento{% endblock %}
 
 {% block content %}
 <section>
     <div class="section-heading">
         <div>
-            <h2>Excluir orçamento</h2>
-            <p>Revise a operação antes de confirmar a remoção definitiva.</p>
+            <h2>{{ acao|capfirst }} orçamento</h2>
+            <p>Revise a operação antes de confirmar a mudança de disponibilidade do orçamento.</p>
         </div>
         <div class="inline-actions">
             <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Voltar</a>
@@ -15,12 +15,12 @@
     </div>
 
     <div class="panel">
-        <p>Tem certeza que deseja excluir o orçamento <strong>{{ orcamento.numero }}</strong>?</p>
+        <p>Tem certeza que deseja {{ acao }} o orçamento <strong>{{ orcamento.numero }}</strong>?</p>
 
         <form method="post">
             {% csrf_token %}
             <div class="inline-actions" style="margin-top: 1rem;">
-                <button class="btn btn-primary" type="submit">Confirmar exclusão</button>
+                <button class="btn btn-primary" type="submit">Confirmar {{ acao }}</button>
                 <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Cancelar</a>
             </div>
         </form>

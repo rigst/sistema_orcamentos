@@ -164,6 +164,7 @@ def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=Non
 def orcamento_lista(request):
     busca = request.GET.get("q", "").strip()
     status = request.GET.get("status", "").strip()
+    ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "recentes")
 
     orcamentos = Orcamento.objects.select_related("cliente").all()
@@ -177,6 +178,11 @@ def orcamento_lista(request):
 
     if status:
         orcamentos = orcamentos.filter(status=status)
+
+    if ativo != "inativos":
+        orcamentos = orcamentos.filter(ativo=True)
+    else:
+        orcamentos = orcamentos.filter(ativo=False)
 
     ordenacoes = {
         "recentes": "-criado_em",
@@ -194,6 +200,7 @@ def orcamento_lista(request):
         "page_obj": page_obj,
         "busca": busca,
         "status": status,
+        "ativo": ativo,
         "sort": ordenar,
         "status_choices": Orcamento.STATUS_CHOICES,
     }
@@ -254,13 +261,18 @@ def orcamento_editar(request, pk):
 @require_capability("pode_gerenciar_orcamentos")
 def orcamento_excluir(request, pk):
     orcamento = get_object_or_404(Orcamento, pk=pk)
+    acao = "reativar" if not orcamento.ativo else "inativar"
 
     if request.method == "POST":
-        orcamento.delete()
-        messages.success(request, "Orçamento excluído com sucesso.")
+        orcamento.ativo = not orcamento.ativo
+        orcamento.save(update_fields=["ativo", "atualizado_em"])
+        if orcamento.ativo:
+            messages.success(request, "Orçamento reativado com sucesso.")
+        else:
+            messages.success(request, "Orçamento inativado com sucesso.")
         return redirect("orcamentos:lista")
 
-    return render(request, "orcamentos/excluir.html", {"orcamento": orcamento})
+    return render(request, "orcamentos/excluir.html", {"orcamento": orcamento, "acao": acao})
 
 
 @require_capability("pode_gerenciar_orcamentos")

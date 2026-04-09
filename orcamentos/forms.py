@@ -1,5 +1,6 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.utils.timezone import localdate
 
 from catalogo.models import ItemCatalogo
 from core.form_fields import substituir_por_decimal_br
@@ -33,7 +34,7 @@ class OrcamentoForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         placeholders = {
-            "numero": "Ex.: ORC-2026-0001",
+            "numero": "Gerado automaticamente pelo sistema",
             "titulo": "Ex.: Orçamento de reforma da recepção",
             "descricao_inicial": "Resumo inicial do orçamento",
             "observacoes_gerais": "Observações internas ou gerais",
@@ -48,6 +49,14 @@ class OrcamentoForm(forms.ModelForm):
             if isinstance(widget, (forms.TextInput, forms.EmailInput, forms.NumberInput, forms.DateInput, forms.Textarea)):
                 widget.attrs.setdefault("placeholder", placeholders.get(nome, ""))
 
+        self.fields["numero"].required = False
+        self.fields["numero"].widget.attrs.update(
+            {
+                "readonly": "readonly",
+                "tabindex": "-1",
+            }
+        )
+
         for nome_campo in [
             "desconto_global_valor",
             "desconto_global_percentual",
@@ -57,6 +66,8 @@ class OrcamentoForm(forms.ModelForm):
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor"))
 
         self.fields["mostrar_ajustes_no_relatorio"].required = False
+        if not self.instance.pk and not self.is_bound:
+            self.fields["data_emissao"].initial = localdate()
 
 
 class ItemOrcamentoForm(forms.ModelForm):
@@ -98,12 +109,19 @@ class ItemOrcamentoForm(forms.ModelForm):
         ]:
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor") or nome_campo == "valor_unitario")
 
+        self.fields["codigo_item"].required = False
+        self.fields["codigo_item"].widget.attrs.update(
+            {
+                "readonly": "readonly",
+                "tabindex": "-1",
+                "placeholder": "Gerado automaticamente pelo sistema",
+            }
+        )
+
     def aplicar_defaults_catalogo(self, cleaned_data):
         item_catalogo = cleaned_data.get("item_catalogo")
 
         if item_catalogo:
-            if not cleaned_data.get("codigo_item"):
-                cleaned_data["codigo_item"] = item_catalogo.codigo
             if not cleaned_data.get("nome"):
                 cleaned_data["nome"] = item_catalogo.nome
             if not cleaned_data.get("descricao"):

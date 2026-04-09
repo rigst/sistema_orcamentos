@@ -1,9 +1,11 @@
+from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Max
 
 
 DUAS_CASAS = Decimal("0.01")
@@ -40,6 +42,7 @@ class Orcamento(models.Model):
         choices=STATUS_CHOICES,
         default="rascunho",
     )
+    ativo = models.BooleanField(default=True)
 
     data_emissao = models.DateField()
     validade_em = models.DateField(null=True, blank=True)
@@ -112,6 +115,31 @@ class Orcamento(models.Model):
     def __str__(self):
         return f"{self.numero} - {self.cliente}"
 
+    @classmethod
+    def gerar_proximo_numero(cls, ano: int) -> str:
+        prefixo = f"ORC-{ano}-"
+        ultimo_numero = cls.objects.filter(numero__startswith=prefixo).aggregate(max_numero=Max("numero"))["max_numero"]
+        sequencial = 1
+        if ultimo_numero:
+            try:
+                sequencial = int(str(ultimo_numero).rsplit("-", 1)[-1]) + 1
+            except (TypeError, ValueError):
+                sequencial = 1
+        return f"{prefixo}{sequencial:04d}"
+
+    def definir_numero_automatico(self):
+        if self.pk:
+            numero_original = type(self).objects.filter(pk=self.pk).values_list("numero", flat=True).first()
+            if numero_original:
+                self.numero = numero_original
+                return
+
+        data_referencia = self.data_emissao
+        if isinstance(data_referencia, str):
+            data_referencia = date.fromisoformat(data_referencia)
+        ano = data_referencia.year if data_referencia else date.today().year
+        self.numero = self.gerar_proximo_numero(ano)
+
     def clean(self):
         if self.validade_em and self.validade_em < self.data_emissao:
             raise ValidationError(
@@ -151,6 +179,11 @@ class Orcamento(models.Model):
 
         if salvar:
             self.save(update_fields=["subtotal_itens", "total_final", "atualizado_em"])
+
+    def save(self, *args, **kwargs):
+        self.definir_numero_automatico()
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class ItemOrcamento(models.Model):
@@ -248,6 +281,31 @@ class ItemOrcamento(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.orcamento.numero})"
 
+    def gerar_codigo_item(self) -> str:
+        prefixo = f"{self.orcamento.numero}-ITEM-"
+        codigos = (
+            type(self).objects.filter(orcamento=self.orcamento)
+            .exclude(pk=self.pk)
+            .values_list("codigo_item", flat=True)
+        )
+        maior = 0
+        for codigo in codigos:
+            if not codigo or not str(codigo).startswith(prefixo):
+                continue
+            try:
+                maior = max(maior, int(str(codigo).rsplit("-", 1)[-1]))
+            except (TypeError, ValueError):
+                continue
+        return f"{prefixo}{maior + 1:03d}"
+
+    def definir_codigo_automatico(self):
+        if self.pk:
+            codigo_original = type(self).objects.filter(pk=self.pk).values_list("codigo_item", flat=True).first()
+            if codigo_original:
+                self.codigo_item = codigo_original
+                return
+        self.codigo_item = self.gerar_codigo_item()
+
     def clean(self):
         valor_base = self.quantidade * self.valor_unitario
 
@@ -285,6 +343,7 @@ class ItemOrcamento(models.Model):
         return arredondar(subtotal)
 
     def save(self, *args, **kwargs):
+        self.definir_codigo_automatico()
         self.full_clean()
         self.subtotal = self.calcular_subtotal()
         super().save(*args, **kwargs)

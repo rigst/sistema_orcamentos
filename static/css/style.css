@@ -295,47 +295,65 @@ button:focus-visible {
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #7bb0ff 0%, #6297ed 100%);
-  border-color: transparent;
-  color: #07111f;
-  box-shadow: 0 14px 28px rgba(118, 169, 255, 0.22);
+  background: linear-gradient(180deg, rgba(235, 244, 255, 0.98) 0%, rgba(222, 236, 255, 0.98) 100%);
+  border-color: rgba(47, 120, 219, 0.18);
+  color: #2d6bbf;
+  box-shadow: 0 10px 24px rgba(118, 169, 255, 0.12);
 }
 
 .btn-primary:hover {
-  box-shadow: 0 18px 34px rgba(118, 169, 255, 0.28);
+  background: linear-gradient(180deg, rgba(229, 240, 255, 1) 0%, rgba(214, 231, 255, 1) 100%);
+  box-shadow: 0 12px 28px rgba(118, 169, 255, 0.16);
 }
 
 .btn-primary-lite {
   min-height: 40px;
   padding: 0 0.9rem;
-  background: rgba(47, 120, 219, 0.11);
-  color: var(--accent);
+  background: rgba(232, 242, 255, 0.96);
+  color: #2d6bbf;
   border-color: rgba(47, 120, 219, 0.16);
   box-shadow: none;
 }
 
 .btn-primary-lite:hover {
   box-shadow: none;
-  background: rgba(47, 120, 219, 0.16);
+  background: rgba(223, 237, 255, 0.98);
 }
 
 .btn-soft {
-  min-height: 36px;
-  padding: 0 0.8rem;
-  background: rgba(47, 120, 219, 0.08);
-  color: var(--accent);
+  min-height: 40px;
+  padding: 0 0.95rem;
+  background: rgba(240, 247, 255, 0.98);
+  color: #316dbf;
   border-color: rgba(47, 120, 219, 0.14);
   box-shadow: none;
 }
 
 .btn-soft:hover {
   box-shadow: none;
-  background: rgba(47, 120, 219, 0.12);
+  background: rgba(231, 241, 255, 0.98);
 }
 
 .btn-icon {
   min-width: 44px;
   padding: 0;
+}
+
+.btn-icon-action {
+  min-width: 40px;
+  width: 40px;
+  min-height: 40px;
+  padding: 0;
+}
+
+.action-icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .btn-secondary {
@@ -552,6 +570,12 @@ tr:hover td {
   color: #2d6bbf;
 }
 
+.badge-danger-soft {
+  background: rgba(209, 69, 69, 0.1);
+  border-color: rgba(209, 69, 69, 0.16);
+  color: #b63e3e;
+}
+
 .status-rascunho { color: #445f7d; }
 .status-em_elaboracao { color: #a16b18; }
 .status-enviado { color: #2f78db; }
@@ -677,16 +701,28 @@ tr:hover td {
 .actions-stack {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: 0.5rem;
   justify-content: center;
+  align-items: stretch;
 }
 
 .actions-stack-inline {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .actions-stack form {
   display: inline-flex;
+}
+
+.actions-stack .btn,
+.actions-stack form .btn {
+  min-width: 132px;
+  min-height: 40px;
+}
+
+.actions-stack .btn-icon-action,
+.actions-stack form .btn-icon-action {
+  min-width: 40px;
 }
 
 .table-subline {
@@ -694,6 +730,11 @@ tr:hover td {
   margin-top: 0.2rem;
   color: var(--text-soft);
   line-height: 1.45;
+}
+
+.table-subline-muted {
+  font-size: 0.83rem;
+  color: var(--muted);
 }
 
 .budget-main-cell,

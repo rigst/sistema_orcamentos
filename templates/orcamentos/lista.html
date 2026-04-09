@@ -19,6 +19,10 @@
 
     <form method="get" class="filters-form">
         <input type="text" name="q" placeholder="Buscar por número, cliente ou título" value="{{ busca }}">
+        <select name="ativo">
+            <option value="ativos" {% if ativo != "inativos" %}selected{% endif %}>Ativos</option>
+            <option value="inativos" {% if ativo == "inativos" %}selected{% endif %}>Inativos</option>
+        </select>
         <select name="status">
             <option value="">Todos os status</option>
             {% for valor, rotulo in status_choices %}
@@ -42,7 +46,7 @@
                 <thead>
                     <tr>
                         <th>Orçamento</th>
-                        <th>Cliente e datas</th>
+                        <th>Cliente</th>
                         <th>Título</th>
                         <th>Status</th>
                         <th>Total final</th>
@@ -54,11 +58,11 @@
                         <tr>
                             <td class="budget-main-cell">
                                 <strong>{{ orcamento.numero }}</strong>
-                                <span class="table-subline">Emitido em {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
+                                <span class="table-subline">Emissão: {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
+                                <span class="table-subline table-subline-muted">Validade: {% if orcamento.validade_em %}{{ orcamento.validade_em|date:"d/m/Y" }}{% else %}-{% endif %}</span>
                             </td>
                             <td class="budget-meta-cell">
                                 <strong>{{ orcamento.cliente }}</strong>
-                                <span class="table-subline">Validade: {% if orcamento.validade_em %}{{ orcamento.validade_em|date:"d/m/Y" }}{% else %}-{% endif %}</span>
                             </td>
                             <td class="budget-title-cell">
                                 <strong>{{ orcamento.titulo }}</strong>
@@ -67,6 +71,9 @@
                                 <span class="badge status-{{ orcamento.status }}">
                                     {{ orcamento.get_status_display }}
                                 </span>
+                                {% if not orcamento.ativo %}
+                                    <span class="badge badge-danger-soft">Inativo</span>
+                                {% endif %}
                             </td>
                             <td class="money budget-total-cell">
                                 <strong>{{ orcamento.total_final|brl }}</strong>
@@ -74,44 +81,74 @@
                             <td class="actions-col">
                                 <div class="actions-cluster">
                                     <div class="actions-stack actions-stack-inline">
-                                        <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">
-                                            {% if user.pode_gerenciar_orcamentos %}Editar{% else %}Ver{% endif %}
+                                        <a class="btn btn-secondary btn-icon-action" href="{% url 'orcamentos:editar' orcamento.pk %}" title="{% if user.pode_gerenciar_orcamentos %}Editar{% else %}Ver{% endif %}">
+                                            {% if user.pode_gerenciar_orcamentos %}
+                                                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M4 20l4.5-1 9.2-9.2a1.8 1.8 0 0 0 0-2.6l-.9-.9a1.8 1.8 0 0 0-2.6 0L5 15.5 4 20Z"/><path d="M13.5 7.5l3 3"/></svg>
+                                            {% else %}
+                                                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            {% endif %}
+                                            <span class="visually-hidden">{% if user.pode_gerenciar_orcamentos %}Editar{% else %}Ver{% endif %}</span>
                                         </a>
-                                        <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">Relatórios</a>
+                                        <a class="btn btn-secondary btn-icon-action" href="{% url 'relatorios:orcamento_central' orcamento.pk %}" title="Relatórios">
+                                            <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6M9 16h6"/></svg>
+                                            <span class="visually-hidden">Relatórios</span>
+                                        </a>
                                         {% if user.pode_gerenciar_orcamentos %}
-                                            <a class="btn btn-danger" href="{% url 'orcamentos:excluir' orcamento.pk %}">Excluir</a>
+                                            <a class="btn {% if orcamento.ativo %}btn-danger{% else %}btn-soft{% endif %} btn-icon-action" href="{% url 'orcamentos:excluir' orcamento.pk %}" title="{% if orcamento.ativo %}Inativar{% else %}Reativar{% endif %}">
+                                                {% if orcamento.ativo %}
+                                                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M5 7.5h14"/><path d="M8 7.5V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1.5"/><path d="M7.5 7.5v10A2 2 0 0 0 9.5 19.5h5A2 2 0 0 0 16.5 17.5v-10"/><path d="M10 11v4M14 11v4"/></svg>
+                                                {% else %}
+                                                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></svg>
+                                                {% endif %}
+                                                <span class="visually-hidden">{% if orcamento.ativo %}Inativar{% else %}Reativar{% endif %}</span>
+                                            </a>
                                         {% endif %}
                                     </div>
-                                    {% if user.pode_gerenciar_orcamentos %}
+                                    {% if user.pode_gerenciar_orcamentos and orcamento.ativo %}
                                         <div class="actions-stack actions-stack-inline actions-stack-status">
                                             {% if orcamento.status != "rascunho" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" onsubmit="return confirm('Confirmar retorno do orçamento para Rascunho?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-soft" type="submit">Rascunho</button>
+                                                    <button class="btn btn-soft btn-icon-action" type="submit" title="Rascunho">
+                                                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6M9 16h4"/></svg>
+                                                        <span class="visually-hidden">Rascunho</span>
+                                                    </button>
                                                 </form>
                                             {% endif %}
                                             {% if orcamento.status != "enviado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Enviado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-soft" type="submit">Enviar</button>
+                                                    <button class="btn btn-soft btn-icon-action" type="submit" title="Enviar">
+                                                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M21 3 10 14"/><path d="m21 3-7 18-4-7-7-4 18-7Z"/></svg>
+                                                        <span class="visually-hidden">Enviar</span>
+                                                    </button>
                                                 </form>
                                             {% endif %}
                                             {% if orcamento.status != "aprovado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Aprovado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-soft" type="submit">Aprovar</button>
+                                                    <button class="btn btn-soft btn-icon-action" type="submit" title="Aprovar">
+                                                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M20 7 9 18l-5-5"/></svg>
+                                                        <span class="visually-hidden">Aprovar</span>
+                                                    </button>
                                                 </form>
                                             {% endif %}
                                             {% if orcamento.status != "rejeitado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Rejeitado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-soft" type="submit">Rejeitar</button>
+                                                    <button class="btn btn-soft btn-icon-action" type="submit" title="Rejeitar">
+                                                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                                                        <span class="visually-hidden">Rejeitar</span>
+                                                    </button>
                                                 </form>
                                             {% endif %}
                                             {% if orcamento.status != "cancelado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Cancelado?');">
                                                     {% csrf_token %}
-                                                    <button class="btn btn-soft" type="submit">Cancelar</button>
+                                                    <button class="btn btn-soft btn-icon-action" type="submit" title="Cancelar">
+                                                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 15.5 15.5 8.5"/></svg>
+                                                        <span class="visually-hidden">Cancelar</span>
+                                                    </button>
                                                 </form>
                                             {% endif %}
                                         </div>

@@ -36,6 +36,9 @@
             <div id="orcamento-draft-status" class="inline-feedback"></div>
             <form method="post" data-collapsible-panel="orcamento-dados" data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
                 {% csrf_token %}
+                {% if not orcamento %}
+                    {{ form.status.as_hidden }}
+                {% endif %}
                 {% if form.non_field_errors %}
                     <div class="form-errors">
                         {% for error in form.non_field_errors %}
@@ -45,11 +48,13 @@
                 {% endif %}
                 <fieldset {% if modo_somente_leitura %}disabled{% endif %}>
                     <div class="form-grid">
-                        <div>
-                            <label for="{{ form.numero.id_for_label }}">Número</label>
-                            {{ form.numero }}
-                            {{ form.numero.errors }}
-                        </div>
+                        {% if orcamento %}
+                            <div>
+                                <label for="{{ form.numero.id_for_label }}">Número</label>
+                                {{ form.numero }}
+                                {{ form.numero.errors }}
+                            </div>
+                        {% endif %}
                         <div>
                             <label for="{{ form.cliente.id_for_label }}">Cliente</label>
                             {{ form.cliente }}
@@ -74,11 +79,13 @@
                             {{ form.observacoes_gerais.errors }}
                         </div>
 
-                        <div>
-                            <label for="{{ form.status.id_for_label }}">Status</label>
-                            {{ form.status }}
-                            {{ form.status.errors }}
-                        </div>
+                        {% if orcamento %}
+                            <div>
+                                <label for="{{ form.status.id_for_label }}">Status</label>
+                                {{ form.status }}
+                                {{ form.status.errors }}
+                            </div>
+                        {% endif %}
                         <div>
                             <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
                             {{ form.data_emissao }}
@@ -90,7 +97,9 @@
                             {{ form.validade_em }}
                             {{ form.validade_em.errors }}
                         </div>
-                        <div></div>
+                        {% if orcamento %}
+                            <div></div>
+                        {% endif %}
 
                         <div>
                             <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor</label>
@@ -310,13 +319,11 @@
         if (!option || !option.value) return;
         const byId = (id) => form.querySelector(id);
 
-        const codigo = byId("#id_codigo_item");
         const nome = byId("#id_nome");
         const descricao = byId("#id_descricao");
         const unidade = byId("#id_unidade_medida");
         const valor = byId("#id_valor_unitario");
 
-        if (codigo) codigo.value = option.dataset.codigo || "";
         if (nome) nome.value = option.dataset.nome || "";
         if (descricao) descricao.value = option.dataset.descricao || "";
         if (unidade) unidade.value = option.dataset.unidade || "";

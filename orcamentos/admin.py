@@ -22,15 +22,19 @@ class OrcamentoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
     list_display = (
         "numero",
         "cliente",
+        "ativo",
         "status",
         "data_emissao",
         "validade_em",
         "total_final",
         "mostrar_ajustes_no_relatorio",
     )
-    list_filter = ("status", "mostrar_ajustes_no_relatorio", "data_emissao")
+    list_filter = ("ativo", "status", "mostrar_ajustes_no_relatorio", "data_emissao")
     search_fields = ("numero", "cliente__nome_razao_social", "titulo")
     inlines = [ItemOrcamentoInline]
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(ItemOrcamento)
