@@ -19,17 +19,12 @@
 
     <form method="get" class="filters-form">
         <input type="text" name="q" placeholder="Buscar por empresa, e-mail ou cidade" value="{{ busca }}">
-        <select name="ativo">
-            <option value="">Todos</option>
-            <option value="ativos" {% if ativo == "ativos" %}selected{% endif %}>Ativos</option>
-            <option value="inativos" {% if ativo == "inativos" %}selected{% endif %}>Inativos</option>
-        </select>
         <select name="sort">
             <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
             <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
             <option value="cidade" {% if sort == "cidade" %}selected{% endif %}>Ordenar por cidade</option>
-            </select>
-            <button class="btn btn-secondary" type="submit">Buscar</button>
+        </select>
+        <button class="btn btn-secondary" type="submit">Buscar</button>
     </form>
 
     {% if configuracoes %}
@@ -56,7 +51,7 @@
                                 <td>{{ configuracao.estado|default:"-" }}</td>
                                 <td>{% if configuracao.ativo %}Sim{% else %}Não{% endif %}</td>
                                 <td class="actions-col">
-                                    <div class="actions-stack">
+                                    <div class="actions-stack actions-stack-inline">
                                         <a class="btn btn-secondary" href="{% url 'relatorios:configuracao_visualizar' configuracao.pk %}">Ver</a>
                                         {% if user.pode_gerenciar_relatorios %}
                                             <a class="btn btn-secondary" href="{% url 'relatorios:configuracao_editar' configuracao.pk %}">Editar</a>
@@ -74,5 +69,12 @@
     {% endif %}
 
     {% include "partials/pagination.html" with page_obj=page_obj %}
+    <div class="list-footer-toggle">
+        {% if ativo == "inativos" %}
+            <a href="?q={{ busca|urlencode }}&sort={{ sort|urlencode }}">Exibir ativas</a>
+        {% else %}
+            <a href="?q={{ busca|urlencode }}&sort={{ sort|urlencode }}&ativo=inativos">Exibir inativas</a>
+        {% endif %}
+    </div>
 </section>
 {% endblock %}

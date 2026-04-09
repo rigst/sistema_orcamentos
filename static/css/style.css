@@ -100,23 +100,17 @@ a {
   align-items: center;
   gap: 0.55rem;
   margin-left: auto;
+  color: var(--text-soft);
 }
 
-.user-chip,
 .user-role {
   display: inline-flex;
   align-items: center;
-  min-height: 38px;
-  padding: 0 0.85rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.88);
   color: var(--text);
   font-size: 0.92rem;
 }
 
 .user-role {
-  background: rgba(47, 120, 219, 0.1);
   color: var(--accent);
 }
 
@@ -131,6 +125,19 @@ a {
 .nav-links a.active {
   color: var(--text);
   background: rgba(47, 120, 219, 0.1);
+}
+
+.nav-logout {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  cursor: pointer;
+  padding: 0.45rem 0;
+}
+
+.nav-logout:hover {
+  color: var(--text);
 }
 
 main {
@@ -636,6 +643,10 @@ tr:hover td {
   gap: 0.45rem;
 }
 
+.actions-stack-inline {
+  flex-wrap: nowrap;
+}
+
 .actions-stack form {
   display: inline-flex;
 }
@@ -931,15 +942,10 @@ tr:hover td {
 }
 
 .dashboard-welcome {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.6rem;
-  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
   margin-bottom: 1rem;
-  padding: 0.8rem 1rem;
-  border-radius: 18px;
-  border: 1px solid var(--border-strong);
-  background: rgba(255, 255, 255, 0.88);
   color: var(--text-soft);
 }
 
@@ -975,6 +981,17 @@ tr:hover td {
   border-radius: 18px;
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.88);
+}
+
+.list-footer-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.75rem;
+}
+
+.list-footer-toggle a {
+  color: var(--accent);
+  font-size: 0.95rem;
 }
 
 @media (max-width: 1024px) {

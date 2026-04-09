@@ -18,27 +18,22 @@
     </div>
 
     <form method="get" class="filters-form">
-            <input type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
-            <select name="categoria">
-                <option value="">Todas as categorias</option>
-                {% for categoria_obj in categorias %}
-                    <option value="{{ categoria_obj.pk }}" {% if categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
-                {% endfor %}
-            </select>
-            <select name="ativo">
-                <option value="">Todos</option>
-                <option value="ativos" {% if ativo == "ativos" %}selected{% endif %}>Ativos</option>
-                <option value="inativos" {% if ativo == "inativos" %}selected{% endif %}>Inativos</option>
-            </select>
-            <select name="sort">
-                <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
-                <option value="codigo" {% if sort == "codigo" %}selected{% endif %}>Ordenar por código</option>
-                <option value="categoria" {% if sort == "categoria" %}selected{% endif %}>Ordenar por categoria</option>
-                <option value="preco_maior" {% if sort == "preco_maior" %}selected{% endif %}>Maior valor</option>
-                <option value="preco_menor" {% if sort == "preco_menor" %}selected{% endif %}>Menor valor</option>
-                <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
-            </select>
-            <button class="btn btn-secondary" type="submit">Buscar</button>
+        <input type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
+        <select name="categoria">
+            <option value="">Todas as categorias</option>
+            {% for categoria_obj in categorias %}
+                <option value="{{ categoria_obj.pk }}" {% if categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
+            {% endfor %}
+        </select>
+        <select name="sort">
+            <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
+            <option value="codigo" {% if sort == "codigo" %}selected{% endif %}>Ordenar por código</option>
+            <option value="categoria" {% if sort == "categoria" %}selected{% endif %}>Ordenar por categoria</option>
+            <option value="preco_maior" {% if sort == "preco_maior" %}selected{% endif %}>Maior valor</option>
+            <option value="preco_menor" {% if sort == "preco_menor" %}selected{% endif %}>Menor valor</option>
+            <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
+        </select>
+        <button class="btn btn-secondary" type="submit">Buscar</button>
     </form>
 
     {% if itens %}
@@ -65,7 +60,7 @@
                                 <td class="money">{{ item.valor_unitario_padrao|brl }}</td>
                                 <td>{% if item.ativo %}Sim{% else %}Não{% endif %}</td>
                                 <td class="actions-col">
-                                    <div class="actions-stack">
+                                    <div class="actions-stack actions-stack-inline">
                                         <a class="btn btn-secondary" href="{% url 'catalogo:item_visualizar' item.pk %}">Ver</a>
                                         {% if user.pode_gerenciar_catalogo %}
                                             <a class="btn btn-secondary" href="{% url 'catalogo:item_editar' item.pk %}">Editar</a>
@@ -83,5 +78,12 @@
     {% endif %}
 
     {% include "partials/pagination.html" with page_obj=page_obj %}
+    <div class="list-footer-toggle">
+        {% if ativo == "inativos" %}
+            <a href="?q={{ busca|urlencode }}&categoria={{ categoria|urlencode }}&sort={{ sort|urlencode }}">Exibir ativos</a>
+        {% else %}
+            <a href="?q={{ busca|urlencode }}&categoria={{ categoria|urlencode }}&sort={{ sort|urlencode }}&ativo=inativos">Exibir inativos</a>
+        {% endif %}
+    </div>
 </section>
 {% endblock %}

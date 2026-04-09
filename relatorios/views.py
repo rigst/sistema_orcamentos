@@ -14,7 +14,7 @@ from .models import ConfiguracaoEmpresa
 @require_capability("pode_visualizar_relatorios")
 def configuracao_lista(request):
     busca = request.GET.get("q", "").strip()
-    ativo = request.GET.get("ativo", "").strip()
+    ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "recentes")
     configuracoes = ConfiguracaoEmpresa.objects.all()
     if busca:
@@ -24,9 +24,9 @@ def configuracao_lista(request):
             | Q(email__icontains=busca)
             | Q(cidade__icontains=busca)
         )
-    if ativo == "ativos":
+    if ativo != "inativos":
         configuracoes = configuracoes.filter(ativo=True)
-    elif ativo == "inativos":
+    else:
         configuracoes = configuracoes.filter(ativo=False)
     ordenacoes = {
         "nome": "nome_empresa",

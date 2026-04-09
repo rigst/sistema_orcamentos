@@ -49,7 +49,7 @@ def dashboard(request):
         total=Coalesce(Sum("total_final"), Value(0), output_field=DecimalField(max_digits=14, decimal_places=2))
     )["total"]
     indicadores["pendentes"] = orcamentos.filter(status__in=["rascunho", "em_elaboracao", "enviado"]).count()
-    ultimos_orcamentos = ultimos_orcamentos[:8]
+    ultimos_orcamentos = ultimos_orcamentos[:5]
 
     context = {
         "ultimos_orcamentos": ultimos_orcamentos,

@@ -34,21 +34,21 @@
         <div class="panel">
             <h3>Fluxo básico</h3>
             <ul class="simple-list">
-                <li class="simple-list-item">Cadastre o cliente com os dados principais.</li>
-                <li class="simple-list-item">Organize o catálogo por categorias e itens.</li>
-                <li class="simple-list-item">Confira os dados da empresa para sair corretamente em PDF e Excel.</li>
-                <li class="simple-list-item">Crie o orçamento, inclua os itens, ajuste totais e revise o status.</li>
-                <li class="simple-list-item">Use a central de relatórios para exportar ou compartilhar.</li>
+                <li>Cadastre o cliente com os dados principais.</li>
+                <li>Organize o catálogo por categorias e itens.</li>
+                <li>Confira os dados da empresa para sair corretamente em PDF e Excel.</li>
+                <li>Crie o orçamento, inclua os itens, ajuste totais e revise o status.</li>
+                <li>Use a central de relatórios para exportar ou compartilhar.</li>
             </ul>
         </div>
 
         <div class="panel">
             <h3>Dicas rápidas</h3>
             <ul class="simple-list">
-                <li class="simple-list-item">Os campos monetários aceitam formato brasileiro, como <strong>R$ 15.000,00</strong>.</li>
-                <li class="simple-list-item">Clientes, categorias, itens e empresas são inativados em vez de apagados.</li>
-                <li class="simple-list-item">Ao sair com alterações pendentes, o sistema avisa para evitar perda de dados.</li>
-                <li class="simple-list-item">Na edição do orçamento, use filtros e ordenação para localizar itens rapidamente.</li>
+                <li>Os campos monetários aceitam formato brasileiro, como <strong>R$ 15.000,00</strong>.</li>
+                <li>Clientes, categorias, itens e empresas são inativados em vez de apagados.</li>
+                <li>Ao sair com alterações pendentes, o sistema avisa para evitar perda de dados.</li>
+                <li>Na edição do orçamento, use filtros e ordenação para localizar itens rapidamente.</li>
             </ul>
         </div>
     </div>
@@ -57,7 +57,7 @@
         <h3>Perfis e autorizações</h3>
         <div class="manual-roles">
             {% for perfil in perfis_manual %}
-                <div class="manual-role-card">
+                <div>
                     <strong>{{ perfil.nome }}</strong>
                     <p>{{ perfil.descricao }}</p>
                 </div>

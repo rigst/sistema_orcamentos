@@ -19,11 +19,6 @@
 
     <form method="get" class="filters-form">
         <input type="text" name="q" placeholder="Buscar por nome, CPF/CNPJ ou e-mail" value="{{ busca }}">
-        <select name="ativo">
-            <option value="">Todos</option>
-            <option value="ativos" {% if ativo == "ativos" %}selected{% endif %}>Ativos</option>
-            <option value="inativos" {% if ativo == "inativos" %}selected{% endif %}>Inativos</option>
-        </select>
         <select name="sort">
             <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
             <option value="tipo" {% if sort == "tipo" %}selected{% endif %}>Ordenar por tipo</option>
@@ -75,5 +70,12 @@
     {% endif %}
 
     {% include "partials/pagination.html" with page_obj=page_obj %}
+    <div class="list-footer-toggle">
+        {% if ativo == "inativos" %}
+            <a href="?q={{ busca|urlencode }}&sort={{ sort|urlencode }}">Exibir ativos</a>
+        {% else %}
+            <a href="?q={{ busca|urlencode }}&sort={{ sort|urlencode }}&ativo=inativos">Exibir inativos</a>
+        {% endif %}
+    </div>
 </section>
 {% endblock %}

@@ -11,7 +11,7 @@ from .models import CategoriaItem, ItemCatalogo
 @require_capability("pode_visualizar_catalogo")
 def categoria_lista(request):
     busca = request.GET.get("q", "").strip()
-    ativo = request.GET.get("ativo", "").strip()
+    ativo = request.GET.get("ativo", "ativas").strip()
     ordenar = request.GET.get("sort", "nome")
 
     categorias = CategoriaItem.objects.all()
@@ -19,9 +19,9 @@ def categoria_lista(request):
     if busca:
         categorias = categorias.filter(nome__icontains=busca)
 
-    if ativo == "ativas":
+    if ativo != "inativas":
         categorias = categorias.filter(ativo=True)
-    elif ativo == "inativas":
+    else:
         categorias = categorias.filter(ativo=False)
 
     ordenacoes = {
@@ -113,7 +113,7 @@ def categoria_excluir(request, pk):
 def item_lista(request):
     busca = request.GET.get("q", "").strip()
     categoria_id = request.GET.get("categoria", "").strip()
-    ativo = request.GET.get("ativo", "").strip()
+    ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "nome")
 
     itens = ItemCatalogo.objects.select_related("categoria").all()
@@ -129,9 +129,9 @@ def item_lista(request):
     if categoria_id:
         itens = itens.filter(categoria_id=categoria_id)
 
-    if ativo == "ativos":
+    if ativo != "inativos":
         itens = itens.filter(ativo=True)
-    elif ativo == "inativos":
+    else:
         itens = itens.filter(ativo=False)
 
     ordenacoes = {

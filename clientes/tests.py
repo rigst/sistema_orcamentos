@@ -108,7 +108,7 @@ class ClienteListaTests(TestCase):
         self.assertNotContains(response, "Cliente Inativo")
 
     def test_lista_ordena_por_cidade(self):
-        response = self.client.get(reverse("clientes:lista"), {"sort": "cidade"})
+        response = self.client.get(reverse("clientes:lista"), {"sort": "cidade", "ativo": "inativos"})
 
         self.assertEqual(response.status_code, 200)
         clientes = list(response.context["clientes"])

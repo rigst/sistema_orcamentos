@@ -67,7 +67,7 @@
                             <td class="money">{{ orcamento.total_final|brl }}</td>
                             <td class="actions-col">
                                 <div class="actions-cluster">
-                                    <div class="actions-stack">
+                                    <div class="actions-stack actions-stack-inline">
                                         <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">
                                             {% if user.pode_gerenciar_orcamentos %}Editar{% else %}Ver{% endif %}
                                         </a>
@@ -77,7 +77,7 @@
                                         {% endif %}
                                     </div>
                                     {% if user.pode_gerenciar_orcamentos %}
-                                        <div class="actions-stack actions-stack-status">
+                                        <div class="actions-stack actions-stack-inline actions-stack-status">
                                             {% if orcamento.status != "enviado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Enviado?');">
                                                     {% csrf_token %}

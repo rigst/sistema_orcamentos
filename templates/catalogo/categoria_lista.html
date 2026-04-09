@@ -18,17 +18,12 @@
     </div>
 
     <form method="get" class="filters-form">
-            <input type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
-            <select name="ativo">
-                <option value="">Todas</option>
-                <option value="ativas" {% if ativo == "ativas" %}selected{% endif %}>Ativas</option>
-                <option value="inativas" {% if ativo == "inativas" %}selected{% endif %}>Inativas</option>
-            </select>
-            <select name="sort">
-                <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
-                <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
-            </select>
-            <button class="btn btn-secondary" type="submit">Buscar</button>
+        <input type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
+        <select name="sort">
+            <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
+            <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
+        </select>
+        <button class="btn btn-secondary" type="submit">Buscar</button>
     </form>
 
     {% if categorias %}
@@ -47,7 +42,7 @@
                                 <td>{{ categoria.nome }}</td>
                                 <td>{% if categoria.ativo %}Sim{% else %}Não{% endif %}</td>
                                 <td class="actions-col">
-                                    <div class="actions-stack">
+                                    <div class="actions-stack actions-stack-inline">
                                         <a class="btn btn-secondary" href="{% url 'catalogo:categoria_visualizar' categoria.pk %}">Ver</a>
                                         {% if user.pode_gerenciar_catalogo %}
                                             <a class="btn btn-secondary" href="{% url 'catalogo:categoria_editar' categoria.pk %}">Editar</a>
@@ -65,5 +60,12 @@
     {% endif %}
 
     {% include "partials/pagination.html" with page_obj=page_obj %}
+    <div class="list-footer-toggle">
+        {% if ativo == "inativas" %}
+            <a href="?q={{ busca|urlencode }}&sort={{ sort|urlencode }}">Exibir ativas</a>
+        {% else %}
+            <a href="?q={{ busca|urlencode }}&sort={{ sort|urlencode }}&ativo=inativas">Exibir inativas</a>
+        {% endif %}
+    </div>
 </section>
 {% endblock %}

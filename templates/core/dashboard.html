@@ -24,10 +24,7 @@
         </div>
     </div>
 
-    <div class="dashboard-welcome">
-        <strong>{{ user }}</strong>
-        <span>Perfil ativo: {{ user.get_perfil_display }}</span>
-    </div>
+    <p class="dashboard-welcome"><strong>{{ user }}</strong> <span>{{ user.get_perfil_display }}</span></p>
 
     <div class="stats-grid">
         <div class="stat-card">
@@ -67,56 +64,54 @@
         </div>
     </div>
 
-    <div class="panel">
-        <div class="section-heading" style="margin-bottom: 1rem;">
-            <div>
-                <h3>Últimos orçamentos</h3>
-                <p>Os 8 mais recentes criados no sistema.</p>
-            </div>
-            <div>
-                <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Ver todos</a>
-            </div>
+    <div class="section-heading" style="margin-bottom: 1rem;">
+        <div>
+            <h3>Últimos orçamentos</h3>
+            <p>Os 5 mais recentes criados no sistema.</p>
         </div>
-
-        {% if ultimos_orcamentos %}
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Número</th>
-                            <th>Cliente</th>
-                            <th>Status</th>
-                            <th>Data</th>
-                            <th>Total</th>
-                            <th class="actions-col">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for orcamento in ultimos_orcamentos %}
-                            <tr>
-                                <td>{{ orcamento.numero }}</td>
-                                <td>{{ orcamento.cliente }}</td>
-                                <td>
-                                    <span class="badge status-{{ orcamento.status }}">
-                                        {{ orcamento.get_status_display }}
-                                    </span>
-                                </td>
-                                <td>{{ orcamento.data_emissao }}</td>
-                                <td class="money">{{ orcamento.total_final|brl }}</td>
-                                <td class="actions-col">
-                                    <div class="actions-stack">
-                                        <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Abrir</a>
-                                        <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">Relatórios</a>
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="empty-state">Ainda não há orçamentos cadastrados.</p>
-        {% endif %}
+        <div>
+            <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Ver todos</a>
+        </div>
     </div>
+
+    {% if ultimos_orcamentos %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Cliente</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>Total</th>
+                        <th class="actions-col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orcamento in ultimos_orcamentos %}
+                        <tr>
+                            <td>{{ orcamento.numero }}</td>
+                            <td>{{ orcamento.cliente }}</td>
+                            <td>
+                                <span class="badge status-{{ orcamento.status }}">
+                                    {{ orcamento.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ orcamento.data_emissao }}</td>
+                            <td class="money">{{ orcamento.total_final|brl }}</td>
+                            <td class="actions-col">
+                                <div class="actions-stack actions-stack-inline">
+                                    <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Abrir</a>
+                                    <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">Relatórios</a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Ainda não há orçamentos cadastrados.</p>
+    {% endif %}
 </section>
 {% endblock %}

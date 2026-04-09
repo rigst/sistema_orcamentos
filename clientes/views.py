@@ -11,7 +11,7 @@ from .models import Cliente
 @require_capability("pode_visualizar_clientes")
 def cliente_lista(request):
     busca = request.GET.get("q", "").strip()
-    ativo = request.GET.get("ativo", "").strip()
+    ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "nome")
 
     clientes = Cliente.objects.all()
@@ -24,9 +24,9 @@ def cliente_lista(request):
             | Q(email__icontains=busca)
         )
 
-    if ativo == "ativos":
+    if ativo != "inativos":
         clientes = clientes.filter(ativo=True)
-    elif ativo == "inativos":
+    else:
         clientes = clientes.filter(ativo=False)
 
     ordenacoes = {
