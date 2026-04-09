@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Configurações da empresa{% endblock %}
+
+{% block content %}
+    <h2>Configurações da empresa</h2>
+
+    <p>
+        <a href="{% url 'relatorios:configuracao_criar' %}">Nova configuração</a>
+    </p>
+
+    {% if configuracoes %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Nome da empresa</th>
+                    <th>E-mail</th>
+                    <th>Telefone</th>
+                    <th>Cidade</th>
+                    <th>Estado</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for configuracao in configuracoes %}
+                    <tr>
+                        <td>{{ configuracao.nome_empresa }}</td>
+                        <td>{{ configuracao.email }}</td>
+                        <td>{{ configuracao.telefone }}</td>
+                        <td>{{ configuracao.cidade }}</td>
+                        <td>{{ configuracao.estado }}</td>
+                        <td>
+                            <a href="{% url 'relatorios:configuracao_editar' configuracao.pk %}">Editar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma configuração cadastrada.</p>
+    {% endif %}
+{% endblock %}

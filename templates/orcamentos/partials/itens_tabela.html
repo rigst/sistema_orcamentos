@@ -1,0 +1,45 @@
+{% if itens %}
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ordem</th>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Qtd.</th>
+                    <th>Valor unitário</th>
+                    <th>Desc. valor</th>
+                    <th>Desc. %</th>
+                    <th>Acrésc. valor</th>
+                    <th>Acrésc. %</th>
+                    <th>Subtotal</th>
+                    <th class="actions-col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in itens %}
+                    <tr>
+                        <td>{{ item.ordem }}</td>
+                        <td>{{ item.codigo_item }}</td>
+                        <td>{{ item.nome }}</td>
+                        <td>{{ item.quantidade }}</td>
+                        <td class="money">R$ {{ item.valor_unitario }}</td>
+                        <td class="money">R$ {{ item.desconto_valor }}</td>
+                        <td>{{ item.desconto_percentual }}%</td>
+                        <td class="money">R$ {{ item.acrescimo_valor }}</td>
+                        <td>{{ item.acrescimo_percentual }}%</td>
+                        <td class="money">R$ {{ item.subtotal }}</td>
+                        <td class="actions-col">
+                            <div class="actions-stack">
+                                <a class="btn btn-secondary" href="{% url 'orcamentos:item_editar' orcamento.pk item.pk %}">Editar</a>
+                                <a class="btn btn-danger" href="{% url 'orcamentos:item_excluir' orcamento.pk item.pk %}">Excluir</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <p class="empty-state">Este orçamento ainda não possui itens.</p>
+{% endif %}

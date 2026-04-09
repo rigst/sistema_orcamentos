@@ -1,0 +1,47 @@
+<div class="panel modal-panel">
+    <div class="section-heading" style="margin-bottom: 1rem;">
+        <div>
+            <h3>{{ titulo }}</h3>
+            <p class="muted">Selecione um item do catálogo para preencher automaticamente ou edite tudo manualmente.</p>
+        </div>
+        <div>
+            <button class="btn btn-secondary" type="button" onclick="document.getElementById('modal-content').innerHTML=''">
+                Fechar
+            </button>
+        </div>
+    </div>
+
+    <form
+        method="post"
+        hx-post="{% if item %}{% url 'orcamentos:item_editar' orcamento.pk item.pk %}{% else %}{% url 'orcamentos:item_criar' orcamento.pk %}{% endif %}"
+        hx-target="#orcamento-page"
+        hx-swap="outerHTML">
+        {% csrf_token %}
+
+        <div id="item-form-fields">
+            <label for="{{ form.item_catalogo.id_for_label }}">Item do catálogo</label>
+            <select
+                name="item_catalogo"
+                id="{{ form.item_catalogo.id_for_label }}"
+                hx-get="{% url 'orcamentos:item_preencher_catalogo' orcamento.pk %}"
+                hx-target="#item-form-fields"
+                hx-include="this"
+                hx-swap="innerHTML">
+                {% for value, text in form.item_catalogo.field.choices %}
+                    <option value="{{ value }}" {% if form.item_catalogo.value|stringformat:'s' == value|stringformat:'s' %}selected{% endif %}>
+                        {{ text }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            {% include "orcamentos/partials/item_form_fields.html" %}
+        </div>
+
+        <div class="inline-actions" style="margin-top: 1rem;">
+            <button class="btn btn-primary" type="submit">Salvar item</button>
+            <button class="btn btn-secondary" type="button" onclick="document.getElementById('modal-content').innerHTML=''">
+                Cancelar
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Itens do catálogo{% endblock %}
+
+{% block content %}
+    <h2>Itens do catálogo</h2>
+
+    <p>
+        <a href="{% url 'catalogo:item_criar' %}">Novo item</a> |
+        <a href="{% url 'catalogo:categoria_lista' %}">Ver categorias</a>
+    </p>
+
+    <form method="get">
+        <input type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
+        <button type="submit">Buscar</button>
+    </form>
+
+    <hr>
+
+    {% if itens %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Código</th>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>Unidade</th>
+                    <th>Valor padrão</th>
+                    <th>Ativo</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in itens %}
+                    <tr>
+                        <td>{{ item.codigo }}</td>
+                        <td>{{ item.nome }}</td>
+                        <td>{{ item.categoria|default:"-" }}</td>
+                        <td>{{ item.get_unidade_medida_display }}</td>
+                        <td>R$ {{ item.valor_unitario_padrao }}</td>
+                        <td>{% if item.ativo %}Sim{% else %}Não{% endif %}</td>
+                        <td>
+                            <a href="{% url 'catalogo:item_editar' item.pk %}">Editar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhum item encontrado.</p>
+    {% endif %}
+{% endblock %}

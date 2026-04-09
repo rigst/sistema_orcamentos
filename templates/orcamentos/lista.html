@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Orçamentos{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>Orçamentos</h2>
+            <p>Gerencie, filtre e altere rapidamente os orçamentos do sistema.</p>
+        </div>
+        <div>
+            <a class="btn btn-primary" href="{% url 'orcamentos:criar' %}">Novo orçamento</a>
+        </div>
+    </div>
+
+    <div class="panel">
+        <form method="get" class="filters-form">
+            <input type="text" name="q" placeholder="Buscar por número, cliente ou título" value="{{ busca }}">
+            <button class="btn btn-secondary" type="submit">Buscar</button>
+        </form>
+
+        {% if orcamentos %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Cliente</th>
+                            <th>Título</th>
+                            <th>Status</th>
+                            <th>Data</th>
+                            <th>Validade</th>
+                            <th>Total final</th>
+                            <th class="actions-col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orcamento in orcamentos %}
+                            <tr>
+                                <td>{{ orcamento.numero }}</td>
+                                <td>{{ orcamento.cliente }}</td>
+                                <td>{{ orcamento.titulo }}</td>
+                                <td>
+                                    <span class="badge status-{{ orcamento.status }}">
+                                        {{ orcamento.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ orcamento.data_emissao }}</td>
+                                <td>{{ orcamento.validade_em|default:"-" }}</td>
+                                <td class="money">R$ {{ orcamento.total_final }}</td>
+                                <td class="actions-col">
+                                    <div class="actions-stack">
+                                        <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Editar</a>
+                                        <a class="btn btn-danger" href="{% url 'orcamentos:excluir' orcamento.pk %}">Excluir</a>
+
+                                        {% if orcamento.status != "enviado" %}
+                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}">Enviar</a>
+                                        {% endif %}
+                                        {% if orcamento.status != "aprovado" %}
+                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}">Aprovar</a>
+                                        {% endif %}
+                                        {% if orcamento.status != "rejeitado" %}
+                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}">Rejeitar</a>
+                                        {% endif %}
+                                        {% if orcamento.status != "cancelado" %}
+                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}">Cancelar</a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">Nenhum orçamento encontrado.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

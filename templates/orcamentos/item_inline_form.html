@@ -1,0 +1,180 @@
+{% if item %}
+    <div class="panel modal-panel" style="margin-bottom: 1rem;">
+        <div class="section-heading" style="margin-bottom: 1rem;">
+            <div>
+                <h3>{{ titulo|default:"Editar item" }}</h3>
+                <p class="muted">Ajuste os dados do item abaixo.</p>
+            </div>
+            <div>
+                <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Fechar edição</a>
+            </div>
+        </div>
+
+        <form method="post" action="{% url 'orcamentos:item_editar' orcamento.pk item.pk %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div>
+                    <label for="id_item_catalogo">Item do catálogo</label>
+                    <select name="item_catalogo" id="id_item_catalogo">
+                        <option value="">---------</option>
+                        {% for catalogo_item in item_catalogo_choices %}
+                            <option value="{{ catalogo_item.pk }}" {% if item.item_catalogo and item.item_catalogo.pk == catalogo_item.pk %}selected{% endif %}>
+                                {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="id_ordem">Ordem</label>
+                    <input type="number" step="1" name="ordem" id="id_ordem" value="{{ item.ordem }}">
+                </div>
+
+                <div>
+                    <label for="id_codigo_item">Código</label>
+                    <input type="text" name="codigo_item" id="id_codigo_item" value="{{ item.codigo_item }}">
+                </div>
+
+                <div>
+                    <label for="id_nome">Nome</label>
+                    <input type="text" name="nome" id="id_nome" value="{{ item.nome }}">
+                </div>
+
+                <div class="full">
+                    <label for="id_descricao">Descrição</label>
+                    <textarea name="descricao" id="id_descricao">{{ item.descricao }}</textarea>
+                </div>
+
+                <div>
+                    <label for="id_unidade_medida">Unidade</label>
+                    <input type="text" name="unidade_medida" id="id_unidade_medida" value="{{ item.unidade_medida }}">
+                </div>
+
+                <div>
+                    <label for="id_quantidade">Quantidade</label>
+                    <input type="number" step="0.01" name="quantidade" id="id_quantidade" value="{{ item.quantidade }}">
+                </div>
+
+                <div>
+                    <label for="id_valor_unitario">Valor unitário (R$)</label>
+                    <input type="number" step="0.01" name="valor_unitario" id="id_valor_unitario" value="{{ item.valor_unitario }}">
+                </div>
+
+                <div>
+                    <label for="id_desconto_valor">Desconto em valor (R$)</label>
+                    <input type="number" step="0.01" name="desconto_valor" id="id_desconto_valor" value="{{ item.desconto_valor }}">
+                </div>
+
+                <div>
+                    <label for="id_desconto_percentual">Desconto em %</label>
+                    <input type="number" step="0.01" name="desconto_percentual" id="id_desconto_percentual" value="{{ item.desconto_percentual }}">
+                </div>
+
+                <div>
+                    <label for="id_acrescimo_valor">Acréscimo em valor (R$)</label>
+                    <input type="number" step="0.01" name="acrescimo_valor" id="id_acrescimo_valor" value="{{ item.acrescimo_valor }}">
+                </div>
+
+                <div>
+                    <label for="id_acrescimo_percentual">Acréscimo em %</label>
+                    <input type="number" step="0.01" name="acrescimo_percentual" id="id_acrescimo_percentual" value="{{ item.acrescimo_percentual }}">
+                </div>
+
+                <div class="full">
+                    <label for="id_observacoes">Observações</label>
+                    <textarea name="observacoes" id="id_observacoes">{{ item.observacoes }}</textarea>
+                </div>
+            </div>
+
+            <div class="inline-actions" style="margin-top: 1rem;">
+                <button class="btn btn-primary" type="submit">Salvar item</button>
+            </div>
+        </form>
+    </div>
+{% else %}
+    <div class="panel modal-panel" style="margin-bottom: 1rem;">
+        <h3>Novo item</h3>
+        <p class="muted">Crie um item diretamente aqui.</p>
+
+        <form method="post" action="{% url 'orcamentos:item_criar' orcamento.pk %}">
+            {% csrf_token %}
+            <div class="form-grid">
+                <div>
+                    <label for="id_item_catalogo">Item do catálogo</label>
+                    <select name="item_catalogo" id="id_item_catalogo">
+                        <option value="">---------</option>
+                        {% for catalogo_item in item_catalogo_choices %}
+                            <option value="{{ catalogo_item.pk }}">
+                                {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="id_ordem">Ordem</label>
+                    <input type="number" step="1" name="ordem" id="id_ordem" value="1">
+                </div>
+
+                <div>
+                    <label for="id_codigo_item">Código</label>
+                    <input type="text" name="codigo_item" id="id_codigo_item">
+                </div>
+
+                <div>
+                    <label for="id_nome">Nome</label>
+                    <input type="text" name="nome" id="id_nome">
+                </div>
+
+                <div class="full">
+                    <label for="id_descricao">Descrição</label>
+                    <textarea name="descricao" id="id_descricao"></textarea>
+                </div>
+
+                <div>
+                    <label for="id_unidade_medida">Unidade</label>
+                    <input type="text" name="unidade_medida" id="id_unidade_medida" value="un">
+                </div>
+
+                <div>
+                    <label for="id_quantidade">Quantidade</label>
+                    <input type="number" step="0.01" name="quantidade" id="id_quantidade" value="1">
+                </div>
+
+                <div>
+                    <label for="id_valor_unitario">Valor unitário (R$)</label>
+                    <input type="number" step="0.01" name="valor_unitario" id="id_valor_unitario" value="0.00">
+                </div>
+
+                <div>
+                    <label for="id_desconto_valor">Desconto em valor (R$)</label>
+                    <input type="number" step="0.01" name="desconto_valor" id="id_desconto_valor" value="0.00">
+                </div>
+
+                <div>
+                    <label for="id_desconto_percentual">Desconto em %</label>
+                    <input type="number" step="0.01" name="desconto_percentual" id="id_desconto_percentual" value="0.00">
+                </div>
+
+                <div>
+                    <label for="id_acrescimo_valor">Acréscimo em valor (R$)</label>
+                    <input type="number" step="0.01" name="acrescimo_valor" id="id_acrescimo_valor" value="0.00">
+                </div>
+
+                <div>
+                    <label for="id_acrescimo_percentual">Acréscimo em %</label>
+                    <input type="number" step="0.01" name="acrescimo_percentual" id="id_acrescimo_percentual" value="0.00">
+                </div>
+
+                <div class="full">
+                    <label for="id_observacoes">Observações</label>
+                    <textarea name="observacoes" id="id_observacoes"></textarea>
+                </div>
+            </div>
+
+            <div class="inline-actions" style="margin-top: 1rem;">
+                <button class="btn btn-primary" type="submit">Adicionar item</button>
+            </div>
+        </form>
+    </div>
+{% endif %}

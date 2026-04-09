@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>{{ titulo }}</h2>
+            <p>Edite os dados do orçamento e gerencie os itens diretamente nesta página.</p>
+        </div>
+        <div class="inline-actions">
+            <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Voltar</a>
+        </div>
+    </div>
+
+    <div class="editor-grid">
+        <div>
+            <div class="panel form-panel">
+                <h3>Dados do orçamento</h3>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-grid">
+                        <div>
+                            <label for="{{ form.numero.id_for_label }}">Número</label>
+                            {{ form.numero }}
+                        </div>
+                        <div>
+                            <label for="{{ form.cliente.id_for_label }}">Cliente</label>
+                            {{ form.cliente }}
+                        </div>
+
+                        <div class="full">
+                            <label for="{{ form.titulo.id_for_label }}">Título</label>
+                            {{ form.titulo }}
+                        </div>
+
+                        <div class="full">
+                            <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial</label>
+                            {{ form.descricao_inicial }}
+                        </div>
+
+                        <div class="full">
+                            <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais</label>
+                            {{ form.observacoes_gerais }}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.status.id_for_label }}">Status</label>
+                            {{ form.status }}
+                        </div>
+                        <div>
+                            <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
+                            {{ form.data_emissao }}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.validade_em.id_for_label }}">Validade</label>
+                            {{ form.validade_em }}
+                        </div>
+                        <div></div>
+
+                        <div>
+                            <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor</label>
+                            {{ form.desconto_global_valor }}
+                        </div>
+                        <div>
+                            <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %</label>
+                            {{ form.desconto_global_percentual }}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor</label>
+                            {{ form.acrescimo_global_valor }}
+                        </div>
+                        <div>
+                            <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %</label>
+                            {{ form.acrescimo_global_percentual }}
+                        </div>
+
+                        <div class="full">
+                            <div class="checkbox-row">
+                                {{ form.mostrar_ajustes_no_relatorio }}
+                                <label for="{{ form.mostrar_ajustes_no_relatorio.id_for_label }}">
+                                    Mostrar descontos e acréscimos no relatório do cliente
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="inline-actions" style="margin-top: 1rem;">
+                        <button class="btn btn-primary" type="submit">Salvar orçamento</button>
+                    </div>
+                </form>
+            </div>
+
+            {% if orcamento %}
+                <div class="panel table-panel" style="margin-top: 1rem;">
+                    <div class="section-heading" style="margin-bottom: 1rem;">
+                        <div>
+                            <h3>Itens do orçamento</h3>
+                            <p>Você pode criar itens diretamente aqui.</p>
+                        </div>
+                    </div>
+
+                    {% include "orcamentos/item_inline_form.html" %}
+
+                    <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
+
+                    {% include "orcamentos/partials/itens_tabela.html" %}
+                </div>
+            {% endif %}
+        </div>
+
+        {% if orcamento %}
+            <aside class="editor-sidebar">
+                {% include "orcamentos/partials/totais_card.html" %}
+            </aside>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

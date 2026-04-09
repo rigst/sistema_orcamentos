@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Categorias{% endblock %}
+
+{% block content %}
+    <h2>Categorias de itens</h2>
+
+    <p>
+        <a href="{% url 'catalogo:categoria_criar' %}">Nova categoria</a> |
+        <a href="{% url 'catalogo:item_lista' %}">Ver itens</a>
+    </p>
+
+    <form method="get">
+        <input type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
+        <button type="submit">Buscar</button>
+    </form>
+
+    <hr>
+
+    {% if categorias %}
+        <table border="1" cellpadding="6" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Ativa</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for categoria in categorias %}
+                    <tr>
+                        <td>{{ categoria.nome }}</td>
+                        <td>{% if categoria.ativo %}Sim{% else %}Não{% endif %}</td>
+                        <td>
+                            <a href="{% url 'catalogo:categoria_editar' categoria.pk %}">Editar</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>Nenhuma categoria encontrada.</p>
+    {% endif %}
+{% endblock %}

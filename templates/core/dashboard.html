@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>Dashboard</h2>
+            <p>Resumo rápido do sistema e dos orçamentos mais recentes.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="label">Rascunhos</span>
+            <span class="value">{{ status_map.rascunho }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="label">Em elaboração</span>
+            <span class="value">{{ status_map.em_elaboracao }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="label">Enviados</span>
+            <span class="value">{{ status_map.enviado }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="label">Aprovados</span>
+            <span class="value">{{ status_map.aprovado }}</span>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="section-heading" style="margin-bottom: 1rem;">
+            <div>
+                <h3>Últimos orçamentos</h3>
+                <p>Os 5 mais recentes criados no sistema.</p>
+            </div>
+            <div>
+                <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Ver todos</a>
+            </div>
+        </div>
+
+        {% if ultimos_orcamentos %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Número</th>
+                            <th>Cliente</th>
+                            <th>Status</th>
+                            <th>Data</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for orcamento in ultimos_orcamentos %}
+                            <tr>
+                                <td>{{ orcamento.numero }}</td>
+                                <td>{{ orcamento.cliente }}</td>
+                                <td>
+                                    <span class="badge status-{{ orcamento.status }}">
+                                        {{ orcamento.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ orcamento.data_emissao }}</td>
+                                <td class="money">R$ {{ orcamento.total_final }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">Ainda não há orçamentos cadastrados.</p>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

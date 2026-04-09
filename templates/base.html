@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistema de Orçamentos{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+</head>
+<body>
+    <header class="site-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="{% url 'dashboard' %}" class="brand">Sistema<span>Orçamentos</span></a>
+
+                {% if user.is_authenticated %}
+                    <ul class="nav-links">
+                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                        <li><a href="{% url 'clientes:lista' %}">Clientes</a></li>
+                        <li><a href="{% url 'catalogo:categoria_lista' %}">Categorias</a></li>
+                        <li><a href="{% url 'catalogo:item_lista' %}">Itens</a></li>
+                        <li><a href="{% url 'relatorios:configuracao_lista' %}">Empresa</a></li>
+                        <li><a href="{% url 'orcamentos:lista' %}">Orçamentos</a></li>
+                        <li>
+                            <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button class="btn btn-secondary" type="submit">Sair</button>
+                            </form>
+                        </li>
+                    </ul>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% if messages %}
+            <div class="panel" style="margin-bottom: 1rem;">
+                <ul class="simple-list">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
