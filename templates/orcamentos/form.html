@@ -10,6 +10,9 @@
             <p>Edite os dados do orçamento e gerencie os itens diretamente nesta página.</p>
         </div>
         <div class="inline-actions">
+            {% if orcamento %}
+                <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">Relatórios</a>
+            {% endif %}
             <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Voltar</a>
         </div>
     </div>
@@ -17,107 +20,397 @@
     <div class="editor-grid">
         <div>
             <div class="panel form-panel">
-                <h3>Dados do orçamento</h3>
+                <div class="section-heading" style="margin-bottom: 1rem;">
+                    <div>
+                        <h3>Dados do orçamento</h3>
+                        {% if modo_somente_leitura %}
+                            <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>
+                        {% else %}
+                            <p class="muted">Mantenha este bloco recolhido enquanto trabalha nos itens e expanda quando precisar rever os dados gerais.</p>
+                        {% endif %}
+                    </div>
+                    {% if not modo_somente_leitura %}
+                        <div class="inline-actions">
+                            <button class="btn btn-secondary" type="button" data-toggle-panel="orcamento-dados">Recolher dados</button>
+                        </div>
+                    {% endif %}
+                </div>
 
-                <form method="post">
+                <div id="orcamento-draft-status" class="inline-feedback"></div>
+                <form method="post" data-collapsible-panel="orcamento-dados" data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
                     {% csrf_token %}
-                    <div class="form-grid">
-                        <div>
-                            <label for="{{ form.numero.id_for_label }}">Número</label>
-                            {{ form.numero }}
+                    {% if form.non_field_errors %}
+                        <div class="form-errors">
+                            {% for error in form.non_field_errors %}
+                                <p>{{ error }}</p>
+                            {% endfor %}
                         </div>
-                        <div>
-                            <label for="{{ form.cliente.id_for_label }}">Cliente</label>
-                            {{ form.cliente }}
-                        </div>
+                    {% endif %}
+                    <fieldset {% if modo_somente_leitura %}disabled{% endif %}>
+                        <div class="form-grid">
+                            <div>
+                                <label for="{{ form.numero.id_for_label }}">Número</label>
+                                {{ form.numero }}
+                                {{ form.numero.errors }}
+                            </div>
+                            <div>
+                                <label for="{{ form.cliente.id_for_label }}">Cliente</label>
+                                {{ form.cliente }}
+                                {{ form.cliente.errors }}
+                            </div>
 
-                        <div class="full">
-                            <label for="{{ form.titulo.id_for_label }}">Título</label>
-                            {{ form.titulo }}
-                        </div>
+                            <div class="full">
+                                <label for="{{ form.titulo.id_for_label }}">Título</label>
+                                {{ form.titulo }}
+                                {{ form.titulo.errors }}
+                            </div>
 
-                        <div class="full">
-                            <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial</label>
-                            {{ form.descricao_inicial }}
-                        </div>
+                            <div class="full">
+                                <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial</label>
+                                {{ form.descricao_inicial }}
+                                {{ form.descricao_inicial.errors }}
+                            </div>
 
-                        <div class="full">
-                            <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais</label>
-                            {{ form.observacoes_gerais }}
-                        </div>
+                            <div class="full">
+                                <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais</label>
+                                {{ form.observacoes_gerais }}
+                                {{ form.observacoes_gerais.errors }}
+                            </div>
 
-                        <div>
-                            <label for="{{ form.status.id_for_label }}">Status</label>
-                            {{ form.status }}
-                        </div>
-                        <div>
-                            <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
-                            {{ form.data_emissao }}
-                        </div>
+                            <div>
+                                <label for="{{ form.status.id_for_label }}">Status</label>
+                                {{ form.status }}
+                                {{ form.status.errors }}
+                            </div>
+                            <div>
+                                <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
+                                {{ form.data_emissao }}
+                                {{ form.data_emissao.errors }}
+                            </div>
 
-                        <div>
-                            <label for="{{ form.validade_em.id_for_label }}">Validade</label>
-                            {{ form.validade_em }}
-                        </div>
-                        <div></div>
+                            <div>
+                                <label for="{{ form.validade_em.id_for_label }}">Validade</label>
+                                {{ form.validade_em }}
+                                {{ form.validade_em.errors }}
+                            </div>
+                            <div></div>
 
-                        <div>
-                            <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor</label>
-                            {{ form.desconto_global_valor }}
-                        </div>
-                        <div>
-                            <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %</label>
-                            {{ form.desconto_global_percentual }}
-                        </div>
+                            <div>
+                                <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor</label>
+                                {{ form.desconto_global_valor }}
+                                {{ form.desconto_global_valor.errors }}
+                            </div>
+                            <div>
+                                <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %</label>
+                                {{ form.desconto_global_percentual }}
+                                {{ form.desconto_global_percentual.errors }}
+                            </div>
 
-                        <div>
-                            <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor</label>
-                            {{ form.acrescimo_global_valor }}
-                        </div>
-                        <div>
-                            <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %</label>
-                            {{ form.acrescimo_global_percentual }}
-                        </div>
+                            <div>
+                                <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor</label>
+                                {{ form.acrescimo_global_valor }}
+                                {{ form.acrescimo_global_valor.errors }}
+                            </div>
+                            <div>
+                                <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %</label>
+                                {{ form.acrescimo_global_percentual }}
+                                {{ form.acrescimo_global_percentual.errors }}
+                            </div>
 
-                        <div class="full">
-                            <div class="checkbox-row">
-                                {{ form.mostrar_ajustes_no_relatorio }}
-                                <label for="{{ form.mostrar_ajustes_no_relatorio.id_for_label }}">
-                                    Mostrar descontos e acréscimos no relatório do cliente
-                                </label>
+                            <div class="full">
+                                <div class="checkbox-row">
+                                    {{ form.mostrar_ajustes_no_relatorio }}
+                                    <label for="{{ form.mostrar_ajustes_no_relatorio.id_for_label }}">
+                                        Mostrar descontos e acréscimos no relatório do cliente
+                                    </label>
+                                </div>
+                                {{ form.mostrar_ajustes_no_relatorio.errors }}
                             </div>
                         </div>
-                    </div>
+                    </fieldset>
 
-                    <div class="inline-actions" style="margin-top: 1rem;">
-                        <button class="btn btn-primary" type="submit">Salvar orçamento</button>
-                    </div>
+                    {% if not modo_somente_leitura %}
+                        <div class="inline-actions" style="margin-top: 1rem;">
+                            <button class="btn btn-primary" type="submit">Salvar orçamento</button>
+                        </div>
+                    {% endif %}
                 </form>
             </div>
 
             {% if orcamento %}
+                <div id="item-feedback-region" style="margin-top: 1rem;" aria-live="polite"></div>
+
+                <div id="item-edit-panel-region" style="margin-top: 1rem;">
+                    {% include "orcamentos/partials/item_edit_panel.html" %}
+                </div>
+
+                {% if not modo_somente_leitura %}
+                    <div style="margin-top: 1rem;">
+                        {% include "orcamentos/partials/item_create_panel.html" %}
+                    </div>
+                {% endif %}
+
                 <div class="panel table-panel" style="margin-top: 1rem;">
                     <div class="section-heading" style="margin-bottom: 1rem;">
                         <div>
                             <h3>Itens do orçamento</h3>
-                            <p>Você pode criar itens diretamente aqui.</p>
+                            <p>
+                                {% if modo_somente_leitura %}
+                                    Visualização dos itens do orçamento.
+                                {% else %}
+                                    Revise os itens já adicionados e entre na edição individual quando precisar ajustar detalhes.
+                                {% endif %}
+                            </p>
                         </div>
                     </div>
 
-                    {% include "orcamentos/item_inline_form.html" %}
+                    <form method="get" class="filters-form compact-filters" style="margin-bottom: 1rem;">
+                        <input type="text" name="item_q" placeholder="Buscar por nome, código ou descrição" value="{{ item_q }}">
+                        <select name="item_categoria">
+                            <option value="">Todas as categorias</option>
+                            {% for categoria_obj in categorias_item %}
+                                <option value="{{ categoria_obj.pk }}" {% if item_categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="item_sort">
+                            <option value="ordem" {% if item_sort == "ordem" %}selected{% endif %}>Ordem manual</option>
+                            <option value="categoria" {% if item_sort == "categoria" %}selected{% endif %}>Categoria</option>
+                            <option value="nome" {% if item_sort == "nome" %}selected{% endif %}>Nome</option>
+                            <option value="preco_maior" {% if item_sort == "preco_maior" %}selected{% endif %}>Maior preço</option>
+                            <option value="preco_menor" {% if item_sort == "preco_menor" %}selected{% endif %}>Menor preço</option>
+                            <option value="subtotal_maior" {% if item_sort == "subtotal_maior" %}selected{% endif %}>Maior subtotal</option>
+                            <option value="subtotal_menor" {% if item_sort == "subtotal_menor" %}selected{% endif %}>Menor subtotal</option>
+                        </select>
+                        <button class="btn btn-secondary" type="submit">Aplicar</button>
+                    </form>
 
                     <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
 
-                    {% include "orcamentos/partials/itens_tabela.html" %}
+                    <div id="itens-tabela-region">
+                        {% include "orcamentos/partials/itens_tabela.html" %}
+                    </div>
                 </div>
             {% endif %}
         </div>
 
         {% if orcamento %}
-            <aside class="editor-sidebar">
+            <aside class="editor-sidebar" id="totais-card-region">
                 {% include "orcamentos/partials/totais_card.html" %}
             </aside>
         {% endif %}
     </div>
 </section>
+
+<script>
+(() => {
+  const toggle = document.querySelector("[data-toggle-panel='orcamento-dados']");
+  const panel = document.querySelector("[data-collapsible-panel='orcamento-dados']");
+  if (!toggle || !panel) return;
+
+  const updateLabel = () => {
+    const collapsed = panel.classList.contains("is-collapsed");
+    toggle.textContent = collapsed ? "Expandir dados" : "Recolher dados";
+  };
+
+  toggle.addEventListener("click", () => {
+    panel.classList.toggle("is-collapsed");
+    updateLabel();
+  });
+
+  updateLabel();
+})();
+
+(() => {
+  const initItemTable = (scope = document) => {
+    scope.querySelectorAll("[data-expand-row]").forEach((button) => {
+      if (button.dataset.bound === "1") return;
+      button.dataset.bound = "1";
+      button.addEventListener("click", () => {
+        const target = document.querySelector(`[data-row-detail="${button.dataset.expandRow}"]`);
+        if (!target) return;
+        target.classList.toggle("is-hidden");
+        const expanded = !target.classList.contains("is-hidden");
+        button.setAttribute("aria-expanded", expanded ? "true" : "false");
+        button.setAttribute("title", expanded ? "Recolher detalhes" : "Expandir detalhes");
+        button.querySelector("span").textContent = expanded ? "-" : "+";
+      });
+    });
+  };
+
+  const initItemBuilders = (scope = document) => {
+    scope.querySelectorAll("[data-item-builder]").forEach((root) => {
+      if (root.dataset.bound === "1") return;
+      root.dataset.bound = "1";
+
+      const form = root.querySelector("[data-item-form]");
+      const select = root.querySelector("[data-catalog-select]");
+      const applyButton = root.querySelector("[data-apply-catalog]");
+      const catalogTitle = root.querySelector("[data-catalog-title]");
+      const catalogMeta = root.querySelector("[data-catalog-meta]");
+      const previewUrl = root.dataset.previewUrl;
+      const previewPanel = root.querySelector("#item-preview-panel");
+
+      const fields = [
+        "#id_codigo_item",
+        "#id_nome",
+        "#id_descricao",
+        "#id_unidade_medida",
+        "#id_quantidade",
+        "#id_valor_unitario",
+        "#id_desconto_valor",
+        "#id_desconto_percentual",
+        "#id_acrescimo_valor",
+        "#id_acrescimo_percentual",
+        "#id_observacoes",
+        "#id_ordem",
+      ]
+        .map((selector) => form.querySelector(selector))
+        .filter(Boolean);
+
+      let previewTimeout = null;
+
+      const parseNumber = (value) => {
+        const normalized = String(value || "")
+          .replace(/[^\d,.-]/g, "")
+          .replace(/\.(?=.*[,])/g, "")
+          .replace(",", ".")
+          .trim();
+        const parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : 0;
+      };
+
+      const formatMoney = (value) =>
+        new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
+
+      const updateCatalogSummary = () => {
+        if (!select) return;
+        const option = select.options[select.selectedIndex];
+        if (!option || !option.value) {
+          if (catalogTitle) catalogTitle.textContent = "Nenhum item do catálogo selecionado.";
+          if (catalogMeta) catalogMeta.textContent = "Selecione um item para receber sugestões automáticas de preenchimento.";
+          return;
+        }
+
+        if (catalogTitle) catalogTitle.textContent = `${option.dataset.codigo} - ${option.dataset.nome}`;
+        if (catalogMeta) {
+          catalogMeta.textContent = `Unidade ${option.dataset.unidade || "-"} • Valor padrão ${formatMoney(parseNumber(option.dataset.valor))}`;
+        }
+      };
+
+      const requestPreview = () => {
+        if (!previewPanel || !previewUrl) return;
+        const params = new URLSearchParams(new FormData(form));
+        fetch(`${previewUrl}?${params.toString()}`, {
+          headers: { "X-Requested-With": "XMLHttpRequest" },
+        })
+          .then((response) => response.text())
+          .then((html) => {
+            previewPanel.innerHTML = html;
+          });
+      };
+
+      const schedulePreview = () => {
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(requestPreview, 200);
+      };
+
+      const applyCatalogData = () => {
+        if (!select) return;
+        const option = select.options[select.selectedIndex];
+        if (!option || !option.value) return;
+        const byId = (id) => form.querySelector(id);
+
+        const codigo = byId("#id_codigo_item");
+        const nome = byId("#id_nome");
+        const descricao = byId("#id_descricao");
+        const unidade = byId("#id_unidade_medida");
+        const valor = byId("#id_valor_unitario");
+
+        if (codigo) codigo.value = option.dataset.codigo || "";
+        if (nome) nome.value = option.dataset.nome || "";
+        if (descricao) descricao.value = option.dataset.descricao || "";
+        if (unidade) unidade.value = option.dataset.unidade || "";
+        if (valor) valor.value = option.dataset.valor || "0.00";
+        document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: form } }));
+        schedulePreview();
+      };
+
+      if (select) {
+        select.addEventListener("change", () => {
+          updateCatalogSummary();
+          schedulePreview();
+        });
+      }
+
+      if (applyButton) {
+        applyButton.addEventListener("click", applyCatalogData);
+      }
+
+      fields.forEach((field) => {
+        field.addEventListener("input", schedulePreview);
+        field.addEventListener("change", schedulePreview);
+      });
+
+      updateCatalogSummary();
+      document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: root } }));
+      schedulePreview();
+    });
+  };
+
+  initItemTable();
+  initItemBuilders();
+
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!form.matches(".item-builder-form")) return;
+
+    event.preventDefault();
+    form.classList.add("is-loading");
+    const submitButton = form.querySelector("button[type='submit']");
+    const originalLabel = submitButton ? submitButton.textContent : null;
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Salvando...";
+    }
+
+    try {
+      const response = await fetch(form.action, {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+        },
+        body: new FormData(form),
+      });
+
+      if (!response.ok) {
+        throw new Error("Falha ao salvar item.");
+      }
+
+      const data = await response.json();
+      const tabela = document.getElementById("itens-tabela-region");
+      const totais = document.getElementById("totais-card-region");
+      const feedback = document.getElementById("item-feedback-region");
+      const createPanel = document.getElementById("item-create-panel-region");
+      const editPanel = document.getElementById("item-edit-panel-region");
+
+      if (tabela && data.itens_html !== undefined) tabela.innerHTML = data.itens_html;
+      if (totais && data.totais_html !== undefined) totais.innerHTML = data.totais_html;
+      if (feedback && data.flash_html !== undefined) feedback.innerHTML = data.flash_html;
+      if (createPanel && data.novo_item_html !== undefined) createPanel.innerHTML = data.novo_item_html;
+      if (editPanel && data.edicao_item_html !== undefined) editPanel.innerHTML = data.edicao_item_html;
+      form.dispatchEvent(new CustomEvent("codex:mark-clean"));
+      document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: document } }));
+      initItemTable(document);
+      initItemBuilders(document);
+    } finally {
+      form.dataset.isSubmitting = "0";
+      form.classList.remove("is-loading");
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = originalLabel;
+      }
+    }
+  });
+})();
+</script>
 {% endblock %}

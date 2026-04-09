@@ -1,14 +1,17 @@
-from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
+from core.permissions import require_capability
+from core.query import paginate_queryset
 from .forms import ClienteForm
 from .models import Cliente
 
 
-@login_required
+@require_capability("pode_visualizar_clientes")
 def cliente_lista(request):
     busca = request.GET.get("q", "").strip()
+    ativo = request.GET.get("ativo", "").strip()
+    ordenar = request.GET.get("sort", "nome")
 
     clientes = Cliente.objects.all()
 
@@ -20,14 +23,31 @@ def cliente_lista(request):
             | Q(email__icontains=busca)
         )
 
+    if ativo == "ativos":
+        clientes = clientes.filter(ativo=True)
+    elif ativo == "inativos":
+        clientes = clientes.filter(ativo=False)
+
+    ordenacoes = {
+        "nome": "nome_razao_social",
+        "tipo": "tipo_pessoa",
+        "cidade": "cidade",
+        "recentes": "-atualizado_em",
+    }
+    clientes = clientes.order_by(ordenacoes.get(ordenar, "nome_razao_social"))
+    page_obj = paginate_queryset(request, clientes, per_page=12)
+
     context = {
-        "clientes": clientes,
+        "clientes": page_obj,
+        "page_obj": page_obj,
         "busca": busca,
+        "ativo": ativo,
+        "sort": ordenar,
     }
     return render(request, "clientes/lista.html", context)
 
 
-@login_required
+@require_capability("pode_gerenciar_clientes")
 def cliente_criar(request):
     if request.method == "POST":
         form = ClienteForm(request.POST)
@@ -40,7 +60,7 @@ def cliente_criar(request):
     return render(request, "clientes/form.html", {"form": form, "titulo": "Novo cliente"})
 
 
-@login_required
+@require_capability("pode_gerenciar_clientes")
 def cliente_editar(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
 

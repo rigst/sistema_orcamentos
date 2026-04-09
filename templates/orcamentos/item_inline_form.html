@@ -1,180 +1,177 @@
-{% if item %}
-    <div class="panel modal-panel" style="margin-bottom: 1rem;">
+<div class="item-builder" data-item-builder data-preview-url="{% url 'orcamentos:item_preview' orcamento.pk %}">
+    {% if item %}
         <div class="section-heading" style="margin-bottom: 1rem;">
             <div>
                 <h3>{{ titulo|default:"Editar item" }}</h3>
-                <p class="muted">Ajuste os dados do item abaixo.</p>
+                <p class="muted">A edição acontece neste painel, sem sair da tela do orçamento.</p>
             </div>
             <div>
-                <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Fechar edição</a>
+                <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}">Fechar edição</a>
             </div>
         </div>
-
-        <form method="post" action="{% url 'orcamentos:item_editar' orcamento.pk item.pk %}">
-            {% csrf_token %}
-            <div class="form-grid">
-                <div>
-                    <label for="id_item_catalogo">Item do catálogo</label>
-                    <select name="item_catalogo" id="id_item_catalogo">
-                        <option value="">---------</option>
-                        {% for catalogo_item in item_catalogo_choices %}
-                            <option value="{{ catalogo_item.pk }}" {% if item.item_catalogo and item.item_catalogo.pk == catalogo_item.pk %}selected{% endif %}>
-                                {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label for="id_ordem">Ordem</label>
-                    <input type="number" step="1" name="ordem" id="id_ordem" value="{{ item.ordem }}">
-                </div>
-
-                <div>
-                    <label for="id_codigo_item">Código</label>
-                    <input type="text" name="codigo_item" id="id_codigo_item" value="{{ item.codigo_item }}">
-                </div>
-
-                <div>
-                    <label for="id_nome">Nome</label>
-                    <input type="text" name="nome" id="id_nome" value="{{ item.nome }}">
-                </div>
-
-                <div class="full">
-                    <label for="id_descricao">Descrição</label>
-                    <textarea name="descricao" id="id_descricao">{{ item.descricao }}</textarea>
-                </div>
-
-                <div>
-                    <label for="id_unidade_medida">Unidade</label>
-                    <input type="text" name="unidade_medida" id="id_unidade_medida" value="{{ item.unidade_medida }}">
-                </div>
-
-                <div>
-                    <label for="id_quantidade">Quantidade</label>
-                    <input type="number" step="0.01" name="quantidade" id="id_quantidade" value="{{ item.quantidade }}">
-                </div>
-
-                <div>
-                    <label for="id_valor_unitario">Valor unitário (R$)</label>
-                    <input type="number" step="0.01" name="valor_unitario" id="id_valor_unitario" value="{{ item.valor_unitario }}">
-                </div>
-
-                <div>
-                    <label for="id_desconto_valor">Desconto em valor (R$)</label>
-                    <input type="number" step="0.01" name="desconto_valor" id="id_desconto_valor" value="{{ item.desconto_valor }}">
-                </div>
-
-                <div>
-                    <label for="id_desconto_percentual">Desconto em %</label>
-                    <input type="number" step="0.01" name="desconto_percentual" id="id_desconto_percentual" value="{{ item.desconto_percentual }}">
-                </div>
-
-                <div>
-                    <label for="id_acrescimo_valor">Acréscimo em valor (R$)</label>
-                    <input type="number" step="0.01" name="acrescimo_valor" id="id_acrescimo_valor" value="{{ item.acrescimo_valor }}">
-                </div>
-
-                <div>
-                    <label for="id_acrescimo_percentual">Acréscimo em %</label>
-                    <input type="number" step="0.01" name="acrescimo_percentual" id="id_acrescimo_percentual" value="{{ item.acrescimo_percentual }}">
-                </div>
-
-                <div class="full">
-                    <label for="id_observacoes">Observações</label>
-                    <textarea name="observacoes" id="id_observacoes">{{ item.observacoes }}</textarea>
-                </div>
+    {% else %}
+        <div class="item-builder-intro">
+            <div class="item-builder-tip">
+                <strong>Fluxo sugerido</strong>
+                <p>1. Escolha um item do catálogo. 2. Aplique os dados sugeridos. 3. Ajuste quantidade e preço. 4. Revise a prévia calculada pelo backend.</p>
             </div>
-
-            <div class="inline-actions" style="margin-top: 1rem;">
-                <button class="btn btn-primary" type="submit">Salvar item</button>
+            <div id="item-preview-panel">
+                {% include "orcamentos/partials/item_preview_card.html" with item_preview=None erro_validacao_preview=None %}
             </div>
-        </form>
-    </div>
-{% else %}
-    <div class="panel modal-panel" style="margin-bottom: 1rem;">
-        <h3>Novo item</h3>
-        <p class="muted">Crie um item diretamente aqui.</p>
+        </div>
+    {% endif %}
 
-        <form method="post" action="{% url 'orcamentos:item_criar' orcamento.pk %}">
-            {% csrf_token %}
-            <div class="form-grid">
-                <div>
-                    <label for="id_item_catalogo">Item do catálogo</label>
-                    <select name="item_catalogo" id="id_item_catalogo">
-                        <option value="">---------</option>
-                        {% for catalogo_item in item_catalogo_choices %}
-                            <option value="{{ catalogo_item.pk }}">
-                                {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
-                            </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div>
-                    <label for="id_ordem">Ordem</label>
-                    <input type="number" step="1" name="ordem" id="id_ordem" value="1">
-                </div>
-
-                <div>
-                    <label for="id_codigo_item">Código</label>
-                    <input type="text" name="codigo_item" id="id_codigo_item">
-                </div>
-
-                <div>
-                    <label for="id_nome">Nome</label>
-                    <input type="text" name="nome" id="id_nome">
-                </div>
-
-                <div class="full">
-                    <label for="id_descricao">Descrição</label>
-                    <textarea name="descricao" id="id_descricao"></textarea>
-                </div>
-
-                <div>
-                    <label for="id_unidade_medida">Unidade</label>
-                    <input type="text" name="unidade_medida" id="id_unidade_medida" value="un">
-                </div>
-
-                <div>
-                    <label for="id_quantidade">Quantidade</label>
-                    <input type="number" step="0.01" name="quantidade" id="id_quantidade" value="1">
-                </div>
-
-                <div>
-                    <label for="id_valor_unitario">Valor unitário (R$)</label>
-                    <input type="number" step="0.01" name="valor_unitario" id="id_valor_unitario" value="0.00">
-                </div>
-
-                <div>
-                    <label for="id_desconto_valor">Desconto em valor (R$)</label>
-                    <input type="number" step="0.01" name="desconto_valor" id="id_desconto_valor" value="0.00">
-                </div>
-
-                <div>
-                    <label for="id_desconto_percentual">Desconto em %</label>
-                    <input type="number" step="0.01" name="desconto_percentual" id="id_desconto_percentual" value="0.00">
-                </div>
-
-                <div>
-                    <label for="id_acrescimo_valor">Acréscimo em valor (R$)</label>
-                    <input type="number" step="0.01" name="acrescimo_valor" id="id_acrescimo_valor" value="0.00">
-                </div>
-
-                <div>
-                    <label for="id_acrescimo_percentual">Acréscimo em %</label>
-                    <input type="number" step="0.01" name="acrescimo_percentual" id="id_acrescimo_percentual" value="0.00">
-                </div>
-
-                <div class="full">
-                    <label for="id_observacoes">Observações</label>
-                    <textarea name="observacoes" id="id_observacoes"></textarea>
-                </div>
+    <div id="item-draft-status-{{ item.pk|default:'novo' }}" class="inline-feedback"></div>
+    <form method="post" action="{% if item %}{% url 'orcamentos:item_editar' orcamento.pk item.pk %}{% else %}{% url 'orcamentos:item_criar' orcamento.pk %}{% endif %}" class="item-builder-form" data-item-form data-unsaved-warning="1" data-draft-key="orcamento:{{ orcamento.pk }}:item:{% if item %}{{ item.pk }}{% else %}novo{% endif %}" data-draft-status-target="#item-draft-status-{{ item.pk|default:'novo' }}" data-clear-draft-on-submit="1">
+        {% csrf_token %}
+        <input type="hidden" name="item_q" value="{{ item_q }}">
+        <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
+        <input type="hidden" name="item_sort" value="{{ item_sort }}">
+        {% if item_form.non_field_errors %}
+            <div class="form-errors">
+                {% for error in item_form.non_field_errors %}
+                    <p>{{ error }}</p>
+                {% endfor %}
             </div>
+        {% endif %}
 
-            <div class="inline-actions" style="margin-top: 1rem;">
-                <button class="btn btn-primary" type="submit">Adicionar item</button>
-            </div>
-        </form>
-    </div>
-{% endif %}
+        <div class="item-builder-grid">
+            <section class="item-block">
+                <div class="item-block-header">
+                    <h4>Base do item</h4>
+                    <p>Use um item de catálogo para preencher rapidamente os dados principais.</p>
+                </div>
+
+                <div class="catalog-picker">
+                    <div class="full">
+                        <label for="{{ item_form.item_catalogo.id_for_label }}">Item do catálogo</label>
+                        <select name="item_catalogo" id="{{ item_form.item_catalogo.id_for_label }}" data-catalog-select>
+                            <option value="">---------</option>
+                            {% for catalogo_item in item_form.item_catalogo.field.queryset %}
+                                <option
+                                    value="{{ catalogo_item.pk }}"
+                                    data-codigo="{{ catalogo_item.codigo }}"
+                                    data-nome="{{ catalogo_item.nome }}"
+                                    data-descricao="{{ catalogo_item.descricao_padrao }}"
+                                    data-unidade="{{ catalogo_item.unidade_medida }}"
+                                    data-valor="{{ catalogo_item.valor_unitario_padrao }}"
+                                    {% if item_form.item_catalogo.value|stringformat:'s' == catalogo_item.pk|stringformat:'s' %}selected{% endif %}>
+                                    {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        {{ item_form.item_catalogo.errors }}
+                    </div>
+
+                    <div class="inline-actions">
+                        <button class="btn btn-primary" type="button" data-apply-catalog>Aplicar dados do catálogo</button>
+                    </div>
+
+                    <div class="catalog-summary" data-catalog-summary>
+                        <strong data-catalog-title>Nenhum item do catálogo selecionado.</strong>
+                        <small data-catalog-meta>Selecione um item para receber sugestões automáticas de preenchimento.</small>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label for="{{ item_form.ordem.id_for_label }}">Ordem</label>
+                        {{ item_form.ordem }}
+                        {{ item_form.ordem.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ item_form.codigo_item.id_for_label }}">Código</label>
+                        {{ item_form.codigo_item }}
+                        {{ item_form.codigo_item.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ item_form.nome.id_for_label }}">Nome</label>
+                        {{ item_form.nome }}
+                        {{ item_form.nome.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ item_form.descricao.id_for_label }}">Descrição</label>
+                        {{ item_form.descricao }}
+                        {{ item_form.descricao.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ item_form.unidade_medida.id_for_label }}">Unidade</label>
+                        {{ item_form.unidade_medida }}
+                        {{ item_form.unidade_medida.errors }}
+                    </div>
+                </div>
+            </section>
+
+            <section class="item-block">
+                <div class="item-block-header">
+                    <h4>Quantidade e preço</h4>
+                    <p>Defina a base do cálculo do item.</p>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label for="{{ item_form.quantidade.id_for_label }}">Quantidade</label>
+                        {{ item_form.quantidade }}
+                        {{ item_form.quantidade.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ item_form.valor_unitario.id_for_label }}">Valor unitário (R$)</label>
+                        {{ item_form.valor_unitario }}
+                        {{ item_form.valor_unitario.errors }}
+                    </div>
+                </div>
+            </section>
+
+            <section class="item-block">
+                <div class="item-block-header">
+                    <h4>Ajustes</h4>
+                    <p>Descontos e acréscimos são refletidos na prévia calculada pelo backend.</p>
+                </div>
+
+                <div class="form-grid">
+                    <div>
+                        <label for="{{ item_form.desconto_valor.id_for_label }}">Desconto em valor (R$)</label>
+                        {{ item_form.desconto_valor }}
+                        {{ item_form.desconto_valor.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ item_form.desconto_percentual.id_for_label }}">Desconto em %</label>
+                        {{ item_form.desconto_percentual }}
+                        {{ item_form.desconto_percentual.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ item_form.acrescimo_valor.id_for_label }}">Acréscimo em valor (R$)</label>
+                        {{ item_form.acrescimo_valor }}
+                        {{ item_form.acrescimo_valor.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ item_form.acrescimo_percentual.id_for_label }}">Acréscimo em %</label>
+                        {{ item_form.acrescimo_percentual }}
+                        {{ item_form.acrescimo_percentual.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ item_form.observacoes.id_for_label }}">Observações</label>
+                        {{ item_form.observacoes }}
+                        {{ item_form.observacoes.errors }}
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="inline-actions" style="margin-top: 1rem;">
+            <button class="btn btn-primary" type="submit">{% if item %}Salvar item{% else %}Adicionar item{% endif %}</button>
+            {% if item %}
+                <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}">Cancelar</a>
+            {% endif %}
+        </div>
+    </form>
+</div>

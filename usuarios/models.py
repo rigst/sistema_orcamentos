@@ -19,5 +19,49 @@ class Usuario(AbstractUser):
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
+    @property
+    def eh_admin_perfil(self):
+        return self.perfil == "admin"
+
+    @property
+    def eh_orcamentista(self):
+        return self.perfil == "orcamentista"
+
+    @property
+    def eh_visualizador(self):
+        return self.perfil == "visualizador"
+
+    @property
+    def pode_visualizar_clientes(self):
+        return self.is_authenticated
+
+    @property
+    def pode_gerenciar_clientes(self):
+        return self.eh_admin_perfil or self.eh_orcamentista
+
+    @property
+    def pode_visualizar_catalogo(self):
+        return self.is_authenticated
+
+    @property
+    def pode_gerenciar_catalogo(self):
+        return self.eh_admin_perfil
+
+    @property
+    def pode_visualizar_relatorios(self):
+        return self.is_authenticated
+
+    @property
+    def pode_gerenciar_relatorios(self):
+        return self.eh_admin_perfil
+
+    @property
+    def pode_visualizar_orcamentos(self):
+        return self.is_authenticated
+
+    @property
+    def pode_gerenciar_orcamentos(self):
+        return self.eh_admin_perfil or self.eh_orcamentista
+
     def __str__(self):
         return self.nome_exibicao or self.get_full_name() or self.username

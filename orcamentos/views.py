@@ -1,12 +1,18 @@
-from decimal import Decimal
-
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.db import models, transaction
 from django.db.models import Q
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_POST
+from urllib.parse import urlencode
 
-from catalogo.models import ItemCatalogo
-from .forms import OrcamentoForm
+from core.permissions import require_capability
+from core.query import paginate_queryset
+from catalogo.models import CategoriaItem
+from .forms import ItemOrcamentoForm, OrcamentoForm
 from .models import ItemOrcamento, Orcamento
 
 
@@ -19,10 +25,146 @@ STATUS_PERMITIDOS = {
     "cancelado",
 }
 
+ITEM_SORT_MAP = {
+    "ordem": ("ordem", "id"),
+    "nome": ("nome", "id"),
+    "categoria": ("item_catalogo__categoria__nome", "nome", "id"),
+    "preco_maior": ("-valor_unitario", "nome", "id"),
+    "preco_menor": ("valor_unitario", "nome", "id"),
+    "subtotal_maior": ("-subtotal", "nome", "id"),
+    "subtotal_menor": ("subtotal", "nome", "id"),
+}
 
-@login_required
+
+def normalizar_ordens_itens(orcamento):
+    itens = list(orcamento.itens.all().order_by("ordem", "id"))
+    for ordem, item in enumerate(itens, start=1):
+        if item.ordem != ordem:
+            ItemOrcamento.objects.filter(pk=item.pk).update(ordem=ordem)
+
+
+def obter_item_em_edicao(request, orcamento, modo_somente_leitura):
+    item_edit_pk = request.GET.get("item_edit")
+    if not item_edit_pk or modo_somente_leitura:
+        return None, None
+
+    item = get_object_or_404(ItemOrcamento, pk=item_edit_pk, orcamento=orcamento)
+    return item, ItemOrcamentoForm(instance=item)
+
+
+def obter_estado_itens(request, orcamento):
+    origem = request.POST if request.method == "POST" else request.GET
+    busca = (origem.get("item_q") or "").strip()
+    categoria = (origem.get("item_categoria") or "").strip()
+    ordenacao = (origem.get("item_sort") or "ordem").strip()
+
+    itens = orcamento.itens.select_related("item_catalogo__categoria")
+    if busca:
+        itens = itens.filter(
+            Q(nome__icontains=busca)
+            | Q(codigo_item__icontains=busca)
+            | Q(descricao__icontains=busca)
+        )
+    if categoria:
+        itens = itens.filter(item_catalogo__categoria_id=categoria)
+
+    itens = itens.order_by(*ITEM_SORT_MAP.get(ordenacao, ITEM_SORT_MAP["ordem"]))
+    categorias = (
+        CategoriaItem.objects.filter(itens__itens_em_orcamentos__orcamento=orcamento)
+        .distinct()
+        .order_by("nome")
+    )
+    return {
+        "item_q": busca,
+        "item_categoria": categoria,
+        "item_sort": ordenacao,
+        "categorias_item": categorias,
+        "itens": itens,
+    }
+
+
+def montar_url_edicao_orcamento(request, orcamento_pk, *, item_edit=None):
+    origem = request.POST if request.method == "POST" else request.GET
+    params = []
+    for chave in ("item_q", "item_categoria", "item_sort"):
+        valor = (origem.get(chave) or "").strip()
+        if valor:
+            params.append((chave, valor))
+    if item_edit:
+        params.append(("item_edit", str(item_edit)))
+    query = urlencode(params)
+    url = reverse("orcamentos:editar", kwargs={"pk": orcamento_pk})
+    return f"{url}?{query}" if query else url
+
+
+def renderizar_editor_orcamento(
+    request,
+    orcamento,
+    form,
+    item_form,
+    modo_somente_leitura,
+    *,
+    titulo="Editar orçamento",
+    item_editando_override=None,
+    item_form_edicao_override=None,
+):
+    itens = orcamento.itens.all()
+    item_editando, item_form_edicao = obter_item_em_edicao(request, orcamento, modo_somente_leitura)
+    if item_editando_override is not None:
+        item_editando = item_editando_override
+        item_form_edicao = item_form_edicao_override
+
+    context = {
+        "form": form,
+        "titulo": titulo,
+        "orcamento": orcamento,
+        "item_form": item_form,
+        "item_editando": item_editando,
+        "item_form_edicao": item_form_edicao,
+        "modo_somente_leitura": modo_somente_leitura,
+    }
+    context.update(obter_estado_itens(request, orcamento))
+    return render(request, "orcamentos/form.html", context)
+
+
+def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=None, item_form_edicao=None, mensagem=None):
+    context_base = {"orcamento": orcamento}
+    context_base.update(obter_estado_itens(request, orcamento))
+    payload = {
+        "itens_html": render_to_string("orcamentos/partials/itens_tabela.html", context_base, request=request),
+        "totais_html": render_to_string("orcamentos/partials/totais_card.html", {"orcamento": orcamento}, request=request),
+        "flash_html": render_to_string("orcamentos/partials/item_feedback.html", {"mensagem": mensagem}, request=request),
+    }
+
+    if item_form is not None:
+        contexto_novo_item = dict(context_base)
+        contexto_novo_item["item_form"] = item_form
+        payload["novo_item_html"] = render_to_string(
+            "orcamentos/partials/item_create_panel.html",
+            contexto_novo_item,
+            request=request,
+        )
+
+    contexto_edicao_item = dict(context_base)
+    contexto_edicao_item.update(
+        {
+            "item_editando": item_editando,
+            "item_form_edicao": item_form_edicao,
+        }
+    )
+    payload["edicao_item_html"] = render_to_string(
+        "orcamentos/partials/item_edit_panel.html",
+        contexto_edicao_item,
+        request=request,
+    )
+    return JsonResponse(payload)
+
+
+@require_capability("pode_visualizar_orcamentos")
 def orcamento_lista(request):
     busca = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "").strip()
+    ordenar = request.GET.get("sort", "recentes")
 
     orcamentos = Orcamento.objects.select_related("cliente").all()
 
@@ -33,14 +175,32 @@ def orcamento_lista(request):
             | Q(titulo__icontains=busca)
         )
 
+    if status:
+        orcamentos = orcamentos.filter(status=status)
+
+    ordenacoes = {
+        "recentes": "-criado_em",
+        "numero": "numero",
+        "cliente": "cliente__nome_razao_social",
+        "data": "-data_emissao",
+        "valor_maior": "-total_final",
+        "valor_menor": "total_final",
+    }
+    orcamentos = orcamentos.order_by(ordenacoes.get(ordenar, "-criado_em"))
+    page_obj = paginate_queryset(request, orcamentos, per_page=12)
+
     context = {
-        "orcamentos": orcamentos,
+        "orcamentos": page_obj,
+        "page_obj": page_obj,
         "busca": busca,
+        "status": status,
+        "sort": ordenar,
+        "status_choices": Orcamento.STATUS_CHOICES,
     }
     return render(request, "orcamentos/lista.html", context)
 
 
-@login_required
+@require_capability("pode_gerenciar_orcamentos")
 def orcamento_criar(request):
     if request.method == "POST":
         form = OrcamentoForm(request.POST)
@@ -61,11 +221,15 @@ def orcamento_criar(request):
     )
 
 
-@login_required
+@require_capability("pode_visualizar_orcamentos")
 def orcamento_editar(request, pk):
     orcamento = get_object_or_404(Orcamento, pk=pk)
+    modo_somente_leitura = not request.user.pode_gerenciar_orcamentos
 
     if request.method == "POST":
+        if modo_somente_leitura:
+            raise PermissionDenied
+
         form = OrcamentoForm(request.POST, instance=orcamento)
         if form.is_valid():
             orcamento = form.save(commit=False)
@@ -77,20 +241,17 @@ def orcamento_editar(request, pk):
     else:
         form = OrcamentoForm(instance=orcamento)
 
-    itens = orcamento.itens.all()
-    item_catalogo_choices = ItemCatalogo.objects.filter(ativo=True).select_related("categoria").order_by("nome")
-
-    context = {
-        "form": form,
-        "titulo": "Editar orçamento",
-        "orcamento": orcamento,
-        "itens": itens,
-        "item_catalogo_choices": item_catalogo_choices,
-    }
-    return render(request, "orcamentos/form.html", context)
+    item_form = ItemOrcamentoForm()
+    return renderizar_editor_orcamento(
+        request,
+        orcamento,
+        form,
+        item_form,
+        modo_somente_leitura,
+    )
 
 
-@login_required
+@require_capability("pode_gerenciar_orcamentos")
 def orcamento_excluir(request, pk):
     orcamento = get_object_or_404(Orcamento, pk=pk)
 
@@ -102,7 +263,8 @@ def orcamento_excluir(request, pk):
     return render(request, "orcamentos/excluir.html", {"orcamento": orcamento})
 
 
-@login_required
+@require_capability("pode_gerenciar_orcamentos")
+@require_POST
 def orcamento_alterar_status(request, pk, novo_status):
     orcamento = get_object_or_404(Orcamento, pk=pk)
 
@@ -111,121 +273,100 @@ def orcamento_alterar_status(request, pk, novo_status):
         orcamento.atualizado_por = request.user
         orcamento.save(update_fields=["status", "atualizado_por", "atualizado_em"])
         messages.success(request, f"Status alterado para {orcamento.get_status_display()}.")
+    else:
+        messages.error(request, "Status solicitado é inválido.")
 
     return redirect("orcamentos:lista")
 
 
-@login_required
+@require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_criar(request, orcamento_pk):
     orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     if request.method == "POST":
-        item_catalogo_id = request.POST.get("item_catalogo")
-        item_catalogo = None
-        if item_catalogo_id:
-            item_catalogo = ItemCatalogo.objects.filter(pk=item_catalogo_id).first()
+        form = ItemOrcamentoForm(request.POST)
+        if form.is_valid():
+            item = form.save(commit=False)
+            item.orcamento = orcamento
+            item.save()
+            normalizar_ordens_itens(orcamento)
+            mensagem = f"Item '{item.nome}' adicionado."
+            if is_ajax:
+                return responder_ajax_item(
+                    request,
+                    orcamento,
+                    item_form=ItemOrcamentoForm(),
+                    mensagem=mensagem,
+                )
 
-        codigo_item = request.POST.get("codigo_item", "").strip()
-        nome = request.POST.get("nome", "").strip()
-        descricao = request.POST.get("descricao", "").strip()
-        unidade_medida = request.POST.get("unidade_medida", "un")
-        observacoes = request.POST.get("observacoes", "").strip()
+            messages.success(request, mensagem)
+            return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
 
-        ordem = int(request.POST.get("ordem") or 1)
-        quantidade = Decimal(request.POST.get("quantidade") or "1")
-        valor_unitario = Decimal(request.POST.get("valor_unitario") or "0")
-        desconto_valor = Decimal(request.POST.get("desconto_valor") or "0")
-        desconto_percentual = Decimal(request.POST.get("desconto_percentual") or "0")
-        acrescimo_valor = Decimal(request.POST.get("acrescimo_valor") or "0")
-        acrescimo_percentual = Decimal(request.POST.get("acrescimo_percentual") or "0")
+        if is_ajax:
+            return responder_ajax_item(
+                request,
+                orcamento,
+                item_form=form,
+            )
 
-        if item_catalogo:
-            if not codigo_item:
-                codigo_item = item_catalogo.codigo
-            if not nome:
-                nome = item_catalogo.nome
-            if not descricao:
-                descricao = item_catalogo.descricao_padrao
-            if not unidade_medida:
-                unidade_medida = item_catalogo.unidade_medida
-            if valor_unitario == 0:
-                valor_unitario = item_catalogo.valor_unitario_padrao
-
-        item = ItemOrcamento.objects.create(
-            orcamento=orcamento,
-            item_catalogo=item_catalogo,
-            ordem=ordem,
-            codigo_item=codigo_item,
-            nome=nome,
-            descricao=descricao,
-            unidade_medida=unidade_medida,
-            quantidade=quantidade,
-            valor_unitario=valor_unitario,
-            desconto_valor=desconto_valor,
-            desconto_percentual=desconto_percentual,
-            acrescimo_valor=acrescimo_valor,
-            acrescimo_percentual=acrescimo_percentual,
-            observacoes=observacoes,
+        return renderizar_editor_orcamento(
+            request,
+            orcamento,
+            OrcamentoForm(instance=orcamento),
+            form,
+            False,
         )
-        orcamento.recalcular_totais()
-        messages.success(request, f"Item '{item.nome}' adicionado.")
-        return redirect("orcamentos:editar", pk=orcamento.pk)
 
     return redirect("orcamentos:editar", pk=orcamento.pk)
 
 
-@login_required
+@require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_editar(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     if request.method == "POST":
-        item_catalogo_id = request.POST.get("item_catalogo")
-        item_catalogo = None
-        if item_catalogo_id:
-            item_catalogo = ItemCatalogo.objects.filter(pk=item_catalogo_id).first()
+        form = ItemOrcamentoForm(request.POST, instance=item)
+        if form.is_valid():
+            item = form.save()
+            normalizar_ordens_itens(orcamento)
+            mensagem = f"Item '{item.nome}' atualizado."
+            if is_ajax:
+                return responder_ajax_item(
+                    request,
+                    orcamento,
+                    item_form=ItemOrcamentoForm(),
+                    mensagem=mensagem,
+                )
 
-        item.item_catalogo = item_catalogo
-        item.ordem = int(request.POST.get("ordem") or 1)
-        item.codigo_item = request.POST.get("codigo_item", "").strip()
-        item.nome = request.POST.get("nome", "").strip()
-        item.descricao = request.POST.get("descricao", "").strip()
-        item.unidade_medida = request.POST.get("unidade_medida", "un")
-        item.quantidade = Decimal(request.POST.get("quantidade") or "1")
-        item.valor_unitario = Decimal(request.POST.get("valor_unitario") or "0")
-        item.desconto_valor = Decimal(request.POST.get("desconto_valor") or "0")
-        item.desconto_percentual = Decimal(request.POST.get("desconto_percentual") or "0")
-        item.acrescimo_valor = Decimal(request.POST.get("acrescimo_valor") or "0")
-        item.acrescimo_percentual = Decimal(request.POST.get("acrescimo_percentual") or "0")
-        item.observacoes = request.POST.get("observacoes", "").strip()
+            messages.success(request, mensagem)
+            return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
 
-        if item_catalogo:
-            if not item.codigo_item:
-                item.codigo_item = item_catalogo.codigo
-            if not item.nome:
-                item.nome = item_catalogo.nome
-            if not item.descricao:
-                item.descricao = item_catalogo.descricao_padrao
+        if is_ajax:
+            return responder_ajax_item(
+                request,
+                orcamento,
+                item_form=ItemOrcamentoForm(),
+                item_editando=item,
+                item_form_edicao=form,
+            )
 
-        item.save()
-        orcamento.recalcular_totais()
-        messages.success(request, f"Item '{item.nome}' atualizado.")
-        return redirect("orcamentos:editar", pk=orcamento.pk)
+        return renderizar_editor_orcamento(
+            request,
+            orcamento,
+            OrcamentoForm(instance=orcamento),
+            ItemOrcamentoForm(),
+            False,
+            item_editando_override=item,
+            item_form_edicao_override=form,
+        )
 
-    item_catalogo_choices = ItemCatalogo.objects.filter(ativo=True).order_by("nome")
-    return render(
-        request,
-        "orcamentos/item_inline_form.html",
-        {
-            "orcamento": orcamento,
-            "item": item,
-            "item_catalogo_choices": item_catalogo_choices,
-            "titulo": f"Editar item de {orcamento.numero}",
-        },
-    )
+    return redirect(f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao")
 
 
-@login_required
+@require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_excluir(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
@@ -233,9 +374,9 @@ def item_orcamento_excluir(request, orcamento_pk, item_pk):
     if request.method == "POST":
         nome_item = item.nome
         item.delete()
-        orcamento.recalcular_totais()
+        normalizar_ordens_itens(orcamento)
         messages.success(request, f"Item '{nome_item}' excluído.")
-        return redirect("orcamentos:editar", pk=orcamento.pk)
+        return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
 
     return render(
         request,
@@ -243,5 +384,93 @@ def item_orcamento_excluir(request, orcamento_pk, item_pk):
         {
             "orcamento": orcamento,
             "item": item,
+            "retorno_edicao_url": montar_url_edicao_orcamento(request, orcamento.pk),
         },
     )
+
+
+@require_capability("pode_gerenciar_orcamentos")
+@require_POST
+def item_orcamento_duplicar(request, orcamento_pk, item_pk):
+    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+
+    with transaction.atomic():
+        (
+            ItemOrcamento.objects.filter(orcamento=orcamento, ordem__gt=item.ordem)
+            .update(ordem=models.F("ordem") + 1)
+        )
+
+        item.pk = None
+        item.ordem = item.ordem + 1
+        item.save()
+
+    normalizar_ordens_itens(orcamento)
+    messages.success(request, f"Item '{item.nome}' duplicado.")
+    return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
+
+
+@require_capability("pode_gerenciar_orcamentos")
+@require_POST
+def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
+    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+
+    with transaction.atomic():
+        (
+            ItemOrcamento.objects.filter(orcamento=orcamento, ordem__gt=item.ordem)
+            .update(ordem=models.F("ordem") + 1)
+        )
+
+        item.pk = None
+        item.ordem = item.ordem + 1
+        item.save()
+
+    normalizar_ordens_itens(orcamento)
+    messages.success(request, f"Item '{item.nome}' duplicado para edição.")
+    return redirect(f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao")
+
+
+@require_capability("pode_gerenciar_orcamentos")
+@require_POST
+def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
+    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+
+    itens = list(orcamento.itens.all().order_by("ordem", "id"))
+    indice_atual = next((indice for indice, atual in enumerate(itens) if atual.pk == item.pk), None)
+
+    if indice_atual is None:
+        return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
+
+    deslocamento = -1 if direcao == "cima" else 1 if direcao == "baixo" else 0
+    novo_indice = indice_atual + deslocamento
+
+    if deslocamento == 0 or novo_indice < 0 or novo_indice >= len(itens):
+        return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
+
+    itens[indice_atual], itens[novo_indice] = itens[novo_indice], itens[indice_atual]
+
+    with transaction.atomic():
+        for ordem, atual in enumerate(itens, start=1):
+            if atual.ordem != ordem:
+                ItemOrcamento.objects.filter(pk=atual.pk).update(ordem=ordem)
+
+    messages.success(request, f"Item '{item.nome}' movido.")
+    return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
+
+
+@require_capability("pode_gerenciar_orcamentos")
+def item_orcamento_preview(request, orcamento_pk):
+    if request.method != "GET":
+        return HttpResponseBadRequest("Método inválido.")
+
+    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    form = ItemOrcamentoForm(request.GET)
+    form.is_valid()
+    item_preview, erro_validacao = form.construir_item_preview(orcamento)
+
+    return render(request, "orcamentos/partials/item_preview_card.html", {
+        "item_preview": item_preview,
+        "erro_validacao_preview": erro_validacao,
+    })

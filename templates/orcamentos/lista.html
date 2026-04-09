@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load br_format querystring %}
 
 {% block title %}Orçamentos{% endblock %}
 
@@ -10,13 +11,29 @@
             <p>Gerencie, filtre e altere rapidamente os orçamentos do sistema.</p>
         </div>
         <div>
-            <a class="btn btn-primary" href="{% url 'orcamentos:criar' %}">Novo orçamento</a>
+            {% if user.pode_gerenciar_orcamentos %}
+                <a class="btn btn-primary" href="{% url 'orcamentos:criar' %}">Novo orçamento</a>
+            {% endif %}
         </div>
     </div>
 
     <div class="panel">
         <form method="get" class="filters-form">
             <input type="text" name="q" placeholder="Buscar por número, cliente ou título" value="{{ busca }}">
+            <select name="status">
+                <option value="">Todos os status</option>
+                {% for valor, rotulo in status_choices %}
+                    <option value="{{ valor }}" {% if status == valor %}selected{% endif %}>{{ rotulo }}</option>
+                {% endfor %}
+            </select>
+            <select name="sort">
+                <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
+                <option value="numero" {% if sort == "numero" %}selected{% endif %}>Ordenar por número</option>
+                <option value="cliente" {% if sort == "cliente" %}selected{% endif %}>Ordenar por cliente</option>
+                <option value="data" {% if sort == "data" %}selected{% endif %}>Data de emissão</option>
+                <option value="valor_maior" {% if sort == "valor_maior" %}selected{% endif %}>Maior valor</option>
+                <option value="valor_menor" {% if sort == "valor_menor" %}selected{% endif %}>Menor valor</option>
+            </select>
             <button class="btn btn-secondary" type="submit">Buscar</button>
         </form>
 
@@ -48,23 +65,40 @@
                                 </td>
                                 <td>{{ orcamento.data_emissao }}</td>
                                 <td>{{ orcamento.validade_em|default:"-" }}</td>
-                                <td class="money">R$ {{ orcamento.total_final }}</td>
+                                <td class="money">{{ orcamento.total_final|brl }}</td>
                                 <td class="actions-col">
                                     <div class="actions-stack">
-                                        <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Editar</a>
-                                        <a class="btn btn-danger" href="{% url 'orcamentos:excluir' orcamento.pk %}">Excluir</a>
+                                        <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">
+                                            {% if user.pode_gerenciar_orcamentos %}Editar{% else %}Ver{% endif %}
+                                        </a>
+                                        <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">Relatórios</a>
+                                        {% if user.pode_gerenciar_orcamentos %}
+                                            <a class="btn btn-danger" href="{% url 'orcamentos:excluir' orcamento.pk %}">Excluir</a>
 
-                                        {% if orcamento.status != "enviado" %}
-                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}">Enviar</a>
-                                        {% endif %}
-                                        {% if orcamento.status != "aprovado" %}
-                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}">Aprovar</a>
-                                        {% endif %}
-                                        {% if orcamento.status != "rejeitado" %}
-                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}">Rejeitar</a>
-                                        {% endif %}
-                                        {% if orcamento.status != "cancelado" %}
-                                            <a class="btn btn-secondary" href="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}">Cancelar</a>
+                                            {% if orcamento.status != "enviado" %}
+                                                <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Enviado?');">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-primary" type="submit">Enviar</button>
+                                                </form>
+                                            {% endif %}
+                                            {% if orcamento.status != "aprovado" %}
+                                                <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Aprovado?');">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-primary" type="submit">Aprovar</button>
+                                                </form>
+                                            {% endif %}
+                                            {% if orcamento.status != "rejeitado" %}
+                                                <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Rejeitado?');">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-primary" type="submit">Rejeitar</button>
+                                                </form>
+                                            {% endif %}
+                                            {% if orcamento.status != "cancelado" %}
+                                                <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Cancelado?');">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-primary" type="submit">Cancelar</button>
+                                                </form>
+                                            {% endif %}
                                         {% endif %}
                                     </div>
                                 </td>
@@ -76,6 +110,8 @@
         {% else %}
             <p class="empty-state">Nenhum orçamento encontrado.</p>
         {% endif %}
+
+        {% include "partials/pagination.html" with page_obj=page_obj %}
     </div>
 </section>
 {% endblock %}

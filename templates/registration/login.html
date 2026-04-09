@@ -3,15 +3,31 @@
 {% block title %}Login{% endblock %}
 
 {% block content %}
-    <h2>Entrar</h2>
+<section class="auth-shell">
+    <div class="panel auth-card">
+        <div class="auth-header">
+            <h2>Entrar</h2>
+            <p>Acesse o sistema com seu usuário e senha.</p>
+        </div>
 
-    {% if form.errors %}
-        <p>Usuário ou senha inválidos.</p>
-    {% endif %}
+        {% if form.errors %}
+            <div class="form-errors">
+                <p>Usuário ou senha inválidos.</p>
+            </div>
+        {% endif %}
 
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Entrar</button>
-    </form>
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.username.id_for_label }}">Usuário</label>
+                {{ form.username }}
+            </div>
+            <div>
+                <label for="{{ form.password.id_for_label }}">Senha</label>
+                {{ form.password }}
+            </div>
+            <button class="btn btn-primary auth-submit" type="submit">Entrar</button>
+        </form>
+    </div>
+</section>
 {% endblock %}

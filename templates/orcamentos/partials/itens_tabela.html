@@ -1,38 +1,111 @@
+{% load br_format querystring %}
 {% if itens %}
     <div class="table-wrap">
-        <table>
+        <table class="items-compact-table">
             <thead>
                 <tr>
+                    <th></th>
                     <th>Ordem</th>
-                    <th>Código</th>
-                    <th>Nome</th>
+                    <th>Item</th>
                     <th>Qtd.</th>
-                    <th>Valor unitário</th>
-                    <th>Desc. valor</th>
-                    <th>Desc. %</th>
-                    <th>Acrésc. valor</th>
-                    <th>Acrésc. %</th>
+                    <th>Base</th>
+                    <th>Ajustes</th>
                     <th>Subtotal</th>
-                    <th class="actions-col">Ações</th>
+                    {% if user.pode_gerenciar_orcamentos %}
+                        <th class="actions-col">Ações</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for item in itens %}
-                    <tr>
+                    <tr class="item-row-summary">
+                        <td>
+                            <button class="btn btn-secondary btn-icon" type="button" data-expand-row="item-{{ item.pk }}" aria-expanded="false" aria-label="Expandir detalhes do item {{ item.nome }}" title="Expandir detalhes">
+                                <span aria-hidden="true">+</span>
+                            </button>
+                        </td>
                         <td>{{ item.ordem }}</td>
-                        <td>{{ item.codigo_item }}</td>
-                        <td>{{ item.nome }}</td>
-                        <td>{{ item.quantidade }}</td>
-                        <td class="money">R$ {{ item.valor_unitario }}</td>
-                        <td class="money">R$ {{ item.desconto_valor }}</td>
-                        <td>{{ item.desconto_percentual }}%</td>
-                        <td class="money">R$ {{ item.acrescimo_valor }}</td>
-                        <td>{{ item.acrescimo_percentual }}%</td>
-                        <td class="money">R$ {{ item.subtotal }}</td>
-                        <td class="actions-col">
-                            <div class="actions-stack">
-                                <a class="btn btn-secondary" href="{% url 'orcamentos:item_editar' orcamento.pk item.pk %}">Editar</a>
-                                <a class="btn btn-danger" href="{% url 'orcamentos:item_excluir' orcamento.pk item.pk %}">Excluir</a>
+                        <td>
+                            <strong>{{ item.nome }}</strong>
+                            <small class="table-subline">{{ item.codigo_item|default:"Sem código" }}</small>
+                        </td>
+                        <td>{{ item.quantidade|decimal_br }} {{ item.get_unidade_medida_display }}</td>
+                        <td class="money">{{ item.quantidade|decimal_br }} x {{ item.valor_unitario|brl }}</td>
+                        <td>
+                            <div class="adjustment-badges">
+                                {% if item.desconto_valor > 0 or item.desconto_percentual > 0 %}
+                                    <span class="badge badge-warning">Desconto</span>
+                                {% endif %}
+                                {% if item.acrescimo_valor > 0 or item.acrescimo_percentual > 0 %}
+                                    <span class="badge badge-info">Acréscimo</span>
+                                {% endif %}
+                                {% if item.desconto_valor == 0 and item.desconto_percentual == 0 and item.acrescimo_valor == 0 and item.acrescimo_percentual == 0 %}
+                                    <span class="badge">Sem ajuste</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="money">{{ item.subtotal|brl }}</td>
+                        {% if user.pode_gerenciar_orcamentos %}
+                            <td class="actions-col">
+                                <div class="actions-stack">
+                                    <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}{% querystring item_edit=item.pk %}#painel-item-edicao">Editar</a>
+                                    <form method="post" action="{% url 'orcamentos:item_duplicar' orcamento.pk item.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="item_q" value="{{ item_q }}">
+                                        <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
+                                        <input type="hidden" name="item_sort" value="{{ item_sort }}">
+                                        <button class="btn btn-primary" type="submit">Duplicar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        {% endif %}
+                    </tr>
+                    <tr class="item-row-detail is-hidden" data-row-detail="item-{{ item.pk }}">
+                        <td colspan="{% if user.pode_gerenciar_orcamentos %}8{% else %}7{% endif %}">
+                            <div class="item-row-card">
+                                <div class="item-row-card-grid">
+                                    <div>
+                                        <span class="preview-label">Descrição</span>
+                                        <p>{{ item.descricao|default:"Sem descrição complementar." }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="preview-label">Ajustes detalhados</span>
+                                        <p>Desconto: {{ item.desconto_valor|brl }} + {{ item.desconto_percentual|percentual_br }}</p>
+                                        <p>Acréscimo: {{ item.acrescimo_valor|brl }} + {{ item.acrescimo_percentual|percentual_br }}</p>
+                                    </div>
+                                    <div>
+                                        <span class="preview-label">Observações</span>
+                                        <p>{{ item.observacoes|default:"Sem observações." }}</p>
+                                    </div>
+                                </div>
+
+                                {% if user.pode_gerenciar_orcamentos %}
+                                    <div class="actions-stack" style="margin-top: 1rem;">
+                                        <form method="post" action="{% url 'orcamentos:item_mover' orcamento.pk item.pk 'cima' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="item_q" value="{{ item_q }}">
+                                            <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
+                                            <input type="hidden" name="item_sort" value="{{ item_sort }}">
+                                            <button class="btn btn-secondary" type="submit">Subir</button>
+                                        </form>
+                                        <form method="post" action="{% url 'orcamentos:item_mover' orcamento.pk item.pk 'baixo' %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="item_q" value="{{ item_q }}">
+                                            <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
+                                            <input type="hidden" name="item_sort" value="{{ item_sort }}">
+                                            <button class="btn btn-secondary" type="submit">Descer</button>
+                                        </form>
+                                        <form method="post" action="{% url 'orcamentos:item_duplicar_editar' orcamento.pk item.pk %}">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="item_q" value="{{ item_q }}">
+                                            <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
+                                            <input type="hidden" name="item_sort" value="{{ item_sort }}">
+                                            <button class="btn btn-primary" type="submit">Duplicar e editar</button>
+                                        </form>
+                                        <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}{% querystring item_edit=item.pk %}#painel-item-edicao">Editar neste painel</a>
+                                        <a class="btn btn-danger" href="{% url 'orcamentos:item_excluir' orcamento.pk item.pk %}{% querystring %}">Excluir</a>
+                                    </div>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

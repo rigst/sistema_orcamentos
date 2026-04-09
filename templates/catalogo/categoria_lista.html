@@ -1,44 +1,70 @@
 {% extends "base.html" %}
+{% load querystring %}
 
 {% block title %}Categorias{% endblock %}
 
 {% block content %}
-    <h2>Categorias de itens</h2>
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>Categorias de itens</h2>
+            <p>Organize o catálogo em grupos para facilitar busca e preenchimento.</p>
+        </div>
+        <div class="inline-actions">
+            {% if user.pode_gerenciar_catalogo %}
+                <a class="btn btn-primary" href="{% url 'catalogo:categoria_criar' %}">Nova categoria</a>
+            {% endif %}
+            <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}">Ver itens</a>
+        </div>
+    </div>
 
-    <p>
-        <a href="{% url 'catalogo:categoria_criar' %}">Nova categoria</a> |
-        <a href="{% url 'catalogo:item_lista' %}">Ver itens</a>
-    </p>
+    <div class="panel">
+        <form method="get" class="filters-form">
+            <input type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
+            <select name="ativo">
+                <option value="">Todas</option>
+                <option value="ativas" {% if ativo == "ativas" %}selected{% endif %}>Ativas</option>
+                <option value="inativas" {% if ativo == "inativas" %}selected{% endif %}>Inativas</option>
+            </select>
+            <select name="sort">
+                <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
+                <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
+            </select>
+            <button class="btn btn-secondary" type="submit">Buscar</button>
+        </form>
 
-    <form method="get">
-        <input type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
-        <button type="submit">Buscar</button>
-    </form>
+        {% if categorias %}
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Ativa</th>
+                            <th class="actions-col">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for categoria in categorias %}
+                            <tr>
+                                <td>{{ categoria.nome }}</td>
+                                <td>{% if categoria.ativo %}Sim{% else %}Não{% endif %}</td>
+                                <td class="actions-col">
+                                    {% if user.pode_gerenciar_catalogo %}
+                                        <a class="btn btn-secondary" href="{% url 'catalogo:categoria_editar' categoria.pk %}">Editar</a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="empty-state">Nenhuma categoria encontrada.</p>
+        {% endif %}
 
-    <hr>
-
-    {% if categorias %}
-        <table border="1" cellpadding="6" cellspacing="0">
-            <thead>
-                <tr>
-                    <th>Nome</th>
-                    <th>Ativa</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for categoria in categorias %}
-                    <tr>
-                        <td>{{ categoria.nome }}</td>
-                        <td>{% if categoria.ativo %}Sim{% else %}Não{% endif %}</td>
-                        <td>
-                            <a href="{% url 'catalogo:categoria_editar' categoria.pk %}">Editar</a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p>Nenhuma categoria encontrada.</p>
-    {% endif %}
+        {% include "partials/pagination.html" with page_obj=page_obj %}
+    </div>
+</section>
 {% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load br_format %}
+
+{% block title %}Relatório do Orçamento{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>Relatório do orçamento {{ orcamento.numero }}</h2>
+            <p>Exporte um documento profissional em PDF ou Excel com base no estado atual do orçamento.</p>
+        </div>
+        <div class="inline-actions">
+            <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Voltar ao orçamento</a>
+        </div>
+    </div>
+
+    <div class="report-status-card report-status-{{ alerta_status.nivel }}">
+        <strong>{{ alerta_status.titulo }}</strong>
+        <p>{{ alerta_status.detalhe }}</p>
+    </div>
+
+    <div class="editor-grid">
+        <div class="panel">
+            <h3>Resumo do documento</h3>
+            {% if configuracao and configuracao.logo %}
+                <div class="report-logo-card">
+                    <img src="{{ configuracao.logo.url }}" alt="Logo da empresa" class="report-logo">
+                </div>
+            {% endif %}
+            <div class="report-summary-grid">
+                <div>
+                    <span class="preview-label">Cliente</span>
+                    <p>{{ orcamento.cliente }}</p>
+                </div>
+                <div>
+                    <span class="preview-label">Status</span>
+                    <p>{{ orcamento.get_status_display }}</p>
+                </div>
+                <div>
+                    <span class="preview-label">Emissão</span>
+                    <p>{{ orcamento.data_emissao }}</p>
+                </div>
+                <div>
+                    <span class="preview-label">Validade</span>
+                    <p>{{ orcamento.validade_em|default:"-" }}</p>
+                </div>
+                <div>
+                    <span class="preview-label">Subtotal</span>
+                    <p class="money">{{ orcamento.subtotal_itens|brl }}</p>
+                </div>
+                <div>
+                    <span class="preview-label">Total final</span>
+                    <p class="money">{{ orcamento.total_final|brl }}</p>
+                </div>
+            </div>
+
+            {% if configuracao %}
+                <div class="report-meta-card">
+                    <span class="preview-label">Cabeçalho da empresa</span>
+                    <p>{{ configuracao.nome_empresa }}</p>
+                    <small>{{ configuracao.cidade }}{% if configuracao.estado %}/{{ configuracao.estado }}{% endif %}</small>
+                </div>
+            {% else %}
+                <div class="report-status-card report-status-warning">
+                    <strong>Configuração da empresa não encontrada</strong>
+                    <p>O relatório será gerado sem cabeçalho institucional completo. Cadastre os dados da empresa para um resultado mais profissional.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <aside class="editor-sidebar">
+            <div class="panel">
+                <h3>Exportar</h3>
+                <p>Escolha o formato conforme o uso do documento.</p>
+                <div class="report-export-list">
+                    <a class="btn btn-primary" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
+                    <small>Apresentação pronta para envio e impressão.</small>
+                    <a class="btn btn-primary" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>
+                    <small>Planilha para análise, conferência e manipulação comercial.</small>
+                </div>
+            </div>
+        </aside>
+    </div>
+</section>
+{% endblock %}

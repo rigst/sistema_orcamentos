@@ -1,10 +1,15 @@
 from django.contrib import admin
 
+from core.admin_permissions import PerfilAdminPermissionMixin
 from .models import CategoriaItem, ItemCatalogo
 
 
 @admin.register(CategoriaItem)
-class CategoriaItemAdmin(admin.ModelAdmin):
+class CategoriaItemAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+    capability_view = "pode_visualizar_catalogo"
+    capability_add = "pode_gerenciar_catalogo"
+    capability_change = "pode_gerenciar_catalogo"
+    capability_delete = "pode_gerenciar_catalogo"
     list_display = ("nome", "ativo", "criado_em")
     list_filter = ("ativo",)
     search_fields = ("nome",)
@@ -12,7 +17,11 @@ class CategoriaItemAdmin(admin.ModelAdmin):
 
 
 @admin.register(ItemCatalogo)
-class ItemCatalogoAdmin(admin.ModelAdmin):
+class ItemCatalogoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+    capability_view = "pode_visualizar_catalogo"
+    capability_add = "pode_gerenciar_catalogo"
+    capability_change = "pode_gerenciar_catalogo"
+    capability_delete = "pode_gerenciar_catalogo"
     list_display = (
         "codigo",
         "nome",

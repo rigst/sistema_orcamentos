@@ -1,9 +1,15 @@
 from django.contrib import admin
+
+from core.admin_permissions import PerfilAdminPermissionMixin
 from .models import Cliente
 
 
 @admin.register(Cliente)
-class ClienteAdmin(admin.ModelAdmin):
+class ClienteAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+    capability_view = "pode_visualizar_clientes"
+    capability_add = "pode_gerenciar_clientes"
+    capability_change = "pode_gerenciar_clientes"
+    capability_delete = "pode_gerenciar_clientes"
     list_display = (
         "nome_razao_social",
         "tipo_pessoa",

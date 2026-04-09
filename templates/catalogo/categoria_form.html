@@ -3,15 +3,24 @@
 {% block title %}{{ titulo }}{% endblock %}
 
 {% block content %}
-    <h2>{{ titulo }}</h2>
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>{{ titulo }}</h2>
+        </div>
+        <div>
+            <a class="btn btn-secondary" href="{% url 'catalogo:categoria_lista' %}">Voltar para categorias</a>
+        </div>
+    </div>
 
-    <p>
-        <a href="{% url 'catalogo:categoria_lista' %}">Voltar para categorias</a>
-    </p>
-
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Salvar</button>
-    </form>
+    <div class="panel form-panel">
+        <form method="post" data-unsaved-warning="1">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="inline-actions">
+                <button class="btn btn-primary" type="submit">Salvar</button>
+            </div>
+        </form>
+    </div>
+</section>
 {% endblock %}

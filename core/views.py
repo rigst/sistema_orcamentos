@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count
+from django.db.models import Count, DecimalField, Sum, Value
+from django.db.models.functions import Coalesce
 from django.shortcuts import render
 
 from orcamentos.models import Orcamento
@@ -7,10 +10,23 @@ from orcamentos.models import Orcamento
 
 @login_required
 def dashboard(request):
-    ultimos_orcamentos = Orcamento.objects.select_related("cliente").order_by("-criado_em")[:5]
+    periodo = request.GET.get("periodo", "30")
+    ultimos_orcamentos = Orcamento.objects.select_related("cliente").order_by("-criado_em")
+    orcamentos = Orcamento.objects.all()
+
+    if periodo != "todos":
+        try:
+            dias = int(periodo)
+        except (TypeError, ValueError):
+            dias = 30
+        from django.utils import timezone
+
+        inicio = timezone.localdate() - timedelta(days=dias)
+        orcamentos = orcamentos.filter(data_emissao__gte=inicio)
+        ultimos_orcamentos = ultimos_orcamentos.filter(data_emissao__gte=inicio)
 
     resumo_status = (
-        Orcamento.objects.values("status")
+        orcamentos.values("status")
         .annotate(total=Count("id"))
     )
 
@@ -25,8 +41,20 @@ def dashboard(request):
         if item["status"] in status_map:
             status_map[item["status"]] = item["total"]
 
+    indicadores = orcamentos.aggregate(
+        total_orcamentos=Count("id"),
+        valor_total=Coalesce(Sum("total_final"), Value(0), output_field=DecimalField(max_digits=14, decimal_places=2)),
+    )
+    indicadores["valor_aprovado"] = orcamentos.filter(status="aprovado").aggregate(
+        total=Coalesce(Sum("total_final"), Value(0), output_field=DecimalField(max_digits=14, decimal_places=2))
+    )["total"]
+    indicadores["pendentes"] = orcamentos.filter(status__in=["rascunho", "em_elaboracao", "enviado"]).count()
+    ultimos_orcamentos = ultimos_orcamentos[:8]
+
     context = {
         "ultimos_orcamentos": ultimos_orcamentos,
         "status_map": status_map,
+        "indicadores": indicadores,
+        "periodo": periodo,
     }
     return render(request, "core/dashboard.html", context)

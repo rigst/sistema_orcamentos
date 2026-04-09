@@ -1,15 +1,24 @@
 from django.contrib import admin
 
+from core.admin_permissions import PerfilAdminPermissionMixin
 from .models import ItemOrcamento, Orcamento
 
 
-class ItemOrcamentoInline(admin.TabularInline):
+class ItemOrcamentoInline(PerfilAdminPermissionMixin, admin.TabularInline):
     model = ItemOrcamento
     extra = 1
+    capability_view = "pode_visualizar_orcamentos"
+    capability_add = "pode_gerenciar_orcamentos"
+    capability_change = "pode_gerenciar_orcamentos"
+    capability_delete = "pode_gerenciar_orcamentos"
 
 
 @admin.register(Orcamento)
-class OrcamentoAdmin(admin.ModelAdmin):
+class OrcamentoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+    capability_view = "pode_visualizar_orcamentos"
+    capability_add = "pode_gerenciar_orcamentos"
+    capability_change = "pode_gerenciar_orcamentos"
+    capability_delete = "pode_gerenciar_orcamentos"
     list_display = (
         "numero",
         "cliente",
@@ -25,7 +34,11 @@ class OrcamentoAdmin(admin.ModelAdmin):
 
 
 @admin.register(ItemOrcamento)
-class ItemOrcamentoAdmin(admin.ModelAdmin):
+class ItemOrcamentoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+    capability_view = "pode_visualizar_orcamentos"
+    capability_add = "pode_gerenciar_orcamentos"
+    capability_change = "pode_gerenciar_orcamentos"
+    capability_delete = "pode_gerenciar_orcamentos"
     list_display = (
         "orcamento",
         "ordem",

@@ -1,21 +1,51 @@
-from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
+from core.permissions import require_capability
+from core.query import paginate_queryset
+from orcamentos.models import Orcamento
 from .forms import ConfiguracaoEmpresaForm
+from .exporters import gerar_excel_orcamento, gerar_pdf_orcamento, obter_alerta_status
 from .models import ConfiguracaoEmpresa
 
 
-@login_required
+@require_capability("pode_visualizar_relatorios")
 def configuracao_lista(request):
+    busca = request.GET.get("q", "").strip()
+    ordenar = request.GET.get("sort", "recentes")
     configuracoes = ConfiguracaoEmpresa.objects.all()
+    if busca:
+        configuracoes = configuracoes.filter(
+            Q(nome_empresa__icontains=busca)
+            | Q(nome_fantasia__icontains=busca)
+            | Q(email__icontains=busca)
+            | Q(cidade__icontains=busca)
+        )
+    ordenacoes = {
+        "nome": "nome_empresa",
+        "cidade": "cidade",
+        "recentes": "-atualizado_em",
+    }
+    configuracoes = configuracoes.order_by(ordenacoes.get(ordenar, "-atualizado_em"))
+    page_obj = paginate_queryset(request, configuracoes, per_page=10)
     return render(
         request,
         "relatorios/configuracao_lista.html",
-        {"configuracoes": configuracoes},
+        {
+            "configuracoes": page_obj,
+            "page_obj": page_obj,
+            "busca": busca,
+            "sort": ordenar,
+        },
     )
 
 
-@login_required
+def obter_configuracao_ativa():
+    return ConfiguracaoEmpresa.objects.order_by("-atualizado_em").first()
+
+
+@require_capability("pode_gerenciar_relatorios")
 def configuracao_criar(request):
     if request.method == "POST":
         form = ConfiguracaoEmpresaForm(request.POST, request.FILES)
@@ -32,7 +62,7 @@ def configuracao_criar(request):
     )
 
 
-@login_required
+@require_capability("pode_gerenciar_relatorios")
 def configuracao_editar(request, pk):
     configuracao = get_object_or_404(ConfiguracaoEmpresa, pk=pk)
 
@@ -49,3 +79,43 @@ def configuracao_editar(request, pk):
         "relatorios/configuracao_form.html",
         {"form": form, "titulo": "Editar configuração da empresa", "configuracao": configuracao},
     )
+
+
+@require_capability("pode_visualizar_orcamentos")
+def orcamento_relatorio_central(request, pk):
+    orcamento = get_object_or_404(Orcamento.objects.select_related("cliente"), pk=pk)
+    configuracao = obter_configuracao_ativa()
+    alerta_status = obter_alerta_status(orcamento)
+    return render(
+        request,
+        "relatorios/orcamento_central.html",
+        {
+            "orcamento": orcamento,
+            "configuracao": configuracao,
+            "alerta_status": alerta_status,
+        },
+    )
+
+
+@require_capability("pode_visualizar_orcamentos")
+def orcamento_exportar_excel(request, pk):
+    orcamento = get_object_or_404(Orcamento.objects.select_related("cliente"), pk=pk)
+    configuracao = obter_configuracao_ativa()
+    alerta_status = obter_alerta_status(orcamento)
+    conteudo = gerar_excel_orcamento(orcamento, configuracao, alerta_status)
+
+    response = HttpResponse(conteudo, content_type="application/vnd.ms-excel")
+    response["Content-Disposition"] = f'attachment; filename="orcamento-{orcamento.numero}.xls"'
+    return response
+
+
+@require_capability("pode_visualizar_orcamentos")
+def orcamento_exportar_pdf(request, pk):
+    orcamento = get_object_or_404(Orcamento.objects.select_related("cliente"), pk=pk)
+    configuracao = obter_configuracao_ativa()
+    alerta_status = obter_alerta_status(orcamento)
+    conteudo = gerar_pdf_orcamento(orcamento, configuracao, alerta_status)
+
+    response = HttpResponse(conteudo, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="orcamento-{orcamento.numero}.pdf"'
+    return response

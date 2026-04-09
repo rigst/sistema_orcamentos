@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load br_format %}
 
 {% block title %}Dashboard{% endblock %}
 
@@ -7,7 +8,38 @@
     <div class="section-heading">
         <div>
             <h2>Dashboard</h2>
-            <p>Resumo rápido do sistema e dos orçamentos mais recentes.</p>
+            <p>Resumo operacional, financeiro e comercial dos orçamentos recentes.</p>
+        </div>
+        <div class="inline-actions">
+            <form method="get" class="filters-form compact-filters">
+                <select name="periodo">
+                    <option value="7" {% if periodo == "7" %}selected{% endif %}>Últimos 7 dias</option>
+                    <option value="30" {% if periodo == "30" %}selected{% endif %}>Últimos 30 dias</option>
+                    <option value="90" {% if periodo == "90" %}selected{% endif %}>Últimos 90 dias</option>
+                    <option value="todos" {% if periodo == "todos" %}selected{% endif %}>Todo o período</option>
+                </select>
+                <button class="btn btn-secondary" type="submit">Aplicar</button>
+            </form>
+            <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Ir para orçamentos</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="label">Orçamentos no período</span>
+            <span class="value">{{ indicadores.total_orcamentos }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="label">Valor total</span>
+            <span class="value">{{ indicadores.valor_total|brl }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="label">Valor aprovado</span>
+            <span class="value">{{ indicadores.valor_aprovado|brl }}</span>
+        </div>
+        <div class="stat-card">
+            <span class="label">Pendentes</span>
+            <span class="value">{{ indicadores.pendentes }}</span>
         </div>
     </div>
 
@@ -34,7 +66,7 @@
         <div class="section-heading" style="margin-bottom: 1rem;">
             <div>
                 <h3>Últimos orçamentos</h3>
-                <p>Os 5 mais recentes criados no sistema.</p>
+                <p>Os 8 mais recentes criados no sistema.</p>
             </div>
             <div>
                 <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Ver todos</a>
@@ -51,6 +83,7 @@
                             <th>Status</th>
                             <th>Data</th>
                             <th>Total</th>
+                            <th class="actions-col">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -64,7 +97,13 @@
                                     </span>
                                 </td>
                                 <td>{{ orcamento.data_emissao }}</td>
-                                <td class="money">R$ {{ orcamento.total_final }}</td>
+                                <td class="money">{{ orcamento.total_final|brl }}</td>
+                                <td class="actions-col">
+                                    <div class="actions-stack">
+                                        <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Abrir</a>
+                                        <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">Relatórios</a>
+                                    </div>
+                                </td>
                             </tr>
                         {% endfor %}
                     </tbody>

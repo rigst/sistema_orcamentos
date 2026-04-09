@@ -4,15 +4,24 @@
 
 {% block content %}
 <section>
+    <div class="section-heading">
+        <div>
+            <h2>Excluir item</h2>
+            <p>Confirme a remoção do item antes de atualizar o orçamento.</p>
+        </div>
+        <div class="inline-actions">
+            <a class="btn btn-secondary" href="{{ retorno_edicao_url }}">Voltar</a>
+        </div>
+    </div>
+
     <div class="panel">
-        <h2>Excluir item</h2>
         <p>Tem certeza que deseja excluir o item <strong>{{ item.nome }}</strong> do orçamento <strong>{{ orcamento.numero }}</strong>?</p>
 
         <form method="post">
             {% csrf_token %}
             <div class="inline-actions" style="margin-top: 1rem;">
-                <button class="btn btn-danger" type="submit">Confirmar exclusão</button>
-                <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">Cancelar</a>
+                <button class="btn btn-primary" type="submit">Confirmar exclusão</button>
+                <a class="btn btn-secondary" href="{{ retorno_edicao_url }}">Cancelar</a>
             </div>
         </form>
     </div>

@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Sistema de Orçamentos{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </head>
 <body>
     <header class="site-header">
@@ -16,12 +15,20 @@
 
                 {% if user.is_authenticated %}
                     <ul class="nav-links">
-                        <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-                        <li><a href="{% url 'clientes:lista' %}">Clientes</a></li>
-                        <li><a href="{% url 'catalogo:categoria_lista' %}">Categorias</a></li>
-                        <li><a href="{% url 'catalogo:item_lista' %}">Itens</a></li>
-                        <li><a href="{% url 'relatorios:configuracao_lista' %}">Empresa</a></li>
-                        <li><a href="{% url 'orcamentos:lista' %}">Orçamentos</a></li>
+                        <li><a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
+                        {% if user.pode_visualizar_clientes %}
+                            <li><a href="{% url 'clientes:lista' %}" {% if request.resolver_match.namespace == 'clientes' %}class="active"{% endif %}>Clientes</a></li>
+                        {% endif %}
+                        {% if user.pode_visualizar_catalogo %}
+                            <li><a href="{% url 'catalogo:categoria_lista' %}" {% if request.resolver_match.namespace == 'catalogo' %}class="active"{% endif %}>Categorias</a></li>
+                            <li><a href="{% url 'catalogo:item_lista' %}" {% if request.resolver_match.namespace == 'catalogo' %}class="active"{% endif %}>Itens</a></li>
+                        {% endif %}
+                        {% if user.pode_visualizar_relatorios %}
+                            <li><a href="{% url 'relatorios:configuracao_lista' %}" {% if request.resolver_match.namespace == 'relatorios' %}class="active"{% endif %}>Empresa</a></li>
+                        {% endif %}
+                        {% if user.pode_visualizar_orcamentos %}
+                            <li><a href="{% url 'orcamentos:lista' %}" {% if request.resolver_match.namespace == 'orcamentos' %}class="active"{% endif %}>Orçamentos</a></li>
+                        {% endif %}
                         <li>
                             <form action="{% url 'logout' %}" method="post" style="display:inline;">
                                 {% csrf_token %}
@@ -47,5 +54,296 @@
 
         {% block content %}{% endblock %}
     </main>
+
+    <script>
+    (() => {
+      const normalizeDecimal = (value) => {
+        const raw = String(value || "").replace(/[^\d,.-]/g, "").trim();
+        if (!raw) return "";
+
+        const negative = raw.startsWith("-") ? "-" : "";
+        const cleaned = raw.replace(/-/g, "");
+        const lastComma = cleaned.lastIndexOf(",");
+        const lastDot = cleaned.lastIndexOf(".");
+        const decimalSeparatorIndex = Math.max(lastComma, lastDot);
+
+        if (decimalSeparatorIndex === -1) {
+          return negative + cleaned.replace(/[.,]/g, "");
+        }
+
+        const integerPart = cleaned.slice(0, decimalSeparatorIndex).replace(/[.,]/g, "");
+        const decimalPart = cleaned.slice(decimalSeparatorIndex + 1).replace(/[.,]/g, "");
+        return `${negative}${integerPart || "0"},${decimalPart}`;
+      };
+
+      const formatDecimal = (value, places = 2) => {
+        const normalized = normalizeDecimal(value);
+        if (!normalized) return "";
+        const numeric = Number(normalized.replace(/\./g, "").replace(",", "."));
+        if (!Number.isFinite(numeric)) return value;
+        return new Intl.NumberFormat("pt-BR", {
+          minimumFractionDigits: places,
+          maximumFractionDigits: places,
+        }).format(numeric);
+      };
+
+      const formatCurrency = (value, places = 2) => {
+        const normalized = normalizeDecimal(value);
+        if (!normalized) return "";
+        const numeric = Number(normalized.replace(/\./g, "").replace(",", "."));
+        if (!Number.isFinite(numeric)) return value;
+        return new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+          minimumFractionDigits: places,
+          maximumFractionDigits: places,
+        }).format(numeric);
+      };
+
+      const bindDecimalInput = (input) => {
+        if (!input || input.dataset.brBound === "1") return;
+        input.dataset.brBound = "1";
+
+        const isCurrency = input.dataset.brCurrency === "1";
+        const places = Number.parseInt(input.dataset.decimalPlaces || "2", 10);
+
+        const applyDisplayFormat = () => {
+          if (!input.value) return;
+          input.value = isCurrency ? formatCurrency(input.value, places) : formatDecimal(input.value, places);
+        };
+
+        const applyEditFormat = () => {
+          if (!input.value) return;
+          input.value = normalizeDecimal(input.value);
+        };
+
+        input.addEventListener("focus", applyEditFormat);
+        input.addEventListener("blur", applyDisplayFormat);
+
+        applyDisplayFormat();
+      };
+
+      const maskCpfCnpj = (value) => {
+        const digits = String(value || "").replace(/\D/g, "").slice(0, 14);
+        if (digits.length <= 11) {
+          if (digits.length <= 3) return digits;
+          if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+          if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+          return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+        }
+        if (digits.length <= 2) return digits;
+        if (digits.length <= 5) return `${digits.slice(0, 2)}.${digits.slice(2)}`;
+        if (digits.length <= 8) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5)}`;
+        if (digits.length <= 12) return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8)}`;
+        return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}/${digits.slice(8, 12)}-${digits.slice(12)}`;
+      };
+
+      const maskPhone = (value) => {
+        const digits = String(value || "").replace(/\D/g, "").slice(0, 11);
+        if (digits.length <= 2) return digits;
+        if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+        if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+        return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+      };
+
+      const maskCep = (value) => {
+        const digits = String(value || "").replace(/\D/g, "").slice(0, 8);
+        if (digits.length <= 5) return digits;
+        return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+      };
+
+      const bindMaskedInput = (input) => {
+        if (!input || input.dataset.brMaskBound === "1") return;
+        input.dataset.brMaskBound = "1";
+
+        const applyMask = () => {
+          if (input.dataset.brMask === "cpf_cnpj") {
+            input.value = maskCpfCnpj(input.value);
+            return;
+          }
+          if (input.dataset.brMask === "phone") {
+            input.value = maskPhone(input.value);
+            return;
+          }
+          if (input.dataset.brMask === "cep") {
+            input.value = maskCep(input.value);
+          }
+        };
+
+        input.addEventListener("input", applyMask);
+        input.addEventListener("blur", applyMask);
+        applyMask();
+      };
+
+      const initDecimalInputs = (scope = document) => {
+        scope.querySelectorAll("input[data-br-decimal='1']").forEach(bindDecimalInput);
+        scope.querySelectorAll("input[data-br-mask]").forEach(bindMaskedInput);
+      };
+
+      const serializeForm = (form) => {
+        const formData = new FormData(form);
+        const pairs = [];
+        for (const [key, value] of formData.entries()) {
+          if (value instanceof File) {
+            pairs.push([key, `file:${value.name}:${value.size}:${value.lastModified}`]);
+          } else {
+            pairs.push([key, String(value)]);
+          }
+        }
+        pairs.sort((a, b) => {
+          const keyCompare = a[0].localeCompare(b[0]);
+          if (keyCompare !== 0) return keyCompare;
+          return a[1].localeCompare(b[1]);
+        });
+        return JSON.stringify(pairs);
+      };
+
+      const bindUnsavedWarning = (form) => {
+        if (!form || form.dataset.unsavedBound === "1") return;
+        form.dataset.unsavedBound = "1";
+
+        const refreshSnapshot = () => {
+          form.dataset.initialState = serializeForm(form);
+          form.dataset.isDirty = "0";
+        };
+
+        const evaluateDirty = () => {
+          form.dataset.isDirty = serializeForm(form) === form.dataset.initialState ? "0" : "1";
+        };
+
+        form.addEventListener("input", evaluateDirty);
+        form.addEventListener("change", evaluateDirty);
+        form.addEventListener("submit", () => {
+          form.dataset.isSubmitting = "1";
+        });
+        form.addEventListener("codex:mark-clean", refreshSnapshot);
+
+        refreshSnapshot();
+      };
+
+      const initUnsavedWarnings = (scope = document) => {
+        scope.querySelectorAll("form[data-unsaved-warning='1']").forEach(bindUnsavedWarning);
+      };
+
+      const bindDraftPersistence = (form) => {
+        if (!form || form.dataset.draftBound === "1" || !form.dataset.draftKey) return;
+        form.dataset.draftBound = "1";
+        const storageKey = `codex-draft:${form.dataset.draftKey}`;
+        const statusTarget = form.dataset.draftStatusTarget
+          ? document.querySelector(form.dataset.draftStatusTarget)
+          : null;
+        let saveTimer = null;
+
+        const setStatus = (message) => {
+          if (!statusTarget) return;
+          statusTarget.textContent = message;
+        };
+
+        const capture = () => {
+          const payload = {};
+          form.querySelectorAll("input, select, textarea").forEach((field) => {
+            if (!field.name || field.type === "password" || field.type === "hidden" || field.disabled) return;
+            if (field.type === "checkbox") {
+              payload[field.name] = field.checked;
+              return;
+            }
+            if (field.type === "radio") {
+              if (field.checked) payload[field.name] = field.value;
+              return;
+            }
+            payload[field.name] = field.value;
+          });
+          return payload;
+        };
+
+        const restore = () => {
+          try {
+            const raw = localStorage.getItem(storageKey);
+            if (!raw) return;
+            const payload = JSON.parse(raw);
+            Object.entries(payload).forEach(([name, value]) => {
+              const field = form.querySelector(`[name="${CSS.escape(name)}"]`);
+              if (!field) return;
+              if (field.type === "checkbox") {
+                field.checked = Boolean(value);
+              } else if (field.type === "radio") {
+                const selected = form.querySelector(`[name="${CSS.escape(name)}"][value="${CSS.escape(String(value))}"]`);
+                if (selected) selected.checked = true;
+              } else {
+                field.value = value;
+              }
+            });
+            setStatus("Rascunho restaurado automaticamente.");
+            form.dispatchEvent(new Event("change", { bubbles: true }));
+            document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: form } }));
+          } catch (error) {
+            localStorage.removeItem(storageKey);
+          }
+        };
+
+        const persist = () => {
+          localStorage.setItem(storageKey, JSON.stringify(capture()));
+          setStatus("Rascunho salvo neste navegador.");
+        };
+
+        const schedulePersist = () => {
+          clearTimeout(saveTimer);
+          saveTimer = setTimeout(persist, 350);
+        };
+
+        const clearDraft = () => {
+          localStorage.removeItem(storageKey);
+          if (statusTarget && form.dataset.keepDraftMessage !== "1") {
+            statusTarget.textContent = "";
+          }
+        };
+
+        restore();
+        form.addEventListener("input", schedulePersist);
+        form.addEventListener("change", schedulePersist);
+        form.addEventListener("submit", () => {
+          form.dataset.isSubmitting = "1";
+        });
+        form.addEventListener("codex:mark-clean", () => {
+          if (form.dataset.clearDraftOnSubmit === "1") {
+            clearDraft();
+          } else {
+            persist();
+          }
+          form.dataset.isSubmitting = "0";
+        });
+      };
+
+      const initDraftPersistence = (scope = document) => {
+        scope.querySelectorAll("form[data-draft-key]").forEach(bindDraftPersistence);
+      };
+
+      document.addEventListener("submit", (event) => {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        form.querySelectorAll("input[data-br-decimal='1']").forEach((input) => {
+          input.value = normalizeDecimal(input.value);
+        });
+      });
+
+      window.addEventListener("beforeunload", (event) => {
+        const dirtyForm = Array.from(document.querySelectorAll("form[data-unsaved-warning='1']")).find(
+          (form) => form.dataset.isDirty === "1" && form.dataset.isSubmitting !== "1"
+        );
+        if (!dirtyForm) return;
+        event.preventDefault();
+        event.returnValue = "";
+      });
+
+      initDecimalInputs();
+      initUnsavedWarnings();
+      initDraftPersistence();
+      document.addEventListener("codex:refresh-decimals", (event) => {
+        initDecimalInputs(event.detail?.scope || document);
+        initUnsavedWarnings(event.detail?.scope || document);
+        initDraftPersistence(event.detail?.scope || document);
+      });
+    })();
+    </script>
 </body>
 </html>
