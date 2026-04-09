@@ -206,3 +206,52 @@ class RelatoriosInativacaoTests(TestCase):
         self.assertContains(response, "Configuração inativada com sucesso.")
         configuracao.refresh_from_db()
         self.assertFalse(configuracao.ativo)
+
+
+class RelatoriosAtualizacaoTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="admin_edita_empresa",
+            password="senha-forte-123",
+            perfil="admin",
+        )
+        self.client.force_login(self.user)
+
+    def test_formulario_de_edicao_exibe_aviso_sobre_orcamentos_nao_enviados(self):
+        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Base")
+
+        response = self.client.get(reverse("relatorios:configuracao_editar", args=[configuracao.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "orçamentos ainda não enviados")
+
+    def test_edicao_de_configuracao_exibe_mensagem_de_propagacao(self):
+        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Base")
+
+        response = self.client.post(
+            reverse("relatorios:configuracao_editar", args=[configuracao.pk]),
+            {
+                "nome_empresa": "Empresa Atualizada",
+                "nome_fantasia": configuracao.nome_fantasia,
+                "cpf_cnpj": configuracao.cpf_cnpj,
+                "email": configuracao.email,
+                "telefone": configuracao.telefone,
+                "site": configuracao.site,
+                "cep": configuracao.cep,
+                "logradouro": configuracao.logradouro,
+                "numero": configuracao.numero,
+                "complemento": configuracao.complemento,
+                "bairro": configuracao.bairro,
+                "cidade": configuracao.cidade,
+                "estado": configuracao.estado,
+                "rodape_relatorio": configuracao.rodape_relatorio,
+                "ativo": "on",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Os relatórios e os orçamentos ainda não enviados passam a usar essas informações.",
+        )

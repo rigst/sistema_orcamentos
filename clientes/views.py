@@ -81,6 +81,10 @@ def cliente_editar(request, pk):
         form = ClienteForm(request.POST, instance=cliente)
         if form.is_valid():
             form.save()
+            messages.success(
+                request,
+                "Cliente atualizado. Os orçamentos ainda não enviados passam a usar os dados mais recentes deste cliente.",
+            )
             return redirect("clientes:lista")
     else:
         form = ClienteForm(instance=cliente)

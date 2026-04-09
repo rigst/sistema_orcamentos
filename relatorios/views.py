@@ -93,6 +93,10 @@ def configuracao_editar(request, pk):
         form = ConfiguracaoEmpresaForm(request.POST, request.FILES, instance=configuracao)
         if form.is_valid():
             form.save()
+            messages.success(
+                request,
+                "Dados da empresa atualizados. Os relatórios e os orçamentos ainda não enviados passam a usar essas informações.",
+            )
             return redirect("relatorios:configuracao_lista")
     else:
         form = ConfiguracaoEmpresaForm(instance=configuracao)

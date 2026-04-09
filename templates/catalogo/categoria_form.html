@@ -28,6 +28,12 @@
                 </div>
             {% endif %}
 
+            {% if categoria and not somente_leitura %}
+                <div class="form-note">
+                    <strong>Aviso:</strong> alterações nesta categoria atualizam os itens do catálogo vinculados e a apresentação dos itens em orçamentos ainda não enviados.
+                </div>
+            {% endif %}
+
             <fieldset {% if somente_leitura %}disabled{% endif %}>
                 <div class="form-grid">
                     <div>

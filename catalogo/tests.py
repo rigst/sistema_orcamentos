@@ -243,3 +243,41 @@ class CatalogoInativacaoTests(TestCase):
         self.assertContains(response, "Categoria inativada com sucesso.")
         categoria.refresh_from_db()
         self.assertFalse(categoria.ativo)
+
+
+class CatalogoAtualizacaoTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="admin_edita_categoria",
+            password="senha-forte-123",
+            perfil="admin",
+        )
+        self.client.force_login(self.user)
+
+    def test_formulario_de_edicao_de_categoria_exibe_aviso(self):
+        categoria = CategoriaItem.objects.create(nome="Categoria Base", descricao="Inicial")
+
+        response = self.client.get(reverse("catalogo:categoria_editar", args=[categoria.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "itens do catálogo vinculados")
+
+    def test_edicao_de_categoria_sem_troca_de_cor_exibe_mensagem_de_propagacao(self):
+        categoria = CategoriaItem.objects.create(nome="Categoria Base", descricao="Inicial")
+
+        response = self.client.post(
+            reverse("catalogo:categoria_editar", args=[categoria.pk]),
+            {
+                "nome": "Categoria Atualizada",
+                "descricao": "Descrição ajustada",
+                "cor": categoria.cor,
+                "ativo": "on",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Os itens do catálogo e os orçamentos ainda não enviados passam a usar os dados mais recentes desta categoria.",
+        )

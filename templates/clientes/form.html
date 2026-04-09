@@ -28,6 +28,12 @@
                 </div>
             {% endif %}
 
+            {% if cliente and not somente_leitura %}
+                <div class="form-note">
+                    <strong>Aviso:</strong> alterações neste cliente passam a valer para os orçamentos ainda não enviados vinculados a ele.
+                </div>
+            {% endif %}
+
             <fieldset {% if somente_leitura %}disabled{% endif %}>
                 <div class="form-grid">
                     <div>

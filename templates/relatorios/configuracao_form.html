@@ -34,6 +34,12 @@
                 </div>
             {% endif %}
 
+            {% if configuracao and not somente_leitura %}
+                <div class="form-note">
+                    <strong>Aviso:</strong> alterações nos dados da empresa passam a valer nos relatórios e nos orçamentos ainda não enviados.
+                </div>
+            {% endif %}
+
             <fieldset {% if somente_leitura %}disabled{% endif %}>
                 <div class="form-grid">
                     <div>

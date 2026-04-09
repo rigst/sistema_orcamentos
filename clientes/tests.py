@@ -180,3 +180,54 @@ class ClienteExclusaoTests(TestCase):
         self.assertContains(response, "Cliente reativado com sucesso.")
         cliente.refresh_from_db()
         self.assertTrue(cliente.ativo)
+
+
+class ClienteAtualizacaoTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="editor_clientes",
+            password="senha-forte-123",
+            perfil="orcamentista",
+        )
+        self.client.force_login(self.user)
+
+    def test_formulario_de_edicao_exibe_aviso_sobre_orcamentos_nao_enviados(self):
+        cliente = Cliente.objects.create(nome_razao_social="Cliente Base")
+
+        response = self.client.get(reverse("clientes:editar", args=[cliente.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "orçamentos ainda não enviados")
+
+    def test_edicao_de_cliente_exibe_mensagem_de_propagacao(self):
+        cliente = Cliente.objects.create(nome_razao_social="Cliente Base")
+
+        response = self.client.post(
+            reverse("clientes:editar", args=[cliente.pk]),
+            {
+                "tipo_pessoa": cliente.tipo_pessoa,
+                "nome_razao_social": "Cliente Atualizado",
+                "nome_fantasia": cliente.nome_fantasia,
+                "cpf_cnpj": cliente.cpf_cnpj,
+                "email": cliente.email,
+                "contato_responsavel": cliente.contato_responsavel,
+                "telefone": cliente.telefone,
+                "celular": cliente.celular,
+                "cep": cliente.cep,
+                "logradouro": cliente.logradouro,
+                "numero": cliente.numero,
+                "complemento": cliente.complemento,
+                "bairro": cliente.bairro,
+                "cidade": cliente.cidade,
+                "estado": cliente.estado,
+                "observacoes": cliente.observacoes,
+                "ativo": "on",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Os orçamentos ainda não enviados passam a usar os dados mais recentes deste cliente.",
+        )

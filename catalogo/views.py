@@ -83,6 +83,11 @@ def categoria_editar(request, pk):
                     request,
                     "Cor da categoria atualizada. Os itens do catálogo e os orçamentos ainda não enviados passam a usar a nova cor.",
                 )
+            else:
+                messages.success(
+                    request,
+                    "Categoria atualizada. Os itens do catálogo e os orçamentos ainda não enviados passam a usar os dados mais recentes desta categoria.",
+                )
             return redirect("catalogo:categoria_lista")
     else:
         form = CategoriaItemForm(instance=categoria)
