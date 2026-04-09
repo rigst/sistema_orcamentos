@@ -72,11 +72,17 @@ def categoria_visualizar(request, pk):
 @require_capability("pode_gerenciar_catalogo")
 def categoria_editar(request, pk):
     categoria = get_object_or_404(CategoriaItem, pk=pk)
+    cor_anterior = categoria.cor
 
     if request.method == "POST":
         form = CategoriaItemForm(request.POST, instance=categoria)
         if form.is_valid():
-            form.save()
+            categoria = form.save()
+            if categoria.cor != cor_anterior:
+                messages.success(
+                    request,
+                    "Cor da categoria atualizada. Os itens do catálogo e os orçamentos ainda não enviados passam a usar a nova cor.",
+                )
             return redirect("catalogo:categoria_lista")
     else:
         form = CategoriaItemForm(instance=categoria)

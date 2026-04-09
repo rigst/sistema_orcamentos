@@ -642,6 +642,25 @@ tr:hover td {
   box-shadow: var(--shadow);
 }
 
+.item-entry-panel-compact {
+  width: min(100%, 760px);
+  padding: 1rem 1.1rem;
+  border-radius: 20px;
+}
+
+.item-entry-panel-compact .section-heading h3,
+.item-entry-panel-compact .item-block-header h4 {
+  font-size: 0.96rem;
+}
+
+.item-entry-panel-compact .form-grid {
+  gap: 0.8rem;
+}
+
+.item-entry-panel-compact textarea {
+  min-height: 92px;
+}
+
 .item-builder {
   display: grid;
   gap: 1rem;
