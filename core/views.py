@@ -56,5 +56,31 @@ def dashboard(request):
         "status_map": status_map,
         "indicadores": indicadores,
         "periodo": periodo,
+        "saudacao_dashboard": f"Bom ter você por aqui, {request.user}.",
     }
     return render(request, "core/dashboard.html", context)
+
+
+@login_required
+def manual(request):
+    perfis = [
+        {
+            "nome": "Administrador",
+            "descricao": "Acompanha o sistema inteiro e gerencia clientes, catálogo, empresa, orçamentos e usuários.",
+        },
+        {
+            "nome": "Orçamentista",
+            "descricao": "Trabalha com clientes e orçamentos, consulta catálogo e empresa, e acompanha relatórios.",
+        },
+        {
+            "nome": "Visualizador",
+            "descricao": "Consulta informações do sistema sem editar cadastros nem movimentar orçamentos.",
+        },
+    ]
+    return render(
+        request,
+        "core/manual.html",
+        {
+            "perfis_manual": perfis,
+        },
+    )

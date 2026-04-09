@@ -326,7 +326,7 @@ class OrcamentoViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Fechar edição")
-        self.assertContains(response, "A edição acontece neste painel")
+        self.assertContains(response, "Salvar item")
 
     def test_item_pode_ser_duplicado_para_edicao(self):
         item = ItemOrcamento.objects.create(

@@ -14,12 +14,10 @@
             {% if user.pode_gerenciar_catalogo %}
                 <a class="btn btn-primary" href="{% url 'catalogo:item_criar' %}">Novo item</a>
             {% endif %}
-            <a class="btn btn-secondary" href="{% url 'catalogo:categoria_lista' %}">Ver categorias</a>
         </div>
     </div>
 
-    <div class="panel">
-        <form method="get" class="filters-form">
+    <form method="get" class="filters-form">
             <input type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
             <select name="categoria">
                 <option value="">Todas as categorias</option>
@@ -41,48 +39,49 @@
                 <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
             </select>
             <button class="btn btn-secondary" type="submit">Buscar</button>
-        </form>
+    </form>
 
-        {% if itens %}
-            <div class="table-wrap">
-                <table>
-                    <thead>
+    {% if itens %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Unidade</th>
+                        <th>Valor padrão</th>
+                        <th>Ativo</th>
+                        <th class="actions-col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
                         <tr>
-                            <th>Código</th>
-                            <th>Nome</th>
-                            <th>Categoria</th>
-                            <th>Unidade</th>
-                            <th>Valor padrão</th>
-                            <th>Ativo</th>
-                            <th class="actions-col">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in itens %}
-                            <tr>
-                                <td>{{ item.codigo }}</td>
-                                <td>{{ item.nome }}</td>
-                                <td>{{ item.categoria|default:"-" }}</td>
-                                <td>{{ item.get_unidade_medida_display }}</td>
+                            <td>{{ item.codigo }}</td>
+                            <td>{{ item.nome }}</td>
+                            <td>{{ item.categoria|default:"-" }}</td>
+                            <td>{{ item.get_unidade_medida_display }}</td>
                                 <td class="money">{{ item.valor_unitario_padrao|brl }}</td>
                                 <td>{% if item.ativo %}Sim{% else %}Não{% endif %}</td>
                                 <td class="actions-col">
-                                    {% if user.pode_gerenciar_catalogo %}
-                                        <a class="btn btn-secondary" href="{% url 'catalogo:item_editar' item.pk %}">Editar</a>
-                                    {% else %}
-                                        -
-                                    {% endif %}
+                                    <div class="actions-stack">
+                                        <a class="btn btn-secondary" href="{% url 'catalogo:item_visualizar' item.pk %}">Ver</a>
+                                        {% if user.pode_gerenciar_catalogo %}
+                                            <a class="btn btn-secondary" href="{% url 'catalogo:item_editar' item.pk %}">Editar</a>
+                                            <a class="btn {% if item.ativo %}btn-danger{% else %}btn-primary{% endif %}" href="{% url 'catalogo:item_excluir' item.pk %}">{% if item.ativo %}Inativar{% else %}Reativar{% endif %}</a>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="empty-state">Nenhum item encontrado.</p>
-        {% endif %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhum item encontrado.</p>
+    {% endif %}
 
-        {% include "partials/pagination.html" with page_obj=page_obj %}
-    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
 </section>
 {% endblock %}

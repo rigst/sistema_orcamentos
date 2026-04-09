@@ -30,19 +30,19 @@ class ConfiguracaoEmpresaForm(forms.ModelForm):
             "estado",
             "rodape_relatorio",
             "logo",
+            "ativo",
         ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["ativo"].widget = forms.HiddenInput()
+        self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
         self.fields["nome_empresa"].error_messages["required"] = "Informe o nome da empresa."
-        self.fields["nome_empresa"].help_text = "Obrigatório."
-        self.fields["cpf_cnpj"].help_text = "Opcional. Se informado, use CPF ou CNPJ em formato básico."
-        self.fields["telefone"].help_text = "Opcional. Informe com DDD."
-        self.fields["cep"].help_text = "Opcional. Informe 8 dígitos."
-        self.fields["estado"].help_text = "Opcional. Use a sigla da UF."
         configurar_campo_mascarado(self, "cpf_cnpj", "cpf_cnpj", placeholder="00.000.000/0000-00")
         configurar_campo_mascarado(self, "telefone", "phone", placeholder="(00) 00000-0000")
         configurar_campo_mascarado(self, "cep", "cep", placeholder="00000-000")
+        self.fields["estado"].widget.attrs["data-force-uppercase"] = "1"
+        self.fields["rodape_relatorio"].widget.attrs["rows"] = 3
 
     def clean_nome_empresa(self):
         valor = (self.cleaned_data.get("nome_empresa") or "").strip()

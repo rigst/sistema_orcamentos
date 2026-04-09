@@ -17,186 +17,176 @@
         </div>
     </div>
 
-    <div class="editor-grid">
-        <div>
-            <div class="panel form-panel">
-                <div class="section-heading" style="margin-bottom: 1rem;">
-                    <div>
-                        <h3>Dados do orçamento</h3>
-                        {% if modo_somente_leitura %}
-                            <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>
-                        {% else %}
-                            <p class="muted">Mantenha este bloco recolhido enquanto trabalha nos itens e expanda quando precisar rever os dados gerais.</p>
-                        {% endif %}
-                    </div>
-                    {% if not modo_somente_leitura %}
-                        <div class="inline-actions">
-                            <button class="btn btn-secondary" type="button" data-toggle-panel="orcamento-dados">Recolher dados</button>
-                        </div>
+    <div class="editor-shell">
+        <div class="form-panel">
+            <div class="section-heading section-heading-compact">
+                <div>
+                    <h3>Dados do orçamento</h3>
+                    {% if modo_somente_leitura %}
+                        <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>
                     {% endif %}
                 </div>
-
-                <div id="orcamento-draft-status" class="inline-feedback"></div>
-                <form method="post" data-collapsible-panel="orcamento-dados" data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
-                    {% csrf_token %}
-                    {% if form.non_field_errors %}
-                        <div class="form-errors">
-                            {% for error in form.non_field_errors %}
-                                <p>{{ error }}</p>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                    <fieldset {% if modo_somente_leitura %}disabled{% endif %}>
-                        <div class="form-grid">
-                            <div>
-                                <label for="{{ form.numero.id_for_label }}">Número</label>
-                                {{ form.numero }}
-                                {{ form.numero.errors }}
-                            </div>
-                            <div>
-                                <label for="{{ form.cliente.id_for_label }}">Cliente</label>
-                                {{ form.cliente }}
-                                {{ form.cliente.errors }}
-                            </div>
-
-                            <div class="full">
-                                <label for="{{ form.titulo.id_for_label }}">Título</label>
-                                {{ form.titulo }}
-                                {{ form.titulo.errors }}
-                            </div>
-
-                            <div class="full">
-                                <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial</label>
-                                {{ form.descricao_inicial }}
-                                {{ form.descricao_inicial.errors }}
-                            </div>
-
-                            <div class="full">
-                                <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais</label>
-                                {{ form.observacoes_gerais }}
-                                {{ form.observacoes_gerais.errors }}
-                            </div>
-
-                            <div>
-                                <label for="{{ form.status.id_for_label }}">Status</label>
-                                {{ form.status }}
-                                {{ form.status.errors }}
-                            </div>
-                            <div>
-                                <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
-                                {{ form.data_emissao }}
-                                {{ form.data_emissao.errors }}
-                            </div>
-
-                            <div>
-                                <label for="{{ form.validade_em.id_for_label }}">Validade</label>
-                                {{ form.validade_em }}
-                                {{ form.validade_em.errors }}
-                            </div>
-                            <div></div>
-
-                            <div>
-                                <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor</label>
-                                {{ form.desconto_global_valor }}
-                                {{ form.desconto_global_valor.errors }}
-                            </div>
-                            <div>
-                                <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %</label>
-                                {{ form.desconto_global_percentual }}
-                                {{ form.desconto_global_percentual.errors }}
-                            </div>
-
-                            <div>
-                                <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor</label>
-                                {{ form.acrescimo_global_valor }}
-                                {{ form.acrescimo_global_valor.errors }}
-                            </div>
-                            <div>
-                                <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %</label>
-                                {{ form.acrescimo_global_percentual }}
-                                {{ form.acrescimo_global_percentual.errors }}
-                            </div>
-
-                            <div class="full">
-                                <div class="checkbox-row">
-                                    {{ form.mostrar_ajustes_no_relatorio }}
-                                    <label for="{{ form.mostrar_ajustes_no_relatorio.id_for_label }}">
-                                        Mostrar descontos e acréscimos no relatório do cliente
-                                    </label>
-                                </div>
-                                {{ form.mostrar_ajustes_no_relatorio.errors }}
-                            </div>
-                        </div>
-                    </fieldset>
-
-                    {% if not modo_somente_leitura %}
-                        <div class="inline-actions" style="margin-top: 1rem;">
-                            <button class="btn btn-primary" type="submit">Salvar orçamento</button>
-                        </div>
-                    {% endif %}
-                </form>
-            </div>
-
-            {% if orcamento %}
-                <div id="item-feedback-region" style="margin-top: 1rem;" aria-live="polite"></div>
-
-                <div id="item-edit-panel-region" style="margin-top: 1rem;">
-                    {% include "orcamentos/partials/item_edit_panel.html" %}
-                </div>
-
                 {% if not modo_somente_leitura %}
-                    <div style="margin-top: 1rem;">
-                        {% include "orcamentos/partials/item_create_panel.html" %}
+                    <div class="inline-actions">
+                        <button class="btn btn-secondary" type="button" data-toggle-panel="orcamento-dados">Recolher dados</button>
                     </div>
                 {% endif %}
+            </div>
 
-                <div class="panel table-panel" style="margin-top: 1rem;">
-                    <div class="section-heading" style="margin-bottom: 1rem;">
+            <div id="orcamento-draft-status" class="inline-feedback"></div>
+            <form method="post" data-collapsible-panel="orcamento-dados" data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
+                {% csrf_token %}
+                {% if form.non_field_errors %}
+                    <div class="form-errors">
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <fieldset {% if modo_somente_leitura %}disabled{% endif %}>
+                    <div class="form-grid">
                         <div>
-                            <h3>Itens do orçamento</h3>
-                            <p>
-                                {% if modo_somente_leitura %}
-                                    Visualização dos itens do orçamento.
-                                {% else %}
-                                    Revise os itens já adicionados e entre na edição individual quando precisar ajustar detalhes.
-                                {% endif %}
-                            </p>
+                            <label for="{{ form.numero.id_for_label }}">Número</label>
+                            {{ form.numero }}
+                            {{ form.numero.errors }}
+                        </div>
+                        <div>
+                            <label for="{{ form.cliente.id_for_label }}">Cliente</label>
+                            {{ form.cliente }}
+                            {{ form.cliente.errors }}
+                        </div>
+
+                        <div class="full">
+                            <label for="{{ form.titulo.id_for_label }}">Título</label>
+                            {{ form.titulo }}
+                            {{ form.titulo.errors }}
+                        </div>
+
+                        <div class="full">
+                            <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial</label>
+                            {{ form.descricao_inicial }}
+                            {{ form.descricao_inicial.errors }}
+                        </div>
+
+                        <div class="full">
+                            <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais</label>
+                            {{ form.observacoes_gerais }}
+                            {{ form.observacoes_gerais.errors }}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.status.id_for_label }}">Status</label>
+                            {{ form.status }}
+                            {{ form.status.errors }}
+                        </div>
+                        <div>
+                            <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
+                            {{ form.data_emissao }}
+                            {{ form.data_emissao.errors }}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.validade_em.id_for_label }}">Validade</label>
+                            {{ form.validade_em }}
+                            {{ form.validade_em.errors }}
+                        </div>
+                        <div></div>
+
+                        <div>
+                            <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor</label>
+                            {{ form.desconto_global_valor }}
+                            {{ form.desconto_global_valor.errors }}
+                        </div>
+                        <div>
+                            <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %</label>
+                            {{ form.desconto_global_percentual }}
+                            {{ form.desconto_global_percentual.errors }}
+                        </div>
+
+                        <div>
+                            <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor</label>
+                            {{ form.acrescimo_global_valor }}
+                            {{ form.acrescimo_global_valor.errors }}
+                        </div>
+                        <div>
+                            <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %</label>
+                            {{ form.acrescimo_global_percentual }}
+                            {{ form.acrescimo_global_percentual.errors }}
+                        </div>
+
+                        <div class="full">
+                            <div class="checkbox-row">
+                                {{ form.mostrar_ajustes_no_relatorio }}
+                                <label for="{{ form.mostrar_ajustes_no_relatorio.id_for_label }}">
+                                    Mostrar descontos e acréscimos no relatório do cliente
+                                </label>
+                            </div>
+                            {{ form.mostrar_ajustes_no_relatorio.errors }}
                         </div>
                     </div>
+                </fieldset>
 
-                    <form method="get" class="filters-form compact-filters" style="margin-bottom: 1rem;">
-                        <input type="text" name="item_q" placeholder="Buscar por nome, código ou descrição" value="{{ item_q }}">
-                        <select name="item_categoria">
-                            <option value="">Todas as categorias</option>
-                            {% for categoria_obj in categorias_item %}
-                                <option value="{{ categoria_obj.pk }}" {% if item_categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
-                            {% endfor %}
-                        </select>
-                        <select name="item_sort">
-                            <option value="ordem" {% if item_sort == "ordem" %}selected{% endif %}>Ordem manual</option>
-                            <option value="categoria" {% if item_sort == "categoria" %}selected{% endif %}>Categoria</option>
-                            <option value="nome" {% if item_sort == "nome" %}selected{% endif %}>Nome</option>
-                            <option value="preco_maior" {% if item_sort == "preco_maior" %}selected{% endif %}>Maior preço</option>
-                            <option value="preco_menor" {% if item_sort == "preco_menor" %}selected{% endif %}>Menor preço</option>
-                            <option value="subtotal_maior" {% if item_sort == "subtotal_maior" %}selected{% endif %}>Maior subtotal</option>
-                            <option value="subtotal_menor" {% if item_sort == "subtotal_menor" %}selected{% endif %}>Menor subtotal</option>
-                        </select>
-                        <button class="btn btn-secondary" type="submit">Aplicar</button>
-                    </form>
-
-                    <hr style="margin: 1rem 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
-
-                    <div id="itens-tabela-region">
-                        {% include "orcamentos/partials/itens_tabela.html" %}
+                {% if not modo_somente_leitura %}
+                    <div class="inline-actions" style="margin-top: 1rem;">
+                        <button class="btn btn-primary" type="submit">Salvar orçamento</button>
                     </div>
-                </div>
-            {% endif %}
+                {% endif %}
+            </form>
         </div>
 
         {% if orcamento %}
-            <aside class="editor-sidebar" id="totais-card-region">
+            <div id="totais-card-region">
                 {% include "orcamentos/partials/totais_card.html" %}
-            </aside>
+            </div>
+        {% endif %}
+
+        {% if orcamento %}
+            <div id="item-feedback-region" aria-live="polite"></div>
+
+            <div id="item-edit-panel-region">
+                {% include "orcamentos/partials/item_edit_panel.html" %}
+            </div>
+
+            {% if not modo_somente_leitura %}
+                <div>
+                    {% include "orcamentos/partials/item_create_panel.html" %}
+                </div>
+            {% endif %}
+
+            <div class="table-section">
+                <div class="section-heading section-heading-compact">
+                    <div>
+                        <h3>Itens do orçamento</h3>
+                        {% if modo_somente_leitura %}
+                            <p>Visualização dos itens do orçamento.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form method="get" class="filters-form compact-filters">
+                    <input type="text" name="item_q" placeholder="Buscar por nome, código ou descrição" value="{{ item_q }}">
+                    <select name="item_categoria">
+                        <option value="">Todas as categorias</option>
+                        {% for categoria_obj in categorias_item %}
+                            <option value="{{ categoria_obj.pk }}" {% if item_categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="item_sort">
+                        <option value="ordem" {% if item_sort == "ordem" %}selected{% endif %}>Ordem manual</option>
+                        <option value="categoria" {% if item_sort == "categoria" %}selected{% endif %}>Categoria</option>
+                        <option value="nome" {% if item_sort == "nome" %}selected{% endif %}>Nome</option>
+                        <option value="preco_maior" {% if item_sort == "preco_maior" %}selected{% endif %}>Maior preço</option>
+                        <option value="preco_menor" {% if item_sort == "preco_menor" %}selected{% endif %}>Menor preço</option>
+                        <option value="subtotal_maior" {% if item_sort == "subtotal_maior" %}selected{% endif %}>Maior subtotal</option>
+                        <option value="subtotal_menor" {% if item_sort == "subtotal_menor" %}selected{% endif %}>Menor subtotal</option>
+                    </select>
+                    <button class="btn btn-secondary" type="submit">Aplicar</button>
+                </form>
+
+                <div id="itens-tabela-region">
+                    {% include "orcamentos/partials/itens_tabela.html" %}
+                </div>
+            </div>
         {% endif %}
     </div>
 </section>

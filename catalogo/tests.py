@@ -30,6 +30,25 @@ class CatalogoPermissaoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
 
+    def test_visualizador_pode_visualizar_item_catalogo(self):
+        user = get_user_model().objects.create_user(
+            username="visualizador_catalogo",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        item = ItemCatalogo.objects.create(
+            codigo="VIS-01",
+            nome="Item visivel",
+            unidade_medida="un",
+            valor_unitario_padrao="10.00",
+        )
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("catalogo:item_visualizar", args=[item.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Item visivel")
+
 
 class CatalogoValidacaoTests(TestCase):
     def setUp(self):
@@ -136,3 +155,38 @@ class CatalogoListaTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["page_obj"].has_previous())
         self.assertContains(response, "Extra 12")
+
+
+class CatalogoInativacaoTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="admin_toggle_catalogo",
+            password="senha-forte-123",
+            perfil="admin",
+        )
+        self.client.force_login(self.user)
+
+    def test_item_pode_ser_inativado(self):
+        item = ItemCatalogo.objects.create(
+            codigo="INAT-01",
+            nome="Item ativo",
+            unidade_medida="un",
+            valor_unitario_padrao="15.00",
+        )
+
+        response = self.client.post(reverse("catalogo:item_excluir", args=[item.pk]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Item inativado com sucesso.")
+        item.refresh_from_db()
+        self.assertFalse(item.ativo)
+
+    def test_categoria_pode_ser_inativada(self):
+        categoria = CategoriaItem.objects.create(nome="Categoria ativa")
+
+        response = self.client.post(reverse("catalogo:categoria_excluir", args=[categoria.pk]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Categoria inativada com sucesso.")
+        categoria.refresh_from_db()
+        self.assertFalse(categoria.ativo)

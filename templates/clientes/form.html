@@ -8,18 +8,124 @@
         <div>
             <h2>{{ titulo }}</h2>
         </div>
-        <div>
+        <div class="inline-actions">
+            {% if cliente and not somente_leitura and user.pode_gerenciar_clientes %}
+                <a class="btn btn-secondary" href="{% url 'clientes:visualizar' cliente.pk %}">Ver cliente</a>
+            {% endif %}
             <a class="btn btn-secondary" href="{% url 'clientes:lista' %}">Voltar para a lista</a>
         </div>
     </div>
 
-    <div class="panel form-panel">
-        <form method="post" data-unsaved-warning="1">
+    <div class="form-panel">
+        <form method="post" data-unsaved-warning="{% if not somente_leitura %}1{% else %}0{% endif %}">
             {% csrf_token %}
-            {{ form.as_p }}
-            <div class="inline-actions">
-                <button class="btn btn-primary" type="submit">Salvar</button>
-            </div>
+            {{ form.ativo }}
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <fieldset {% if somente_leitura %}disabled{% endif %}>
+                <div class="form-grid">
+                    <div>
+                        <label for="{{ form.tipo_pessoa.id_for_label }}">Tipo</label>
+                        {{ form.tipo_pessoa }}
+                        {{ form.tipo_pessoa.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.nome_razao_social.id_for_label }}">Nome / Razão social</label>
+                        {{ form.nome_razao_social }}
+                        {{ form.nome_razao_social.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia</label>
+                        {{ form.nome_fantasia }}
+                        {{ form.nome_fantasia.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.cpf_cnpj.id_for_label }}">CPF/CNPJ</label>
+                        {{ form.cpf_cnpj }}
+                        {{ form.cpf_cnpj.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.email.id_for_label }}">E-mail</label>
+                        {{ form.email }}
+                        {{ form.email.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.contato_responsavel.id_for_label }}">Contato responsável</label>
+                        {{ form.contato_responsavel }}
+                        {{ form.contato_responsavel.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.telefone.id_for_label }}">Telefone</label>
+                        {{ form.telefone }}
+                        {{ form.telefone.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.celular.id_for_label }}">Celular</label>
+                        {{ form.celular }}
+                        {{ form.celular.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.cep.id_for_label }}">CEP</label>
+                        {{ form.cep }}
+                        {{ form.cep.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.logradouro.id_for_label }}">Logradouro</label>
+                        {{ form.logradouro }}
+                        {{ form.logradouro.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.numero.id_for_label }}">Número</label>
+                        {{ form.numero }}
+                        {{ form.numero.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.complemento.id_for_label }}">Complemento</label>
+                        {{ form.complemento }}
+                        {{ form.complemento.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.bairro.id_for_label }}">Bairro</label>
+                        {{ form.bairro }}
+                        {{ form.bairro.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.cidade.id_for_label }}">Cidade</label>
+                        {{ form.cidade }}
+                        {{ form.cidade.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.estado.id_for_label }}">UF</label>
+                        {{ form.estado }}
+                        {{ form.estado.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ form.observacoes.id_for_label }}">Observações</label>
+                        {{ form.observacoes }}
+                        {{ form.observacoes.errors }}
+                    </div>
+                </div>
+            </fieldset>
+
+            {% if not somente_leitura %}
+                <div class="inline-actions">
+                    <button class="btn btn-primary" type="submit">Salvar</button>
+                </div>
+            {% endif %}
         </form>
     </div>
 </section>

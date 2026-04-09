@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{% if cliente.ativo %}Inativar cliente{% else %}Reativar cliente{% endif %}{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>{% if cliente.ativo %}Inativar cliente{% else %}Reativar cliente{% endif %}</h2>
+            <p>Revise a operação antes de confirmar a alteração do status.</p>
+        </div>
+        <div class="inline-actions">
+            <a class="btn btn-secondary" href="{% url 'clientes:lista' %}">Voltar</a>
+        </div>
+    </div>
+
+    <div class="panel">
+        <p>Tem certeza que deseja {{ acao }} o cliente <strong>{{ cliente.nome_razao_social }}</strong>?</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="inline-actions" style="margin-top: 1rem;">
+                <button class="btn btn-primary" type="submit">Confirmar {{ acao }}</button>
+                <a class="btn btn-secondary" href="{% url 'clientes:lista' %}">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

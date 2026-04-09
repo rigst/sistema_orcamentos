@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -13,6 +14,7 @@ from .models import ConfiguracaoEmpresa
 @require_capability("pode_visualizar_relatorios")
 def configuracao_lista(request):
     busca = request.GET.get("q", "").strip()
+    ativo = request.GET.get("ativo", "").strip()
     ordenar = request.GET.get("sort", "recentes")
     configuracoes = ConfiguracaoEmpresa.objects.all()
     if busca:
@@ -22,6 +24,10 @@ def configuracao_lista(request):
             | Q(email__icontains=busca)
             | Q(cidade__icontains=busca)
         )
+    if ativo == "ativos":
+        configuracoes = configuracoes.filter(ativo=True)
+    elif ativo == "inativos":
+        configuracoes = configuracoes.filter(ativo=False)
     ordenacoes = {
         "nome": "nome_empresa",
         "cidade": "cidade",
@@ -36,13 +42,14 @@ def configuracao_lista(request):
             "configuracoes": page_obj,
             "page_obj": page_obj,
             "busca": busca,
+            "ativo": ativo,
             "sort": ordenar,
         },
     )
 
 
 def obter_configuracao_ativa():
-    return ConfiguracaoEmpresa.objects.order_by("-atualizado_em").first()
+    return ConfiguracaoEmpresa.objects.filter(ativo=True).order_by("-atualizado_em").first()
 
 
 @require_capability("pode_gerenciar_relatorios")
@@ -62,6 +69,22 @@ def configuracao_criar(request):
     )
 
 
+@require_capability("pode_visualizar_relatorios")
+def configuracao_visualizar(request, pk):
+    configuracao = get_object_or_404(ConfiguracaoEmpresa, pk=pk)
+    form = ConfiguracaoEmpresaForm(instance=configuracao)
+    return render(
+        request,
+        "relatorios/configuracao_form.html",
+        {
+            "form": form,
+            "titulo": "Configuração da empresa",
+            "configuracao": configuracao,
+            "somente_leitura": True,
+        },
+    )
+
+
 @require_capability("pode_gerenciar_relatorios")
 def configuracao_editar(request, pk):
     configuracao = get_object_or_404(ConfiguracaoEmpresa, pk=pk)
@@ -78,6 +101,27 @@ def configuracao_editar(request, pk):
         request,
         "relatorios/configuracao_form.html",
         {"form": form, "titulo": "Editar configuração da empresa", "configuracao": configuracao},
+    )
+
+
+@require_capability("pode_gerenciar_relatorios")
+def configuracao_excluir(request, pk):
+    configuracao = get_object_or_404(ConfiguracaoEmpresa, pk=pk)
+    acao = "reativar" if not configuracao.ativo else "inativar"
+
+    if request.method == "POST":
+        configuracao.ativo = not configuracao.ativo
+        configuracao.save(update_fields=["ativo", "atualizado_em"])
+        if configuracao.ativo:
+            messages.success(request, "Configuração reativada com sucesso.")
+        else:
+            messages.success(request, "Configuração inativada com sucesso.")
+        return redirect("relatorios:configuracao_lista")
+
+    return render(
+        request,
+        "relatorios/configuracao_excluir.html",
+        {"configuracao": configuracao, "acao": acao},
     )
 
 

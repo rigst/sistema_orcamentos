@@ -11,9 +11,7 @@
         </div>
 
         {% if form.errors %}
-            <div class="form-errors">
-                <p>Usuário ou senha inválidos.</p>
-            </div>
+            <p class="auth-error-text">Usuário ou senha inválidos.</p>
         {% endif %}
 
         <form method="post" class="auth-form">

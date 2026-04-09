@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Manual do Sistema{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>Manual do sistema</h2>
+            <p>Um guia rápido para trabalhar com o StölbenOrçamentos no dia a dia.</p>
+        </div>
+    </div>
+
+    <div class="stats-grid manual-grid">
+        <div class="stat-card">
+            <span class="label">1. Cadastros</span>
+            <p>Comece pelos clientes, depois ajuste categorias, itens do catálogo e dados da empresa.</p>
+        </div>
+        <div class="stat-card">
+            <span class="label">2. Orçamentos</span>
+            <p>Crie o orçamento, revise os dados gerais e depois monte os itens com base no catálogo.</p>
+        </div>
+        <div class="stat-card">
+            <span class="label">3. Status</span>
+            <p>Use os status para marcar o momento do orçamento: rascunho, enviado, aprovado, rejeitado ou cancelado.</p>
+        </div>
+        <div class="stat-card">
+            <span class="label">4. Relatórios</span>
+            <p>Depois de revisar o orçamento, gere PDF ou Excel na tela de relatórios do próprio orçamento.</p>
+        </div>
+    </div>
+
+    <div class="manual-layout">
+        <div class="panel">
+            <h3>Fluxo básico</h3>
+            <ul class="simple-list">
+                <li class="simple-list-item">Cadastre o cliente com os dados principais.</li>
+                <li class="simple-list-item">Organize o catálogo por categorias e itens.</li>
+                <li class="simple-list-item">Confira os dados da empresa para sair corretamente em PDF e Excel.</li>
+                <li class="simple-list-item">Crie o orçamento, inclua os itens, ajuste totais e revise o status.</li>
+                <li class="simple-list-item">Use a central de relatórios para exportar ou compartilhar.</li>
+            </ul>
+        </div>
+
+        <div class="panel">
+            <h3>Dicas rápidas</h3>
+            <ul class="simple-list">
+                <li class="simple-list-item">Os campos monetários aceitam formato brasileiro, como <strong>R$ 15.000,00</strong>.</li>
+                <li class="simple-list-item">Clientes, categorias, itens e empresas são inativados em vez de apagados.</li>
+                <li class="simple-list-item">Ao sair com alterações pendentes, o sistema avisa para evitar perda de dados.</li>
+                <li class="simple-list-item">Na edição do orçamento, use filtros e ordenação para localizar itens rapidamente.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="panel">
+        <h3>Perfis e autorizações</h3>
+        <div class="manual-roles">
+            {% for perfil in perfis_manual %}
+                <div class="manual-role-card">
+                    <strong>{{ perfil.nome }}</strong>
+                    <p>{{ perfil.descricao }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

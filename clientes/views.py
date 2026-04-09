@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -60,6 +61,18 @@ def cliente_criar(request):
     return render(request, "clientes/form.html", {"form": form, "titulo": "Novo cliente"})
 
 
+@require_capability("pode_visualizar_clientes")
+def cliente_visualizar(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    form = ClienteForm(instance=cliente)
+
+    return render(
+        request,
+        "clientes/form.html",
+        {"form": form, "titulo": "Cliente", "cliente": cliente, "somente_leitura": True},
+    )
+
+
 @require_capability("pode_gerenciar_clientes")
 def cliente_editar(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
@@ -78,4 +91,23 @@ def cliente_editar(request, pk):
         {"form": form, "titulo": "Editar cliente", "cliente": cliente},
     )
 
-# Create your views here.
+
+@require_capability("pode_gerenciar_clientes")
+def cliente_excluir(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    acao = "reativar" if not cliente.ativo else "inativar"
+
+    if request.method == "POST":
+        cliente.ativo = not cliente.ativo
+        cliente.save(update_fields=["ativo", "atualizado_em"])
+        if cliente.ativo:
+            messages.success(request, "Cliente reativado com sucesso.")
+        else:
+            messages.success(request, "Cliente inativado com sucesso.")
+        return redirect("clientes:lista")
+
+    return render(
+        request,
+        "clientes/excluir.html",
+        {"cliente": cliente, "acao": acao},
+    )

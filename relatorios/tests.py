@@ -26,6 +26,20 @@ class RelatoriosPermissaoTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_visualizador_pode_visualizar_configuracao(self):
+        user = get_user_model().objects.create_user(
+            username="visualizador_empresa",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Visivel")
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("relatorios:configuracao_visualizar", args=[configuracao.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Empresa Visivel")
+
 
 class RelatoriosExportacaoTests(TestCase):
     def gerar_logo_teste(self):
@@ -172,3 +186,23 @@ class RelatoriosListaTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["page_obj"].has_previous())
         self.assertContains(response, "Empresa Extra 00")
+
+
+class RelatoriosInativacaoTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user(
+            username="admin_toggle_empresa",
+            password="senha-forte-123",
+            perfil="admin",
+        )
+        self.client.force_login(self.user)
+
+    def test_configuracao_pode_ser_inativada(self):
+        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Toggle")
+
+        response = self.client.post(reverse("relatorios:configuracao_excluir", args=[configuracao.pk]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Configuração inativada com sucesso.")
+        configuracao.refresh_from_db()
+        self.assertFalse(configuracao.ativo)

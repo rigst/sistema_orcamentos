@@ -14,12 +14,10 @@
             {% if user.pode_gerenciar_catalogo %}
                 <a class="btn btn-primary" href="{% url 'catalogo:categoria_criar' %}">Nova categoria</a>
             {% endif %}
-            <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}">Ver itens</a>
         </div>
     </div>
 
-    <div class="panel">
-        <form method="get" class="filters-form">
+    <form method="get" class="filters-form">
             <input type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
             <select name="ativo">
                 <option value="">Todas</option>
@@ -31,40 +29,41 @@
                 <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
             </select>
             <button class="btn btn-secondary" type="submit">Buscar</button>
-        </form>
+    </form>
 
-        {% if categorias %}
-            <div class="table-wrap">
-                <table>
-                    <thead>
+    {% if categorias %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Ativa</th>
+                        <th class="actions-col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for categoria in categorias %}
                         <tr>
-                            <th>Nome</th>
-                            <th>Ativa</th>
-                            <th class="actions-col">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for categoria in categorias %}
-                            <tr>
                                 <td>{{ categoria.nome }}</td>
                                 <td>{% if categoria.ativo %}Sim{% else %}Não{% endif %}</td>
                                 <td class="actions-col">
-                                    {% if user.pode_gerenciar_catalogo %}
-                                        <a class="btn btn-secondary" href="{% url 'catalogo:categoria_editar' categoria.pk %}">Editar</a>
-                                    {% else %}
-                                        -
-                                    {% endif %}
+                                    <div class="actions-stack">
+                                        <a class="btn btn-secondary" href="{% url 'catalogo:categoria_visualizar' categoria.pk %}">Ver</a>
+                                        {% if user.pode_gerenciar_catalogo %}
+                                            <a class="btn btn-secondary" href="{% url 'catalogo:categoria_editar' categoria.pk %}">Editar</a>
+                                            <a class="btn {% if categoria.ativo %}btn-danger{% else %}btn-primary{% endif %}" href="{% url 'catalogo:categoria_excluir' categoria.pk %}">{% if categoria.ativo %}Inativar{% else %}Reativar{% endif %}</a>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
                         {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="empty-state">Nenhuma categoria encontrada.</p>
-        {% endif %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhuma categoria encontrada.</p>
+    {% endif %}
 
-        {% include "partials/pagination.html" with page_obj=page_obj %}
-    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
 </section>
 {% endblock %}

@@ -4,18 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Sistema de Orçamentos{% endblock %}</title>
+    <title>{% block title %}StölbenOrçamentos{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <header class="site-header">
         <div class="container">
             <nav class="nav">
-                <a href="{% url 'dashboard' %}" class="brand">Sistema<span>Orçamentos</span></a>
+                <a href="{% url 'dashboard' %}" class="brand">Stölben<span>Orçamentos</span></a>
 
                 {% if user.is_authenticated %}
+                    <div class="header-user-meta">
+                        <span class="user-chip">Olá, {{ user }}</span>
+                        <span class="user-role">{{ user.get_perfil_display }}</span>
+                    </div>
                     <ul class="nav-links">
                         <li><a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
+                        <li><a href="{% url 'manual' %}" {% if request.resolver_match.url_name == 'manual' %}class="active"{% endif %}>Manual</a></li>
                         {% if user.pode_visualizar_clientes %}
                             <li><a href="{% url 'clientes:lista' %}" {% if request.resolver_match.namespace == 'clientes' %}class="active"{% endif %}>Clientes</a></li>
                         {% endif %}
@@ -175,9 +180,23 @@
         applyMask();
       };
 
+      const bindUppercaseInput = (input) => {
+        if (!input || input.dataset.upperBound === "1") return;
+        input.dataset.upperBound = "1";
+
+        const applyUpper = () => {
+          input.value = String(input.value || "").toUpperCase();
+        };
+
+        input.addEventListener("input", applyUpper);
+        input.addEventListener("blur", applyUpper);
+        applyUpper();
+      };
+
       const initDecimalInputs = (scope = document) => {
         scope.querySelectorAll("input[data-br-decimal='1']").forEach(bindDecimalInput);
         scope.querySelectorAll("input[data-br-mask]").forEach(bindMaskedInput);
+        scope.querySelectorAll("input[data-force-uppercase='1']").forEach(bindUppercaseInput);
       };
 
       const serializeForm = (form) => {

@@ -8,7 +8,7 @@
     <div class="section-heading">
         <div>
             <h2>Dashboard</h2>
-            <p>Resumo operacional, financeiro e comercial dos orçamentos recentes.</p>
+            <p>{{ saudacao_dashboard }} Você está no perfil {{ user.get_perfil_display|lower }}.</p>
         </div>
         <div class="inline-actions">
             <form method="get" class="filters-form compact-filters">
@@ -22,6 +22,11 @@
             </form>
             <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}">Ir para orçamentos</a>
         </div>
+    </div>
+
+    <div class="dashboard-welcome">
+        <strong>{{ user }}</strong>
+        <span>Perfil ativo: {{ user.get_perfil_display }}</span>
     </div>
 
     <div class="stats-grid">

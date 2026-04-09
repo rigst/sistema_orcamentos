@@ -17,56 +17,56 @@
         </div>
     </div>
 
-    <div class="panel">
-        <form method="get" class="filters-form">
-            <input type="text" name="q" placeholder="Buscar por número, cliente ou título" value="{{ busca }}">
-            <select name="status">
-                <option value="">Todos os status</option>
-                {% for valor, rotulo in status_choices %}
-                    <option value="{{ valor }}" {% if status == valor %}selected{% endif %}>{{ rotulo }}</option>
-                {% endfor %}
-            </select>
-            <select name="sort">
-                <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
-                <option value="numero" {% if sort == "numero" %}selected{% endif %}>Ordenar por número</option>
-                <option value="cliente" {% if sort == "cliente" %}selected{% endif %}>Ordenar por cliente</option>
-                <option value="data" {% if sort == "data" %}selected{% endif %}>Data de emissão</option>
-                <option value="valor_maior" {% if sort == "valor_maior" %}selected{% endif %}>Maior valor</option>
-                <option value="valor_menor" {% if sort == "valor_menor" %}selected{% endif %}>Menor valor</option>
-            </select>
-            <button class="btn btn-secondary" type="submit">Buscar</button>
-        </form>
+    <form method="get" class="filters-form">
+        <input type="text" name="q" placeholder="Buscar por número, cliente ou título" value="{{ busca }}">
+        <select name="status">
+            <option value="">Todos os status</option>
+            {% for valor, rotulo in status_choices %}
+                <option value="{{ valor }}" {% if status == valor %}selected{% endif %}>{{ rotulo }}</option>
+            {% endfor %}
+        </select>
+        <select name="sort">
+            <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
+            <option value="numero" {% if sort == "numero" %}selected{% endif %}>Ordenar por número</option>
+            <option value="cliente" {% if sort == "cliente" %}selected{% endif %}>Ordenar por cliente</option>
+            <option value="data" {% if sort == "data" %}selected{% endif %}>Data de emissão</option>
+            <option value="valor_maior" {% if sort == "valor_maior" %}selected{% endif %}>Maior valor</option>
+            <option value="valor_menor" {% if sort == "valor_menor" %}selected{% endif %}>Menor valor</option>
+        </select>
+        <button class="btn btn-secondary" type="submit">Buscar</button>
+    </form>
 
-        {% if orcamentos %}
-            <div class="table-wrap">
-                <table>
-                    <thead>
+    {% if orcamentos %}
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Cliente</th>
+                        <th>Título</th>
+                        <th>Status</th>
+                        <th>Data</th>
+                        <th>Validade</th>
+                        <th>Total final</th>
+                        <th class="actions-col">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for orcamento in orcamentos %}
                         <tr>
-                            <th>Número</th>
-                            <th>Cliente</th>
-                            <th>Título</th>
-                            <th>Status</th>
-                            <th>Data</th>
-                            <th>Validade</th>
-                            <th>Total final</th>
-                            <th class="actions-col">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for orcamento in orcamentos %}
-                            <tr>
-                                <td>{{ orcamento.numero }}</td>
-                                <td>{{ orcamento.cliente }}</td>
-                                <td>{{ orcamento.titulo }}</td>
-                                <td>
-                                    <span class="badge status-{{ orcamento.status }}">
-                                        {{ orcamento.get_status_display }}
-                                    </span>
-                                </td>
-                                <td>{{ orcamento.data_emissao }}</td>
-                                <td>{{ orcamento.validade_em|default:"-" }}</td>
-                                <td class="money">{{ orcamento.total_final|brl }}</td>
-                                <td class="actions-col">
+                            <td>{{ orcamento.numero }}</td>
+                            <td>{{ orcamento.cliente }}</td>
+                            <td>{{ orcamento.titulo }}</td>
+                            <td>
+                                <span class="badge status-{{ orcamento.status }}">
+                                    {{ orcamento.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ orcamento.data_emissao }}</td>
+                            <td>{{ orcamento.validade_em|default:"-" }}</td>
+                            <td class="money">{{ orcamento.total_final|brl }}</td>
+                            <td class="actions-col">
+                                <div class="actions-cluster">
                                     <div class="actions-stack">
                                         <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}">
                                             {% if user.pode_gerenciar_orcamentos %}Editar{% else %}Ver{% endif %}
@@ -74,7 +74,10 @@
                                         <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">Relatórios</a>
                                         {% if user.pode_gerenciar_orcamentos %}
                                             <a class="btn btn-danger" href="{% url 'orcamentos:excluir' orcamento.pk %}">Excluir</a>
-
+                                        {% endif %}
+                                    </div>
+                                    {% if user.pode_gerenciar_orcamentos %}
+                                        <div class="actions-stack actions-stack-status">
                                             {% if orcamento.status != "enviado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Enviado?');">
                                                     {% csrf_token %}
@@ -99,19 +102,19 @@
                                                     <button class="btn btn-primary" type="submit">Cancelar</button>
                                                 </form>
                                             {% endif %}
-                                        {% endif %}
-                                    </div>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="empty-state">Nenhum orçamento encontrado.</p>
-        {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhum orçamento encontrado.</p>
+    {% endif %}
 
-        {% include "partials/pagination.html" with page_obj=page_obj %}
-    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
 </section>
 {% endblock %}

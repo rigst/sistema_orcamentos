@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -57,6 +58,17 @@ def categoria_criar(request):
     )
 
 
+@require_capability("pode_visualizar_catalogo")
+def categoria_visualizar(request, pk):
+    categoria = get_object_or_404(CategoriaItem, pk=pk)
+    form = CategoriaItemForm(instance=categoria)
+    return render(
+        request,
+        "catalogo/categoria_form.html",
+        {"form": form, "titulo": "Categoria", "categoria": categoria, "somente_leitura": True},
+    )
+
+
 @require_capability("pode_gerenciar_catalogo")
 def categoria_editar(request, pk):
     categoria = get_object_or_404(CategoriaItem, pk=pk)
@@ -73,6 +85,27 @@ def categoria_editar(request, pk):
         request,
         "catalogo/categoria_form.html",
         {"form": form, "titulo": "Editar categoria", "categoria": categoria},
+    )
+
+
+@require_capability("pode_gerenciar_catalogo")
+def categoria_excluir(request, pk):
+    categoria = get_object_or_404(CategoriaItem, pk=pk)
+    acao = "reativar" if not categoria.ativo else "inativar"
+
+    if request.method == "POST":
+        categoria.ativo = not categoria.ativo
+        categoria.save(update_fields=["ativo", "atualizado_em"])
+        if categoria.ativo:
+            messages.success(request, "Categoria reativada com sucesso.")
+        else:
+            messages.success(request, "Categoria inativada com sucesso.")
+        return redirect("catalogo:categoria_lista")
+
+    return render(
+        request,
+        "catalogo/categoria_excluir.html",
+        {"categoria": categoria, "acao": acao},
     )
 
 
@@ -141,6 +174,17 @@ def item_criar(request):
     )
 
 
+@require_capability("pode_visualizar_catalogo")
+def item_visualizar(request, pk):
+    item = get_object_or_404(ItemCatalogo, pk=pk)
+    form = ItemCatalogoForm(instance=item)
+    return render(
+        request,
+        "catalogo/item_form.html",
+        {"form": form, "titulo": "Item do catálogo", "item": item, "somente_leitura": True},
+    )
+
+
 @require_capability("pode_gerenciar_catalogo")
 def item_editar(request, pk):
     item = get_object_or_404(ItemCatalogo, pk=pk)
@@ -159,4 +203,23 @@ def item_editar(request, pk):
         {"form": form, "titulo": "Editar item", "item": item},
     )
 
-# Create your views here.
+
+@require_capability("pode_gerenciar_catalogo")
+def item_excluir(request, pk):
+    item = get_object_or_404(ItemCatalogo, pk=pk)
+    acao = "reativar" if not item.ativo else "inativar"
+
+    if request.method == "POST":
+        item.ativo = not item.ativo
+        item.save(update_fields=["ativo", "atualizado_em"])
+        if item.ativo:
+            messages.success(request, "Item reativado com sucesso.")
+        else:
+            messages.success(request, "Item inativado com sucesso.")
+        return redirect("catalogo:item_lista")
+
+    return render(
+        request,
+        "catalogo/item_excluir.html",
+        {"item": item, "acao": acao},
+    )

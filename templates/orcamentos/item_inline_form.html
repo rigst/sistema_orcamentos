@@ -1,20 +1,15 @@
 <div class="item-builder" data-item-builder data-preview-url="{% url 'orcamentos:item_preview' orcamento.pk %}">
     {% if item %}
-        <div class="section-heading" style="margin-bottom: 1rem;">
+        <div class="section-heading section-heading-compact" style="margin-bottom: 1rem;">
             <div>
                 <h3>{{ titulo|default:"Editar item" }}</h3>
-                <p class="muted">A edição acontece neste painel, sem sair da tela do orçamento.</p>
             </div>
             <div>
                 <a class="btn btn-secondary" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}">Fechar edição</a>
             </div>
         </div>
     {% else %}
-        <div class="item-builder-intro">
-            <div class="item-builder-tip">
-                <strong>Fluxo sugerido</strong>
-                <p>1. Escolha um item do catálogo. 2. Aplique os dados sugeridos. 3. Ajuste quantidade e preço. 4. Revise a prévia calculada pelo backend.</p>
-            </div>
+        <div class="section-heading section-heading-compact">
             <div id="item-preview-panel">
                 {% include "orcamentos/partials/item_preview_card.html" with item_preview=None erro_validacao_preview=None %}
             </div>
@@ -39,7 +34,6 @@
             <section class="item-block">
                 <div class="item-block-header">
                     <h4>Base do item</h4>
-                    <p>Use um item de catálogo para preencher rapidamente os dados principais.</p>
                 </div>
 
                 <div class="catalog-picker">
@@ -109,7 +103,6 @@
             <section class="item-block">
                 <div class="item-block-header">
                     <h4>Quantidade e preço</h4>
-                    <p>Defina a base do cálculo do item.</p>
                 </div>
 
                 <div class="form-grid">
@@ -130,7 +123,6 @@
             <section class="item-block">
                 <div class="item-block-header">
                     <h4>Ajustes</h4>
-                    <p>Descontos e acréscimos são refletidos na prévia calculada pelo backend.</p>
                 </div>
 
                 <div class="form-grid">

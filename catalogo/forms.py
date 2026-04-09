@@ -9,6 +9,12 @@ class CategoriaItemForm(forms.ModelForm):
         model = CategoriaItem
         fields = ["nome", "descricao", "ativo"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["ativo"].widget = forms.HiddenInput()
+        self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        self.fields["descricao"].widget.attrs["rows"] = 3
+
     def clean_nome(self):
         valor = (self.cleaned_data.get("nome") or "").strip()
         if not valor:
@@ -32,13 +38,15 @@ class ItemCatalogoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["ativo"].widget = forms.HiddenInput()
+        self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
         substituir_por_decimal_br(self, "valor_unitario_padrao", currency=True)
-        self.fields["codigo"].help_text = "Obrigatório. Use um código único para localizar o item."
-        self.fields["nome"].help_text = "Obrigatório."
-        self.fields["valor_unitario_padrao"].help_text = "Obrigatório. Não pode ser negativo."
         self.fields["codigo"].error_messages["required"] = "Informe o código do item."
         self.fields["nome"].error_messages["required"] = "Informe o nome do item."
         self.fields["valor_unitario_padrao"].error_messages["min_value"] = "Informe um valor maior ou igual a zero."
+        self.fields["codigo"].widget.attrs["data-force-uppercase"] = "1"
+        self.fields["descricao_padrao"].widget.attrs["rows"] = 3
+        self.fields["observacoes"].widget.attrs["rows"] = 3
 
     def clean_codigo(self):
         valor = (self.cleaned_data.get("codigo") or "").strip().upper()

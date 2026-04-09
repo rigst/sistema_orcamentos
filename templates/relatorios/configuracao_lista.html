@@ -17,55 +17,62 @@
         </div>
     </div>
 
-    <div class="panel">
-        <form method="get" class="filters-form">
-            <input type="text" name="q" placeholder="Buscar por empresa, e-mail ou cidade" value="{{ busca }}">
-            <select name="sort">
-                <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
-                <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
-                <option value="cidade" {% if sort == "cidade" %}selected{% endif %}>Ordenar por cidade</option>
+    <form method="get" class="filters-form">
+        <input type="text" name="q" placeholder="Buscar por empresa, e-mail ou cidade" value="{{ busca }}">
+        <select name="ativo">
+            <option value="">Todos</option>
+            <option value="ativos" {% if ativo == "ativos" %}selected{% endif %}>Ativos</option>
+            <option value="inativos" {% if ativo == "inativos" %}selected{% endif %}>Inativos</option>
+        </select>
+        <select name="sort">
+            <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
+            <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
+            <option value="cidade" {% if sort == "cidade" %}selected{% endif %}>Ordenar por cidade</option>
             </select>
             <button class="btn btn-secondary" type="submit">Buscar</button>
-        </form>
+    </form>
 
-        {% if configuracoes %}
-            <div class="table-wrap">
-                <table>
-                    <thead>
+    {% if configuracoes %}
+        <div class="table-wrap">
+            <table>
+                <thead>
                         <tr>
                             <th>Nome da empresa</th>
                             <th>E-mail</th>
                             <th>Telefone</th>
                             <th>Cidade</th>
                             <th>Estado</th>
+                            <th>Ativa</th>
                             <th class="actions-col">Ações</th>
                         </tr>
-                    </thead>
-                    <tbody>
-                        {% for configuracao in configuracoes %}
+                </thead>
+                <tbody>
+                    {% for configuracao in configuracoes %}
                             <tr>
                                 <td>{{ configuracao.nome_empresa }}</td>
                                 <td>{{ configuracao.email|default:"-" }}</td>
                                 <td>{{ configuracao.telefone|default:"-" }}</td>
                                 <td>{{ configuracao.cidade|default:"-" }}</td>
                                 <td>{{ configuracao.estado|default:"-" }}</td>
+                                <td>{% if configuracao.ativo %}Sim{% else %}Não{% endif %}</td>
                                 <td class="actions-col">
-                                    {% if user.pode_gerenciar_relatorios %}
-                                        <a class="btn btn-secondary" href="{% url 'relatorios:configuracao_editar' configuracao.pk %}">Editar</a>
-                                    {% else %}
-                                        -
-                                    {% endif %}
+                                    <div class="actions-stack">
+                                        <a class="btn btn-secondary" href="{% url 'relatorios:configuracao_visualizar' configuracao.pk %}">Ver</a>
+                                        {% if user.pode_gerenciar_relatorios %}
+                                            <a class="btn btn-secondary" href="{% url 'relatorios:configuracao_editar' configuracao.pk %}">Editar</a>
+                                            <a class="btn {% if configuracao.ativo %}btn-danger{% else %}btn-primary{% endif %}" href="{% url 'relatorios:configuracao_excluir' configuracao.pk %}">{% if configuracao.ativo %}Inativar{% else %}Reativar{% endif %}</a>
+                                        {% endif %}
+                                    </div>
                                 </td>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        {% else %}
-            <p class="empty-state">Nenhuma configuração cadastrada.</p>
-        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">Nenhuma configuração cadastrada.</p>
+    {% endif %}
 
-        {% include "partials/pagination.html" with page_obj=page_obj %}
-    </div>
+    {% include "partials/pagination.html" with page_obj=page_obj %}
 </section>
 {% endblock %}

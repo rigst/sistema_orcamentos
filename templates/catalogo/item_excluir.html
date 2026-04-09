@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{% if item.ativo %}Inativar item{% else %}Reativar item{% endif %}{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading">
+        <div>
+            <h2>{% if item.ativo %}Inativar item{% else %}Reativar item{% endif %}</h2>
+            <p>Revise a operação antes de confirmar a alteração do status.</p>
+        </div>
+        <div class="inline-actions">
+            <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}">Voltar</a>
+        </div>
+    </div>
+
+    <div class="panel">
+        <p>Tem certeza que deseja {{ acao }} o item <strong>{{ item.nome }}</strong>?</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="inline-actions" style="margin-top: 1rem;">
+                <button class="btn btn-primary" type="submit">Confirmar {{ acao }}</button>
+                <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

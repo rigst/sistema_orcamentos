@@ -20,6 +20,7 @@ class ConfiguracaoEmpresa(models.Model):
 
     rodape_relatorio = models.TextField(blank=True)
     logo = models.ImageField(upload_to="empresa/logos/", blank=True, null=True)
+    ativo = models.BooleanField(default=True)
 
     atualizado_em = models.DateTimeField(auto_now=True)
 

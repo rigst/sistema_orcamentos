@@ -8,18 +8,75 @@
         <div>
             <h2>{{ titulo }}</h2>
         </div>
-        <div>
+        <div class="inline-actions">
+            {% if item and not somente_leitura and user.pode_gerenciar_catalogo %}
+                <a class="btn btn-secondary" href="{% url 'catalogo:item_visualizar' item.pk %}">Ver item</a>
+            {% endif %}
             <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}">Voltar para itens</a>
         </div>
     </div>
 
-    <div class="panel form-panel">
-        <form method="post" data-unsaved-warning="1">
+    <div class="form-panel">
+        <form method="post" data-unsaved-warning="{% if not somente_leitura %}1{% else %}0{% endif %}">
             {% csrf_token %}
-            {{ form.as_p }}
-            <div class="inline-actions">
-                <button class="btn btn-primary" type="submit">Salvar</button>
-            </div>
+            {{ form.ativo }}
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <fieldset {% if somente_leitura %}disabled{% endif %}>
+                <div class="form-grid">
+                    <div>
+                        <label for="{{ form.codigo.id_for_label }}">Código</label>
+                        {{ form.codigo }}
+                        {{ form.codigo.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.nome.id_for_label }}">Nome</label>
+                        {{ form.nome }}
+                        {{ form.nome.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.categoria.id_for_label }}">Categoria</label>
+                        {{ form.categoria }}
+                        {{ form.categoria.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.unidade_medida.id_for_label }}">Unidade</label>
+                        {{ form.unidade_medida }}
+                        {{ form.unidade_medida.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.valor_unitario_padrao.id_for_label }}">Valor padrão</label>
+                        {{ form.valor_unitario_padrao }}
+                        {{ form.valor_unitario_padrao.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ form.descricao_padrao.id_for_label }}">Descrição padrão</label>
+                        {{ form.descricao_padrao }}
+                        {{ form.descricao_padrao.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ form.observacoes.id_for_label }}">Observações</label>
+                        {{ form.observacoes }}
+                        {{ form.observacoes.errors }}
+                    </div>
+                </div>
+            </fieldset>
+
+            {% if not somente_leitura %}
+                <div class="inline-actions">
+                    <button class="btn btn-primary" type="submit">Salvar</button>
+                </div>
+            {% endif %}
         </form>
     </div>
 </section>
