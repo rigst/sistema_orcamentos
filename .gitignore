@@ -14,6 +14,8 @@ db.sqlite3
 # Arquivos de ambiente
 .env
 .env.*
+!.env.example
+!.env.production.example
 
 # Arquivos do Django
 *.log
