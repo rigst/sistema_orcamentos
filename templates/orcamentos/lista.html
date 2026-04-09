@@ -12,7 +12,7 @@
         </div>
         <div>
             {% if user.pode_gerenciar_orcamentos %}
-                <a class="btn btn-primary" href="{% url 'orcamentos:criar' %}">Novo orçamento</a>
+                <a class="btn btn-primary-lite" href="{% url 'orcamentos:criar' %}">Novo orçamento</a>
             {% endif %}
         </div>
     </div>
@@ -41,12 +41,10 @@
             <table>
                 <thead>
                     <tr>
-                        <th>Número</th>
-                        <th>Cliente</th>
+                        <th>Orçamento</th>
+                        <th>Cliente e datas</th>
                         <th>Título</th>
                         <th>Status</th>
-                        <th>Data</th>
-                        <th>Validade</th>
                         <th>Total final</th>
                         <th class="actions-col">Ações</th>
                     </tr>
@@ -54,17 +52,25 @@
                 <tbody>
                     {% for orcamento in orcamentos %}
                         <tr>
-                            <td>{{ orcamento.numero }}</td>
-                            <td>{{ orcamento.cliente }}</td>
-                            <td>{{ orcamento.titulo }}</td>
+                            <td class="budget-main-cell">
+                                <strong>{{ orcamento.numero }}</strong>
+                                <span class="table-subline">Emitido em {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
+                            </td>
+                            <td class="budget-meta-cell">
+                                <strong>{{ orcamento.cliente }}</strong>
+                                <span class="table-subline">Validade: {% if orcamento.validade_em %}{{ orcamento.validade_em|date:"d/m/Y" }}{% else %}-{% endif %}</span>
+                            </td>
+                            <td class="budget-title-cell">
+                                <strong>{{ orcamento.titulo }}</strong>
+                            </td>
                             <td>
                                 <span class="badge status-{{ orcamento.status }}">
                                     {{ orcamento.get_status_display }}
                                 </span>
                             </td>
-                            <td>{{ orcamento.data_emissao }}</td>
-                            <td>{{ orcamento.validade_em|default:"-" }}</td>
-                            <td class="money">{{ orcamento.total_final|brl }}</td>
+                            <td class="money budget-total-cell">
+                                <strong>{{ orcamento.total_final|brl }}</strong>
+                            </td>
                             <td class="actions-col">
                                 <div class="actions-cluster">
                                     <div class="actions-stack actions-stack-inline">
@@ -78,6 +84,12 @@
                                     </div>
                                     {% if user.pode_gerenciar_orcamentos %}
                                         <div class="actions-stack actions-stack-inline actions-stack-status">
+                                            {% if orcamento.status != "rascunho" %}
+                                                <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" onsubmit="return confirm('Confirmar retorno do orçamento para Rascunho?');">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-soft" type="submit">Rascunho</button>
+                                                </form>
+                                            {% endif %}
                                             {% if orcamento.status != "enviado" %}
                                                 <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Enviado?');">
                                                     {% csrf_token %}

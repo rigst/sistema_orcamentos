@@ -13,19 +13,19 @@
 
     <div class="stats-grid manual-grid">
         <div class="stat-card">
-            <span class="label">1. Cadastros</span>
+            <span class="label"><strong>1. Cadastros</strong></span>
             <p>Comece pelos clientes, depois ajuste categorias, itens do catálogo e dados da empresa.</p>
         </div>
         <div class="stat-card">
-            <span class="label">2. Orçamentos</span>
+            <span class="label"><strong>2. Orçamentos</strong></span>
             <p>Crie o orçamento, revise os dados gerais e depois monte os itens com base no catálogo.</p>
         </div>
         <div class="stat-card">
-            <span class="label">3. Status</span>
+            <span class="label"><strong>3. Status</strong></span>
             <p>Use os status para marcar o momento do orçamento: rascunho, enviado, aprovado, rejeitado ou cancelado.</p>
         </div>
         <div class="stat-card">
-            <span class="label">4. Relatórios</span>
+            <span class="label"><strong>4. Relatórios</strong></span>
             <p>Depois de revisar o orçamento, gere PDF ou Excel na tela de relatórios do próprio orçamento.</p>
         </div>
     </div>
@@ -33,7 +33,7 @@
     <div class="manual-layout">
         <div class="panel">
             <h3>Fluxo básico</h3>
-            <ul class="simple-list">
+            <ul class="simple-list manual-list">
                 <li>Cadastre o cliente com os dados principais.</li>
                 <li>Organize o catálogo por categorias e itens.</li>
                 <li>Confira os dados da empresa para sair corretamente em PDF e Excel.</li>
@@ -44,7 +44,7 @@
 
         <div class="panel">
             <h3>Dicas rápidas</h3>
-            <ul class="simple-list">
+            <ul class="simple-list manual-list">
                 <li>Os campos monetários aceitam formato brasileiro, como <strong>R$ 15.000,00</strong>.</li>
                 <li>Clientes, categorias, itens e empresas são inativados em vez de apagados.</li>
                 <li>Ao sair com alterações pendentes, o sistema avisa para evitar perda de dados.</li>
@@ -53,7 +53,7 @@
         </div>
     </div>
 
-    <div class="panel">
+    <div class="panel manual-panel-gap">
         <h3>Fluxo dos status do orçamento</h3>
         <div class="manual-status-flow">
             <div>
@@ -79,7 +79,7 @@
         </div>
     </div>
 
-    <div class="panel">
+    <div class="panel manual-panel-gap">
         <h3>Perfis e autorizações</h3>
         <div class="manual-roles">
             {% for perfil in perfis_manual %}

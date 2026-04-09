@@ -305,6 +305,20 @@ button:focus-visible {
   box-shadow: 0 18px 34px rgba(118, 169, 255, 0.28);
 }
 
+.btn-primary-lite {
+  min-height: 40px;
+  padding: 0 0.9rem;
+  background: rgba(47, 120, 219, 0.11);
+  color: var(--accent);
+  border-color: rgba(47, 120, 219, 0.16);
+  box-shadow: none;
+}
+
+.btn-primary-lite:hover {
+  box-shadow: none;
+  background: rgba(47, 120, 219, 0.16);
+}
+
 .btn-soft {
   min-height: 36px;
   padding: 0 0.8rem;
@@ -353,6 +367,7 @@ button:focus-visible {
 .stat-card .label {
   color: var(--text-soft);
   font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .stat-card .value {
@@ -514,12 +529,15 @@ tr:hover td {
 .badge {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   padding: 0.36rem 0.68rem;
   border-radius: 999px;
   background: rgba(47, 120, 219, 0.08);
   border: 1px solid rgba(47, 120, 219, 0.1);
   color: var(--text);
   font-size: 0.82rem;
+  line-height: 1.1;
+  text-align: center;
 }
 
 .badge-warning {
@@ -653,12 +671,14 @@ tr:hover td {
 
 .actions-col {
   min-width: 200px;
+  text-align: center;
 }
 
 .actions-stack {
   display: flex;
   flex-wrap: wrap;
   gap: 0.45rem;
+  justify-content: center;
 }
 
 .actions-stack-inline {
@@ -673,6 +693,21 @@ tr:hover td {
   display: block;
   margin-top: 0.2rem;
   color: var(--text-soft);
+  line-height: 1.45;
+}
+
+.budget-main-cell,
+.budget-meta-cell,
+.budget-title-cell,
+.budget-total-cell {
+  min-width: 0;
+}
+
+.budget-main-cell strong,
+.budget-meta-cell strong,
+.budget-title-cell strong,
+.budget-total-cell strong {
+  color: var(--text);
 }
 
 .simple-list {
@@ -989,6 +1024,14 @@ tr:hover td {
   color: var(--text-soft);
 }
 
+.manual-list {
+  padding-left: 1.15rem;
+}
+
+.manual-list li {
+  padding-left: 0.15rem;
+}
+
 .manual-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1010,6 +1053,10 @@ tr:hover td {
 
 .manual-status-flow p {
   margin-top: 0.35rem;
+}
+
+.manual-panel-gap {
+  margin-top: 1.35rem;
 }
 
 .manual-role-card {
