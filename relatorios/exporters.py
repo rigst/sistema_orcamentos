@@ -271,32 +271,19 @@ def bloco_info(styles, label: str, valor: str):
     return Paragraph(f"<font name='{FONT_BOLD}' color='#617A95'>{label}</font><br/>{valor}", styles["body"])
 
 
-def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio) -> bytes:
-    registrar_fontes_pdf()
-    styles = obter_estilos_pdf()
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(
-        buffer,
-        pagesize=A4,
-        leftMargin=18 * mm,
-        rightMargin=18 * mm,
-        topMargin=18 * mm,
-        bottomMargin=22 * mm,
-        title=f"Orçamento {orcamento.numero}",
-        author=configuracao.nome_empresa if configuracao and configuracao.nome_empresa else "",
-        pageCompression=0,
-    )
-
+def montar_topo_pdf(orcamento, configuracao, styles, titulo_documento: str, subtitulo: str | None = None):
     empresa = configuracao.nome_empresa if configuracao else "Sua empresa"
     nome_fantasia = configuracao.nome_fantasia if configuracao and configuracao.nome_fantasia else "Proposta comercial"
     logo = carregar_logo_pdf(configuracao)
-    status_bg, status_fg = cor_status(alerta_status.nivel)
 
     header_text = [
         Paragraph(empresa, styles["hero"]),
         Paragraph(nome_fantasia, styles["body"]),
         Spacer(1, 4),
-        Paragraph(f"<font name='{FONT_BOLD}'>Orçamento {orcamento.numero}</font><br/>{orcamento.titulo}", styles["body"]),
+        Paragraph(
+            f"<font name='{FONT_BOLD}'>{titulo_documento}</font><br/>{subtitulo or orcamento.titulo}",
+            styles["body"],
+        ),
     ]
     if logo:
         image_buffer, width, height = logo
@@ -317,6 +304,28 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
             ]
         )
     )
+    return topo
+
+
+def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio) -> bytes:
+    registrar_fontes_pdf()
+    styles = obter_estilos_pdf()
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=22 * mm,
+        title=f"Orçamento {orcamento.numero}",
+        author=configuracao.nome_empresa if configuracao and configuracao.nome_empresa else "",
+        pageCompression=0,
+    )
+
+    status_bg, status_fg = cor_status(alerta_status.nivel)
+
+    topo = montar_topo_pdf(orcamento, configuracao, styles, f"Orçamento {orcamento.numero}")
 
     status_card = Table(
         [[Paragraph(f"<font name='{FONT_BOLD}' color='#{status_fg.hexval()[2:]}'> {alerta_status.titulo}</font><br/>{alerta_status.detalhe}", styles["body"])]],
@@ -518,6 +527,107 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
                 ),
             )
         )
+
+    doc.build(story, onFirstPage=desenhar_fundo, onLaterPages=desenhar_fundo)
+    return buffer.getvalue()
+
+
+def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
+    registrar_fontes_pdf()
+    styles = obter_estilos_pdf()
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=22 * mm,
+        title=f"Memorial Descritivo {orcamento.numero}",
+        author=configuracao.nome_empresa if configuracao and configuracao.nome_empresa else "",
+        pageCompression=0,
+    )
+
+    topo = montar_topo_pdf(
+        orcamento,
+        configuracao,
+        styles,
+        f"Memorial Descritivo {orcamento.numero}",
+        orcamento.titulo,
+    )
+
+    resumo = Table(
+        [
+            [
+                bloco_info(styles, "CLIENTE", str(orcamento.cliente)),
+                bloco_info(styles, "EMISSÃO", formatar_data(orcamento.data_emissao)),
+                bloco_info(styles, "TOTAL FINAL", formatar_moeda(orcamento.total_final)),
+            ],
+        ],
+        colWidths=[55 * mm, 55 * mm, 56 * mm],
+    )
+    resumo.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
+                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
+                ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#E7EFF8")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 12),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
+                ("TOPPADDING", (0, 0), (-1, -1), 11),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 11),
+            ]
+        )
+    )
+
+    story = [topo, Spacer(1, 10), resumo, Spacer(1, 12), Paragraph("Memorial Descritivo", styles["title"])]
+
+    for grupo in orcamento.subtotais_por_categoria():
+        story.append(
+            Paragraph(
+                f"<font color='{grupo['categoria_cor']}'><b>{grupo['categoria_nome']}</b></font>",
+                styles["body_strong"],
+            )
+        )
+        story.append(Spacer(1, 4))
+
+        linhas = []
+        for item in grupo["itens"]:
+            descricao = (item.descricao or "").strip() or item.nome
+            linhas.append(
+                [
+                    Paragraph(formatar_decimal_br(item.quantidade), styles["body_strong"]),
+                    Paragraph(descricao.replace("\n", "<br/>"), styles["body"]),
+                    Paragraph(formatar_moeda(item.subtotal), styles["body_strong"]),
+                ]
+            )
+
+        tabela_categoria = Table(linhas, colWidths=[18 * mm, 108 * mm, 40 * mm])
+        tabela_categoria.setStyle(
+            TableStyle(
+                [
+                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
+                    ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.HexColor("#FCFDFF"), colors.white]),
+                    ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
+                    ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#E7EFF8")),
+                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
+                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
+                    ("TOPPADDING", (0, 0), (-1, -1), 10),
+                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ]
+            )
+        )
+        story.extend([tabela_categoria, Spacer(1, 6)])
+        story.append(
+            Paragraph(
+                f"<b>Subtotal da categoria:</b> {formatar_moeda(grupo['subtotal'])}",
+                styles["body"],
+            )
+        )
+        story.append(Spacer(1, 10))
+
+    story.append(Paragraph(f"<b>Total final do orçamento:</b> {formatar_moeda(orcamento.total_final)}", styles["body_strong"]))
 
     doc.build(story, onFirstPage=desenhar_fundo, onLaterPages=desenhar_fundo)
     return buffer.getvalue()

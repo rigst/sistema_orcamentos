@@ -92,7 +92,7 @@ class OrcamentoViewsTests(TestCase):
                 "descricao": "",
                 "unidade_medida": "",
                 "quantidade": "2",
-                "valor_unitario": "0",
+                "valor_unitario": "",
                 "desconto_valor": "0",
                 "desconto_percentual": "0",
                 "acrescimo_valor": "0",
@@ -186,6 +186,33 @@ class OrcamentoViewsTests(TestCase):
         item = ItemOrcamento.objects.get(nome="Item automático")
         self.assertRedirects(response, reverse("orcamentos:editar", args=[self.orcamento.pk]))
         self.assertEqual(item.codigo_item, "ORC-2026-0001-ITEM-001")
+
+    def test_item_do_catalogo_aceita_valor_zero_informado_manualmente(self):
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="SERV-ZERO",
+            nome="Servico zero",
+            unidade_medida="sv",
+            valor_unitario_padrao=Decimal("125.50"),
+        )
+
+        response = self.client.post(
+            reverse("orcamentos:item_criar", args=[self.orcamento.pk]),
+            {
+                "item_catalogo": item_catalogo.pk,
+                "descricao": "",
+                "quantidade": "2",
+                "valor_unitario": "0",
+                "desconto_valor": "0",
+                "desconto_percentual": "0",
+                "acrescimo_valor": "0",
+                "acrescimo_percentual": "0",
+            },
+        )
+
+        self.assertRedirects(response, reverse("orcamentos:editar", args=[self.orcamento.pk]))
+        item = ItemOrcamento.objects.get()
+        self.assertEqual(item.valor_unitario, Decimal("0.00"))
+        self.assertEqual(item.subtotal, Decimal("0.00"))
 
     def test_visualizador_pode_ver_orcamento_em_modo_somente_leitura(self):
         visualizador = get_user_model().objects.create_user(
@@ -475,6 +502,32 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Eletrica")
         self.assertContains(response, "#0F766E")
+
+    def test_orcamento_exibe_subtotais_por_categoria(self):
+        categoria = CategoriaItem.objects.create(nome="Eletrica", cor="#0F766E")
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="ELE-01",
+            nome="Ponto eletrico",
+            categoria=categoria,
+            unidade_medida="sv",
+            valor_unitario_padrao=Decimal("80.00"),
+        )
+        ItemOrcamento.objects.create(
+            orcamento=self.orcamento,
+            item_catalogo=item_catalogo,
+            ordem=1,
+            nome="Ponto eletrico",
+            unidade_medida="sv",
+            quantidade=Decimal("2.00"),
+            valor_unitario=Decimal("80.00"),
+        )
+
+        response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Subtotal da categoria")
+        self.assertContains(response, "Eletrica")
+        self.assertContains(response, "R$ 160,00")
 
     def test_item_criar_via_ajax_retorna_fragments_sem_reload(self):
         response = self.client.post(

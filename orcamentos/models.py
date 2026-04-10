@@ -1,5 +1,6 @@
 from datetime import date
 from decimal import Decimal, ROUND_HALF_UP
+from itertools import groupby
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -193,6 +194,37 @@ class Orcamento(models.Model):
 
         if salvar:
             self.save(update_fields=["subtotal_itens", "total_final", "atualizado_em"])
+
+    def subtotais_por_categoria(self):
+        itens = self.itens.select_related("item_catalogo__categoria").all().order_by(
+            "item_catalogo__categoria__nome",
+            "ordem",
+            "id",
+        )
+        grupos = []
+        for chave, itens_grupo in groupby(
+            itens,
+            key=lambda item: (
+                item.item_catalogo.categoria_id if item.item_catalogo_id and item.item_catalogo.categoria_id else None,
+                item.item_catalogo.categoria.nome
+                if item.item_catalogo_id and item.item_catalogo.categoria_id
+                else "Sem categoria",
+                item.item_catalogo.categoria.cor
+                if item.item_catalogo_id and item.item_catalogo.categoria_id
+                else "#CBD5E1",
+            ),
+        ):
+            itens_lista = list(itens_grupo)
+            grupos.append(
+                {
+                    "categoria_id": chave[0],
+                    "categoria_nome": chave[1],
+                    "categoria_cor": chave[2],
+                    "subtotal": arredondar(sum((item.subtotal for item in itens_lista), Decimal("0.00"))),
+                    "itens": itens_lista,
+                }
+            )
+        return grupos
 
     def save(self, *args, **kwargs):
         if self.empresa_id is None:

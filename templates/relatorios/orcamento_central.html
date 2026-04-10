@@ -58,6 +58,21 @@
                 </div>
             </div>
 
+            {% if subtotais_categoria %}
+                <div class="report-meta-card">
+                    <span class="preview-label">Subtotais por categoria</span>
+                    {% for grupo in subtotais_categoria %}
+                        <p>
+                            <span class="category-chip category-chip-inline" style="--category-color: {{ grupo.categoria_cor }};">
+                                <span class="category-chip-dot"></span>
+                                {{ grupo.categoria_nome }}
+                            </span>
+                            <strong class="money">{{ grupo.subtotal|brl }}</strong>
+                        </p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
             {% if configuracao %}
                 <div class="report-meta-card">
                     <span class="preview-label">Cabeçalho da empresa</span>
@@ -78,6 +93,7 @@
                 <div class="report-export-list report-export-list-compact">
                     <a class="btn btn-soft" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
                     <a class="btn btn-soft" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>
+                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_memorial_pdf' orcamento.pk %}">Baixar Memorial Descritivo</a>
                 </div>
             </div>
         </aside>

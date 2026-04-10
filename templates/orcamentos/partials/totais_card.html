@@ -19,3 +19,19 @@
         <strong class="money">{{ orcamento.total_final|brl }}</strong>
     </div>
 </div>
+{% if subtotais_categoria %}
+    <div class="totals-category-grid">
+        {% for grupo in subtotais_categoria %}
+            <div class="totals-card">
+                <span class="preview-label">Subtotal da categoria</span>
+                <strong>
+                    <span class="category-chip category-chip-inline" style="--category-color: {{ grupo.categoria_cor }};">
+                        <span class="category-chip-dot"></span>
+                        {{ grupo.categoria_nome }}
+                    </span>
+                </strong>
+                <small class="money">{{ grupo.subtotal|brl }}</small>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

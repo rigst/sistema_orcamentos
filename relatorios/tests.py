@@ -8,6 +8,7 @@ from PIL import Image
 
 from decimal import Decimal
 
+from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
 from orcamentos.models import ItemOrcamento, Orcamento
 from .models import ConfiguracaoEmpresa
@@ -103,6 +104,29 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertTrue(response.content.startswith(b"%PDF-1.4"))
         self.assertIn(b"/Subtype /Image", response.content)
+
+    def test_exportacao_memorial_descritivo_retorna_arquivo(self):
+        categoria = CategoriaItem.objects.create(nome="Civil", cor="#2563EB")
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="CIV-01",
+            nome="Servico civil",
+            categoria=categoria,
+            unidade_medida="sv",
+            valor_unitario_padrao=Decimal("100.00"),
+        )
+        item = self.orcamento.itens.first()
+        item.item_catalogo = item_catalogo
+        item.descricao = "Descricao longa do servico"
+        item.save()
+
+        response = self.client.get(reverse("relatorios:orcamento_memorial_pdf", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/pdf")
+        self.assertTrue(response.content.startswith(b"%PDF-1.4"))
+        self.assertIn("Memorial Descritivo".encode("utf-8"), response.content)
+        self.assertIn("Civil".encode("utf-8"), response.content)
+        self.assertIn("Descricao longa do servico".encode("utf-8"), response.content)
 
 
 class RelatoriosValidacaoTests(TestCase):

@@ -122,6 +122,7 @@ class ItemOrcamentoForm(forms.ModelForm):
             if nome_campo != "quantidade" and nome_campo != "valor_unitario":
                 self.fields[nome_campo].required = False
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor") or nome_campo == "valor_unitario")
+        self.fields["valor_unitario"].required = False
 
         self.fields["codigo_item"].required = False
         self.fields["codigo_item"].widget.attrs.update(
@@ -149,7 +150,7 @@ class ItemOrcamentoForm(forms.ModelForm):
                 cleaned_data["unidade_medida"] = item_catalogo.unidade_medida
 
             valor_unitario = cleaned_data.get("valor_unitario")
-            if valor_unitario in (None, 0):
+            if valor_unitario is None:
                 cleaned_data["valor_unitario"] = item_catalogo.valor_unitario_padrao
 
         return cleaned_data
@@ -163,6 +164,8 @@ class ItemOrcamentoForm(forms.ModelForm):
 
         if not cleaned_data.get("unidade_medida"):
             self.add_error("unidade_medida", "Este campo é obrigatório.")
+        if cleaned_data.get("valor_unitario") is None:
+            self.add_error("valor_unitario", "Este campo é obrigatório.")
 
         return cleaned_data
 

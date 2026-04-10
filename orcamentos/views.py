@@ -123,6 +123,7 @@ def renderizar_editor_orcamento(
         "item_editando": item_editando,
         "item_form_edicao": item_form_edicao,
         "modo_somente_leitura": modo_somente_leitura,
+        "subtotais_categoria": orcamento.subtotais_por_categoria(),
     }
     context.update(obter_estado_itens(request, orcamento))
     return render(request, "orcamentos/form.html", context)
@@ -133,6 +134,7 @@ def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=Non
         "orcamento": orcamento,
         "item_editando": item_editando,
         "item_form_edicao": item_form_edicao,
+        "subtotais_categoria": orcamento.subtotais_por_categoria(),
     }
     context_base.update(obter_estado_itens(request, orcamento))
     payload = {

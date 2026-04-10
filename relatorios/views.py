@@ -9,6 +9,7 @@ from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from orcamentos.models import Orcamento
 from .forms import ConfiguracaoEmpresaForm
 from .exporters import gerar_excel_orcamento, gerar_pdf_orcamento, obter_alerta_status
+from .exporters import gerar_pdf_memorial_descritivo
 from .models import ConfiguracaoEmpresa
 
 
@@ -144,6 +145,7 @@ def orcamento_relatorio_central(request, pk):
             "orcamento": orcamento,
             "configuracao": configuracao,
             "alerta_status": alerta_status,
+            "subtotais_categoria": orcamento.subtotais_por_categoria(),
         },
     )
 
@@ -169,4 +171,15 @@ def orcamento_exportar_pdf(request, pk):
 
     response = HttpResponse(conteudo, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="orcamento-{orcamento.numero}.pdf"'
+    return response
+
+
+@require_capability("pode_visualizar_orcamentos")
+def orcamento_exportar_memorial_pdf(request, pk):
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
+    configuracao = obter_configuracao_ativa(request.user)
+    conteudo = gerar_pdf_memorial_descritivo(orcamento, configuracao)
+
+    response = HttpResponse(conteudo, content_type="application/pdf")
+    response["Content-Disposition"] = f'attachment; filename="memorial-descritivo-{orcamento.numero}.pdf"'
     return response
