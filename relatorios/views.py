@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
+from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from orcamentos.models import Orcamento
 from .forms import ConfiguracaoEmpresaForm
 from .exporters import gerar_excel_orcamento, gerar_pdf_orcamento, obter_alerta_status
@@ -16,7 +17,7 @@ def configuracao_lista(request):
     busca = request.GET.get("q", "").strip()
     ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "recentes")
-    configuracoes = ConfiguracaoEmpresa.objects.all()
+    configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user)
     if busca:
         configuracoes = configuracoes.filter(
             Q(nome_empresa__icontains=busca)
@@ -48,8 +49,8 @@ def configuracao_lista(request):
     )
 
 
-def obter_configuracao_ativa():
-    return ConfiguracaoEmpresa.objects.filter(ativo=True).order_by("-atualizado_em").first()
+def obter_configuracao_ativa(user):
+    return queryset_da_empresa(ConfiguracaoEmpresa.objects.filter(ativo=True), user).order_by("-atualizado_em").first()
 
 
 @require_capability("pode_gerenciar_relatorios")
@@ -57,7 +58,9 @@ def configuracao_criar(request):
     if request.method == "POST":
         form = ConfiguracaoEmpresaForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            configuracao = form.save(commit=False)
+            configuracao.empresa = obter_grupo_empresa_ou_erro(request.user)
+            configuracao.save()
             return redirect("relatorios:configuracao_lista")
     else:
         form = ConfiguracaoEmpresaForm()
@@ -71,7 +74,7 @@ def configuracao_criar(request):
 
 @require_capability("pode_visualizar_relatorios")
 def configuracao_visualizar(request, pk):
-    configuracao = get_object_or_404(ConfiguracaoEmpresa, pk=pk)
+    configuracao = get_object_or_404(queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk)
     form = ConfiguracaoEmpresaForm(instance=configuracao)
     return render(
         request,
@@ -87,7 +90,7 @@ def configuracao_visualizar(request, pk):
 
 @require_capability("pode_gerenciar_relatorios")
 def configuracao_editar(request, pk):
-    configuracao = get_object_or_404(ConfiguracaoEmpresa, pk=pk)
+    configuracao = get_object_or_404(queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk)
 
     if request.method == "POST":
         form = ConfiguracaoEmpresaForm(request.POST, request.FILES, instance=configuracao)
@@ -110,7 +113,7 @@ def configuracao_editar(request, pk):
 
 @require_capability("pode_gerenciar_relatorios")
 def configuracao_excluir(request, pk):
-    configuracao = get_object_or_404(ConfiguracaoEmpresa, pk=pk)
+    configuracao = get_object_or_404(queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk)
     acao = "reativar" if not configuracao.ativo else "inativar"
 
     if request.method == "POST":
@@ -131,8 +134,8 @@ def configuracao_excluir(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_relatorio_central(request, pk):
-    orcamento = get_object_or_404(Orcamento.objects.select_related("cliente"), pk=pk)
-    configuracao = obter_configuracao_ativa()
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
+    configuracao = obter_configuracao_ativa(request.user)
     alerta_status = obter_alerta_status(orcamento)
     return render(
         request,
@@ -147,8 +150,8 @@ def orcamento_relatorio_central(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_excel(request, pk):
-    orcamento = get_object_or_404(Orcamento.objects.select_related("cliente"), pk=pk)
-    configuracao = obter_configuracao_ativa()
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
+    configuracao = obter_configuracao_ativa(request.user)
     alerta_status = obter_alerta_status(orcamento)
     conteudo = gerar_excel_orcamento(orcamento, configuracao, alerta_status)
 
@@ -159,8 +162,8 @@ def orcamento_exportar_excel(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_pdf(request, pk):
-    orcamento = get_object_or_404(Orcamento.objects.select_related("cliente"), pk=pk)
-    configuracao = obter_configuracao_ativa()
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
+    configuracao = obter_configuracao_ativa(request.user)
     alerta_status = obter_alerta_status(orcamento)
     conteudo = gerar_pdf_orcamento(orcamento, configuracao, alerta_status)
 

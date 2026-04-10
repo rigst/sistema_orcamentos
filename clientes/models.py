@@ -1,5 +1,7 @@
 from django.db import models
 
+from core.tenancy import obter_grupo_empresa_padrao
+
 
 class Cliente(models.Model):
     TIPO_PESSOA_CHOICES = [
@@ -31,6 +33,13 @@ class Cliente(models.Model):
 
     observacoes = models.TextField(blank=True)
     ativo = models.BooleanField(default=True)
+    empresa = models.ForeignKey(
+        "auth.Group",
+        on_delete=models.PROTECT,
+        related_name="clientes",
+        null=True,
+        blank=True,
+    )
 
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -41,4 +50,7 @@ class Cliente(models.Model):
     def __str__(self):
         return self.nome_razao_social
 
-# Create your models here.
+    def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            self.empresa = obter_grupo_empresa_padrao()
+        super().save(*args, **kwargs)

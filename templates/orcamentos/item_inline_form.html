@@ -1,4 +1,4 @@
-<div class="item-builder" data-item-builder data-preview-url="{% url 'orcamentos:item_preview' orcamento.pk %}">
+<div class="item-builder" data-item-builder>
     {% if item %}
         <div class="section-heading section-heading-compact" style="margin-bottom: 1rem;">
             <div>
@@ -9,12 +9,6 @@
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     <span class="visually-hidden">Fechar edição</span>
                 </a>
-            </div>
-        </div>
-    {% else %}
-        <div class="section-heading section-heading-compact">
-            <div id="item-preview-panel">
-                {% include "orcamentos/partials/item_preview_card.html" with item_preview=None erro_validacao_preview=None %}
             </div>
         </div>
     {% endif %}
@@ -64,7 +58,6 @@
                                     data-unidade="{{ catalogo_item.unidade_medida }}"
                                     data-valor="{{ catalogo_item.valor_unitario_padrao }}"
                                     data-categoria="{{ catalogo_item.categoria.nome|default:'' }}"
-                                    data-categoria-cor="{{ catalogo_item.categoria.cor|default:'' }}"
                                     {% if item_form.item_catalogo.value|stringformat:'s' == catalogo_item.pk|stringformat:'s' %}selected{% endif %}>
                                     {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
                                 </option>
@@ -79,42 +72,24 @@
                     </div>
                 </div>
 
+                {{ item_form.ordem }}
+                {{ item_form.codigo_item }}
+                {{ item_form.nome }}
+                {{ item_form.unidade_medida }}
+                {{ item_form.observacoes }}
+
                 <div class="form-grid">
-                    <div>
-                        <label for="{{ item_form.ordem.id_for_label }}">Ordem{% if item_form.ordem.field.required %}<span class="required-mark">*</span>{% endif %}</label>
-                        {{ item_form.ordem }}
-                        {{ item_form.ordem.errors }}
-                    </div>
-
-                    <div>
-                        <label for="{{ item_form.codigo_item.id_for_label }}">Código{% if item_form.codigo_item.field.required %}<span class="required-mark">*</span>{% endif %}</label>
-                        {{ item_form.codigo_item }}
-                        {{ item_form.codigo_item.errors }}
-                    </div>
-
-                    <div class="full">
-                        <label for="{{ item_form.nome.id_for_label }}">Nome{% if item_form.nome.field.required %}<span class="required-mark">*</span>{% endif %}</label>
-                        {{ item_form.nome }}
-                        {{ item_form.nome.errors }}
-                    </div>
-
                     <div class="full">
                         <label for="{{ item_form.descricao.id_for_label }}">Descrição{% if item_form.descricao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.descricao }}
                         {{ item_form.descricao.errors }}
-                    </div>
-
-                    <div>
-                        <label for="{{ item_form.unidade_medida.id_for_label }}">Unidade{% if item_form.unidade_medida.field.required %}<span class="required-mark">*</span>{% endif %}</label>
-                        {{ item_form.unidade_medida }}
-                        {{ item_form.unidade_medida.errors }}
                     </div>
                 </div>
             </section>
 
             <section class="item-block">
                 <div class="item-block-header">
-                    <h4>Quantidade e preço</h4>
+                    <h4>Valores e ajustes</h4>
                 </div>
 
                 <div class="form-grid">
@@ -129,15 +104,7 @@
                         {{ item_form.valor_unitario }}
                         {{ item_form.valor_unitario.errors }}
                     </div>
-                </div>
-            </section>
 
-            <section class="item-block">
-                <div class="item-block-header">
-                    <h4>Ajustes</h4>
-                </div>
-
-                <div class="form-grid">
                     <div>
                         <label for="{{ item_form.desconto_valor.id_for_label }}">Desconto em valor (R$){% if item_form.desconto_valor.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.desconto_valor }}
@@ -160,12 +127,6 @@
                         <label for="{{ item_form.acrescimo_percentual.id_for_label }}">Acréscimo em %{% if item_form.acrescimo_percentual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                         {{ item_form.acrescimo_percentual }}
                         {{ item_form.acrescimo_percentual.errors }}
-                    </div>
-
-                    <div class="full">
-                        <label for="{{ item_form.observacoes.id_for_label }}">Observações{% if item_form.observacoes.field.required %}<span class="required-mark">*</span>{% endif %}</label>
-                        {{ item_form.observacoes }}
-                        {{ item_form.observacoes.errors }}
                     </div>
                 </div>
             </section>

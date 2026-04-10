@@ -1,6 +1,7 @@
 from django import forms
 
 from core.form_fields import substituir_por_decimal_br
+from core.tenancy import queryset_da_empresa
 from .models import CategoriaItem, ItemCatalogo
 
 
@@ -9,7 +10,7 @@ class CategoriaItemForm(forms.ModelForm):
         model = CategoriaItem
         fields = ["nome", "descricao", "cor", "ativo"]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ativo"].widget = forms.HiddenInput()
         self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
@@ -36,7 +37,7 @@ class ItemCatalogoForm(forms.ModelForm):
             "ativo",
         ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ativo"].widget = forms.HiddenInput()
         self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
@@ -53,6 +54,11 @@ class ItemCatalogoForm(forms.ModelForm):
         )
         self.fields["descricao_padrao"].widget.attrs["rows"] = 3
         self.fields["observacoes"].widget.attrs["rows"] = 3
+        if user is not None:
+            self.fields["categoria"].queryset = queryset_da_empresa(
+                CategoriaItem.objects.filter(ativo=True).order_by("nome"),
+                user,
+            )
 
     def clean_codigo(self):
         if self.instance.pk:
@@ -64,3 +70,7 @@ class ItemCatalogoForm(forms.ModelForm):
         if not valor:
             raise forms.ValidationError("Informe o nome do item.")
         return valor
+
+
+class ImportarCatalogoExcelForm(forms.Form):
+    arquivo = forms.FileField(help_text="Envie um arquivo .xlsx com cabeçalho na primeira linha.")

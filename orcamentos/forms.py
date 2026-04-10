@@ -30,7 +30,7 @@ class OrcamentoForm(forms.ModelForm):
             "validade_em": forms.DateInput(attrs={"type": "date"}),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
 
         placeholders = {
@@ -69,6 +69,11 @@ class OrcamentoForm(forms.ModelForm):
         self.fields["mostrar_ajustes_no_relatorio"].required = False
         if not self.instance.pk and not self.is_bound:
             self.fields["data_emissao"].initial = localdate()
+        if user is not None:
+            from clientes.models import Cliente
+            from core.tenancy import queryset_da_empresa
+
+            self.fields["cliente"].queryset = queryset_da_empresa(Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user)
 
 
 class ItemOrcamentoForm(forms.ModelForm):
@@ -94,12 +99,18 @@ class ItemOrcamentoForm(forms.ModelForm):
             "observacoes": forms.Textarea(),
         }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["item_catalogo"].queryset = ItemCatalogo.objects.filter(ativo=True).select_related("categoria").order_by("nome")
+        queryset = ItemCatalogo.objects.filter(ativo=True).select_related("categoria").order_by("nome")
+        if user is not None:
+            from core.tenancy import queryset_da_empresa
+
+            queryset = queryset_da_empresa(queryset, user)
+        self.fields["item_catalogo"].queryset = queryset
         self.fields["item_catalogo"].required = False
         self.fields["nome"].required = False
         self.fields["unidade_medida"].required = False
+        self.fields["ordem"].required = False
         for nome_campo in [
             "quantidade",
             "valor_unitario",
@@ -120,6 +131,11 @@ class ItemOrcamentoForm(forms.ModelForm):
                 "placeholder": "Gerado automaticamente pelo sistema",
             }
         )
+        self.fields["ordem"].widget = forms.HiddenInput()
+        self.fields["codigo_item"].widget = forms.HiddenInput()
+        self.fields["nome"].widget = forms.HiddenInput()
+        self.fields["unidade_medida"].widget = forms.HiddenInput()
+        self.fields["observacoes"].widget = forms.HiddenInput()
 
     def aplicar_defaults_catalogo(self, cleaned_data):
         item_catalogo = cleaned_data.get("item_catalogo")
@@ -142,8 +158,8 @@ class ItemOrcamentoForm(forms.ModelForm):
         cleaned_data = super().clean()
         cleaned_data = self.aplicar_defaults_catalogo(cleaned_data)
 
-        if not cleaned_data.get("nome"):
-            self.add_error("nome", "Este campo é obrigatório.")
+        if not cleaned_data.get("item_catalogo") and not cleaned_data.get("nome"):
+            self.add_error("item_catalogo", "Este campo é obrigatório.")
 
         if not cleaned_data.get("unidade_medida"):
             self.add_error("unidade_medida", "Este campo é obrigatório.")

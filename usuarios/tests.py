@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -83,3 +84,18 @@ class UsuarioPermissaoPropriedadesTests(TestCase):
         self.assertFalse(user.pode_gerenciar_catalogo)
         self.assertFalse(user.pode_gerenciar_relatorios)
         self.assertFalse(user.pode_gerenciar_orcamentos)
+
+
+class UsuarioVisitanteTests(TestCase):
+    def test_login_como_visitante_cria_usuario_temporario_e_remove_no_logout(self):
+        response = self.client.post(reverse("login"), {"entrar_visitante": "1"})
+
+        self.assertEqual(response.status_code, 302)
+        visitante = get_user_model().objects.get(perfil="visitante")
+        grupo = visitante.groups.get()
+        self.assertTrue(grupo.name.startswith("__visitante__"))
+
+        self.client.post(reverse("logout"))
+
+        self.assertFalse(get_user_model().objects.filter(pk=visitante.pk).exists())
+        self.assertFalse(Group.objects.filter(pk=grupo.pk).exists())

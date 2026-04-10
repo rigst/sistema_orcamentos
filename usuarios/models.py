@@ -7,6 +7,7 @@ class Usuario(AbstractUser):
         ("admin", "Administrador"),
         ("orcamentista", "Orçamentista"),
         ("visualizador", "Visualizador"),
+        ("visitante", "Visitante"),
     ]
 
     perfil = models.CharField(
@@ -32,12 +33,16 @@ class Usuario(AbstractUser):
         return self.perfil == "visualizador"
 
     @property
+    def eh_visitante(self):
+        return self.perfil == "visitante"
+
+    @property
     def pode_visualizar_clientes(self):
         return self.is_authenticated
 
     @property
     def pode_gerenciar_clientes(self):
-        return self.eh_admin_perfil or self.eh_orcamentista
+        return self.eh_admin_perfil or self.eh_orcamentista or self.eh_visitante
 
     @property
     def pode_visualizar_catalogo(self):
@@ -45,7 +50,7 @@ class Usuario(AbstractUser):
 
     @property
     def pode_gerenciar_catalogo(self):
-        return self.eh_admin_perfil
+        return self.eh_admin_perfil or self.eh_visitante
 
     @property
     def pode_visualizar_relatorios(self):
@@ -53,7 +58,7 @@ class Usuario(AbstractUser):
 
     @property
     def pode_gerenciar_relatorios(self):
-        return self.eh_admin_perfil
+        return self.eh_admin_perfil or self.eh_visitante
 
     @property
     def pode_visualizar_orcamentos(self):
@@ -61,7 +66,12 @@ class Usuario(AbstractUser):
 
     @property
     def pode_gerenciar_orcamentos(self):
-        return self.eh_admin_perfil or self.eh_orcamentista
+        return self.eh_admin_perfil or self.eh_orcamentista or self.eh_visitante
+
+    @property
+    def nome_empresa(self):
+        grupo = self.groups.order_by("name", "id").first()
+        return grupo.name if grupo else "Sem empresa"
 
     def __str__(self):
         return self.nome_exibicao or self.get_full_name() or self.username

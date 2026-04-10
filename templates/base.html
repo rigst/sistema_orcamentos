@@ -17,6 +17,8 @@
                     <div class="header-user-meta">
                         <span>Olá, {{ user }}</span>
                         <span class="header-separator">|</span>
+                        <span>{{ user.nome_empresa }}</span>
+                        <span class="header-separator">|</span>
                         <span class="user-role">{{ user.get_perfil_display }}</span>
                     </div>
                     <ul class="nav-links">

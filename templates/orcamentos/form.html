@@ -165,10 +165,6 @@
         {% if orcamento %}
             <div id="item-feedback-region" aria-live="polite"></div>
 
-            <div id="item-edit-panel-region">
-                {% include "orcamentos/partials/item_edit_panel.html" %}
-            </div>
-
             {% if not modo_somente_leitura %}
                 <div>
                     {% include "orcamentos/partials/item_create_panel.html" %}
@@ -242,22 +238,6 @@
 })();
 
 (() => {
-  const initItemTable = (scope = document) => {
-    scope.querySelectorAll("[data-expand-row]").forEach((button) => {
-      if (button.dataset.bound === "1") return;
-      button.dataset.bound = "1";
-      button.addEventListener("click", () => {
-        const target = document.querySelector(`[data-row-detail="${button.dataset.expandRow}"]`);
-        if (!target) return;
-        target.classList.toggle("is-hidden");
-        const expanded = !target.classList.contains("is-hidden");
-        button.setAttribute("aria-expanded", expanded ? "true" : "false");
-        button.setAttribute("title", expanded ? "Recolher detalhes" : "Expandir detalhes");
-        button.querySelector("span").textContent = expanded ? "-" : "+";
-      });
-    });
-  };
-
   const initItemBuilders = (scope = document) => {
     scope.querySelectorAll("[data-item-builder]").forEach((root) => {
       if (root.dataset.bound === "1") return;
@@ -269,27 +249,6 @@
       const searchButton = root.querySelector("[data-catalog-search-button]");
       const catalogTitle = root.querySelector("[data-catalog-title]");
       const catalogMeta = root.querySelector("[data-catalog-meta]");
-      const previewUrl = root.dataset.previewUrl;
-      const previewPanel = root.querySelector("#item-preview-panel");
-
-      const fields = [
-        "#id_codigo_item",
-        "#id_nome",
-        "#id_descricao",
-        "#id_unidade_medida",
-        "#id_quantidade",
-        "#id_valor_unitario",
-        "#id_desconto_valor",
-        "#id_desconto_percentual",
-        "#id_acrescimo_valor",
-        "#id_acrescimo_percentual",
-        "#id_observacoes",
-        "#id_ordem",
-      ]
-        .map((selector) => form.querySelector(selector))
-        .filter(Boolean);
-
-      let previewTimeout = null;
 
       const parseNumber = (value) => {
         const normalized = String(value || "")
@@ -346,54 +305,30 @@
         }
       };
 
-      const requestPreview = () => {
-        if (!previewPanel || !previewUrl) return;
-        const params = new URLSearchParams(new FormData(form));
-        fetch(`${previewUrl}?${params.toString()}`, {
-          headers: { "X-Requested-With": "XMLHttpRequest" },
-        })
-          .then((response) => response.text())
-          .then((html) => {
-            previewPanel.innerHTML = html;
-          });
-      };
-
-      const schedulePreview = () => {
-        clearTimeout(previewTimeout);
-        previewTimeout = setTimeout(requestPreview, 200);
-      };
-
       const applyCatalogData = () => {
         if (!select) return;
         const option = select.options[select.selectedIndex];
         if (!option || !option.value) return;
         const byId = (id) => form.querySelector(id);
 
-        const nome = byId("#id_nome");
         const descricao = byId("#id_descricao");
-        const unidade = byId("#id_unidade_medida");
         const valor = byId("#id_valor_unitario");
 
-        if (nome) nome.value = option.dataset.nome || "";
         if (descricao) descricao.value = option.dataset.descricao || "";
-        if (unidade) unidade.value = option.dataset.unidade || "";
         if (valor) valor.value = option.dataset.valor || "0.00";
         document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: form } }));
-        schedulePreview();
       };
 
       if (select) {
         select.addEventListener("change", () => {
           applyCatalogData();
           updateCatalogSummary();
-          schedulePreview();
         });
       }
 
       if (searchButton) {
         searchButton.addEventListener("click", () => {
           filterCatalogOptions();
-          schedulePreview();
         });
       }
 
@@ -402,22 +337,14 @@
           if (event.key !== "Enter") return;
           event.preventDefault();
           filterCatalogOptions();
-          schedulePreview();
         });
       }
 
-      fields.forEach((field) => {
-        field.addEventListener("input", schedulePreview);
-        field.addEventListener("change", schedulePreview);
-      });
-
       updateCatalogSummary();
       document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: root } }));
-      schedulePreview();
     });
   };
 
-  initItemTable();
   initItemBuilders();
 
   document.addEventListener("submit", async (event) => {
@@ -449,16 +376,13 @@
       const totais = document.getElementById("totais-card-region");
       const feedback = document.getElementById("item-feedback-region");
       const createPanel = document.getElementById("item-create-panel-region");
-      const editPanel = document.getElementById("item-edit-panel-region");
 
       if (tabela && data.itens_html !== undefined) tabela.innerHTML = data.itens_html;
       if (totais && data.totais_html !== undefined) totais.innerHTML = data.totais_html;
       if (feedback && data.flash_html !== undefined) feedback.innerHTML = data.flash_html;
       if (createPanel && data.novo_item_html !== undefined) createPanel.innerHTML = data.novo_item_html;
-      if (editPanel && data.edicao_item_html !== undefined) editPanel.innerHTML = data.edicao_item_html;
       form.dispatchEvent(new CustomEvent("codex:mark-clean"));
       document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: document } }));
-      initItemTable(document);
       initItemBuilders(document);
     } finally {
       form.dataset.isSubmitting = "0";

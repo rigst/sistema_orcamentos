@@ -1,3 +1,4 @@
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -231,3 +232,40 @@ class ClienteAtualizacaoTests(TestCase):
             response,
             "Os orçamentos ainda não enviados passam a usar os dados mais recentes deste cliente.",
         )
+
+
+class ClienteEmpresaIsolationTests(TestCase):
+    def setUp(self):
+        self.empresa_a = Group.objects.create(name="Empresa A")
+        self.empresa_b = Group.objects.create(name="Empresa B")
+        self.user_a = get_user_model().objects.create_user(
+            username="empresa_a",
+            password="senha-forte-123",
+            perfil="orcamentista",
+        )
+        self.user_a.groups.set([self.empresa_a])
+        self.user_b = get_user_model().objects.create_user(
+            username="empresa_b",
+            password="senha-forte-123",
+            perfil="orcamentista",
+        )
+        self.user_b.groups.set([self.empresa_b])
+
+        self.cliente_a = Cliente.objects.create(nome_razao_social="Cliente A", empresa=self.empresa_a)
+        self.cliente_b = Cliente.objects.create(nome_razao_social="Cliente B", empresa=self.empresa_b)
+
+    def test_lista_mostra_apenas_clientes_da_mesma_empresa(self):
+        self.client.force_login(self.user_a)
+
+        response = self.client.get(reverse("clientes:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Cliente A")
+        self.assertNotContains(response, "Cliente B")
+
+    def test_usuario_nao_acessa_cliente_de_outra_empresa(self):
+        self.client.force_login(self.user_a)
+
+        response = self.client.get(reverse("clientes:visualizar", args=[self.cliente_b.pk]))
+
+        self.assertEqual(response.status_code, 404)

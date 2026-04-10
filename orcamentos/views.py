@@ -11,6 +11,7 @@ from urllib.parse import urlencode
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
+from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from catalogo.models import CategoriaItem
 from .forms import ItemOrcamentoForm, OrcamentoForm
 from .models import ItemOrcamento, Orcamento
@@ -49,7 +50,7 @@ def obter_item_em_edicao(request, orcamento, modo_somente_leitura):
         return None, None
 
     item = get_object_or_404(ItemOrcamento, pk=item_edit_pk, orcamento=orcamento)
-    return item, ItemOrcamentoForm(instance=item)
+    return item, ItemOrcamentoForm(instance=item, user=request.user)
 
 
 def obter_estado_itens(request, orcamento):
@@ -70,7 +71,7 @@ def obter_estado_itens(request, orcamento):
 
     itens = itens.order_by(*ITEM_SORT_MAP.get(ordenacao, ITEM_SORT_MAP["ordem"]))
     categorias = (
-        CategoriaItem.objects.filter(itens__itens_em_orcamentos__orcamento=orcamento)
+        queryset_da_empresa(CategoriaItem.objects.filter(itens__itens_em_orcamentos__orcamento=orcamento), request.user)
         .distinct()
         .order_by("nome")
     )
@@ -128,7 +129,11 @@ def renderizar_editor_orcamento(
 
 
 def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=None, item_form_edicao=None, mensagem=None):
-    context_base = {"orcamento": orcamento}
+    context_base = {
+        "orcamento": orcamento,
+        "item_editando": item_editando,
+        "item_form_edicao": item_form_edicao,
+    }
     context_base.update(obter_estado_itens(request, orcamento))
     payload = {
         "itens_html": render_to_string("orcamentos/partials/itens_tabela.html", context_base, request=request),
@@ -145,18 +150,6 @@ def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=Non
             request=request,
         )
 
-    contexto_edicao_item = dict(context_base)
-    contexto_edicao_item.update(
-        {
-            "item_editando": item_editando,
-            "item_form_edicao": item_form_edicao,
-        }
-    )
-    payload["edicao_item_html"] = render_to_string(
-        "orcamentos/partials/item_edit_panel.html",
-        contexto_edicao_item,
-        request=request,
-    )
     return JsonResponse(payload)
 
 
@@ -167,7 +160,7 @@ def orcamento_lista(request):
     ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "recentes")
 
-    orcamentos = Orcamento.objects.select_related("cliente").all()
+    orcamentos = queryset_da_empresa(Orcamento.objects.select_related("cliente").all(), request.user)
 
     if busca:
         orcamentos = orcamentos.filter(
@@ -210,16 +203,17 @@ def orcamento_lista(request):
 @require_capability("pode_gerenciar_orcamentos")
 def orcamento_criar(request):
     if request.method == "POST":
-        form = OrcamentoForm(request.POST)
+        form = OrcamentoForm(request.POST, user=request.user)
         if form.is_valid():
             orcamento = form.save(commit=False)
+            orcamento.empresa = obter_grupo_empresa_ou_erro(request.user)
             orcamento.criado_por = request.user
             orcamento.atualizado_por = request.user
             orcamento.save()
             messages.success(request, "Orçamento criado com sucesso.")
             return redirect("orcamentos:editar", pk=orcamento.pk)
     else:
-        form = OrcamentoForm()
+        form = OrcamentoForm(user=request.user)
 
     return render(
         request,
@@ -230,14 +224,14 @@ def orcamento_criar(request):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_editar(request, pk):
-    orcamento = get_object_or_404(Orcamento, pk=pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
     modo_somente_leitura = not request.user.pode_gerenciar_orcamentos
 
     if request.method == "POST":
         if modo_somente_leitura:
             raise PermissionDenied
 
-        form = OrcamentoForm(request.POST, instance=orcamento)
+        form = OrcamentoForm(request.POST, instance=orcamento, user=request.user)
         if form.is_valid():
             orcamento = form.save(commit=False)
             orcamento.atualizado_por = request.user
@@ -246,9 +240,9 @@ def orcamento_editar(request, pk):
             messages.success(request, "Orçamento atualizado com sucesso.")
             return redirect("orcamentos:editar", pk=orcamento.pk)
     else:
-        form = OrcamentoForm(instance=orcamento)
+        form = OrcamentoForm(instance=orcamento, user=request.user)
 
-    item_form = ItemOrcamentoForm()
+    item_form = ItemOrcamentoForm(user=request.user)
     return renderizar_editor_orcamento(
         request,
         orcamento,
@@ -260,7 +254,7 @@ def orcamento_editar(request, pk):
 
 @require_capability("pode_gerenciar_orcamentos")
 def orcamento_excluir(request, pk):
-    orcamento = get_object_or_404(Orcamento, pk=pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
     acao = "reativar" if not orcamento.ativo else "inativar"
 
     if request.method == "POST":
@@ -278,7 +272,7 @@ def orcamento_excluir(request, pk):
 @require_capability("pode_gerenciar_orcamentos")
 @require_POST
 def orcamento_alterar_status(request, pk, novo_status):
-    orcamento = get_object_or_404(Orcamento, pk=pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
 
     if novo_status in STATUS_PERMITIDOS:
         orcamento.status = novo_status
@@ -293,14 +287,15 @@ def orcamento_alterar_status(request, pk, novo_status):
 
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_criar(request, orcamento_pk):
-    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     if request.method == "POST":
-        form = ItemOrcamentoForm(request.POST)
+        form = ItemOrcamentoForm(request.POST, user=request.user)
         if form.is_valid():
             item = form.save(commit=False)
             item.orcamento = orcamento
+            item.ordem = orcamento.itens.count() + 1
             item.save()
             normalizar_ordens_itens(orcamento)
             mensagem = f"Item '{item.nome}' adicionado."
@@ -308,7 +303,7 @@ def item_orcamento_criar(request, orcamento_pk):
                 return responder_ajax_item(
                     request,
                     orcamento,
-                    item_form=ItemOrcamentoForm(),
+                    item_form=ItemOrcamentoForm(user=request.user),
                     mensagem=mensagem,
                 )
 
@@ -325,7 +320,7 @@ def item_orcamento_criar(request, orcamento_pk):
         return renderizar_editor_orcamento(
             request,
             orcamento,
-            OrcamentoForm(instance=orcamento),
+            OrcamentoForm(instance=orcamento, user=request.user),
             form,
             False,
         )
@@ -335,12 +330,12 @@ def item_orcamento_criar(request, orcamento_pk):
 
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_editar(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     if request.method == "POST":
-        form = ItemOrcamentoForm(request.POST, instance=item)
+        form = ItemOrcamentoForm(request.POST, instance=item, user=request.user)
         if form.is_valid():
             item = form.save()
             normalizar_ordens_itens(orcamento)
@@ -349,7 +344,7 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
                 return responder_ajax_item(
                     request,
                     orcamento,
-                    item_form=ItemOrcamentoForm(),
+                    item_form=ItemOrcamentoForm(user=request.user),
                     mensagem=mensagem,
                 )
 
@@ -360,7 +355,7 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
             return responder_ajax_item(
                 request,
                 orcamento,
-                item_form=ItemOrcamentoForm(),
+                item_form=ItemOrcamentoForm(user=request.user),
                 item_editando=item,
                 item_form_edicao=form,
             )
@@ -368,8 +363,8 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
         return renderizar_editor_orcamento(
             request,
             orcamento,
-            OrcamentoForm(instance=orcamento),
-            ItemOrcamentoForm(),
+            OrcamentoForm(instance=orcamento, user=request.user),
+            ItemOrcamentoForm(user=request.user),
             False,
             item_editando_override=item,
             item_form_edicao_override=form,
@@ -380,7 +375,7 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
 
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_excluir(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
 
     if request.method == "POST":
@@ -404,7 +399,7 @@ def item_orcamento_excluir(request, orcamento_pk, item_pk):
 @require_capability("pode_gerenciar_orcamentos")
 @require_POST
 def item_orcamento_duplicar(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -424,7 +419,7 @@ def item_orcamento_duplicar(request, orcamento_pk, item_pk):
         return responder_ajax_item(
             request,
             orcamento,
-            item_form=ItemOrcamentoForm(),
+            item_form=ItemOrcamentoForm(user=request.user),
             mensagem=mensagem,
         )
     messages.success(request, mensagem)
@@ -434,7 +429,7 @@ def item_orcamento_duplicar(request, orcamento_pk, item_pk):
 @require_capability("pode_gerenciar_orcamentos")
 @require_POST
 def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -454,9 +449,9 @@ def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
         return responder_ajax_item(
             request,
             orcamento,
-            item_form=ItemOrcamentoForm(),
+            item_form=ItemOrcamentoForm(user=request.user),
             item_editando=item,
-            item_form_edicao=ItemOrcamentoForm(instance=item),
+            item_form_edicao=ItemOrcamentoForm(instance=item, user=request.user),
             mensagem=mensagem,
         )
     messages.success(request, mensagem)
@@ -466,7 +461,7 @@ def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
 @require_capability("pode_gerenciar_orcamentos")
 @require_POST
 def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
-    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -494,7 +489,7 @@ def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
         return responder_ajax_item(
             request,
             orcamento,
-            item_form=ItemOrcamentoForm(),
+            item_form=ItemOrcamentoForm(user=request.user),
             mensagem=mensagem,
         )
     messages.success(request, mensagem)
@@ -506,8 +501,8 @@ def item_orcamento_preview(request, orcamento_pk):
     if request.method != "GET":
         return HttpResponseBadRequest("Método inválido.")
 
-    orcamento = get_object_or_404(Orcamento, pk=orcamento_pk)
-    form = ItemOrcamentoForm(request.GET)
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    form = ItemOrcamentoForm(request.GET, user=request.user)
     form.is_valid()
     item_preview, erro_validacao = form.construir_item_preview(orcamento)
 

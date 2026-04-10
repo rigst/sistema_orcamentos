@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
+from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from .forms import ClienteForm
 from .models import Cliente
 
@@ -14,7 +15,7 @@ def cliente_lista(request):
     ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "nome")
 
-    clientes = Cliente.objects.all()
+    clientes = queryset_da_empresa(Cliente.objects.all(), request.user)
 
     if busca:
         clientes = clientes.filter(
@@ -53,7 +54,9 @@ def cliente_criar(request):
     if request.method == "POST":
         form = ClienteForm(request.POST)
         if form.is_valid():
-            form.save()
+            cliente = form.save(commit=False)
+            cliente.empresa = obter_grupo_empresa_ou_erro(request.user)
+            cliente.save()
             return redirect("clientes:lista")
     else:
         form = ClienteForm()
@@ -63,7 +66,7 @@ def cliente_criar(request):
 
 @require_capability("pode_visualizar_clientes")
 def cliente_visualizar(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
+    cliente = get_object_or_404(queryset_da_empresa(Cliente.objects.all(), request.user), pk=pk)
     form = ClienteForm(instance=cliente)
 
     return render(
@@ -75,7 +78,7 @@ def cliente_visualizar(request, pk):
 
 @require_capability("pode_gerenciar_clientes")
 def cliente_editar(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
+    cliente = get_object_or_404(queryset_da_empresa(Cliente.objects.all(), request.user), pk=pk)
 
     if request.method == "POST":
         form = ClienteForm(request.POST, instance=cliente)
@@ -98,7 +101,7 @@ def cliente_editar(request, pk):
 
 @require_capability("pode_gerenciar_clientes")
 def cliente_excluir(request, pk):
-    cliente = get_object_or_404(Cliente, pk=pk)
+    cliente = get_object_or_404(queryset_da_empresa(Cliente.objects.all(), request.user), pk=pk)
     acao = "reativar" if not cliente.ativo else "inativar"
 
     if request.method == "POST":

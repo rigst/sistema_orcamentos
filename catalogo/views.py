@@ -4,7 +4,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
-from .forms import CategoriaItemForm, ItemCatalogoForm
+from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
+from .forms import CategoriaItemForm, ImportarCatalogoExcelForm, ItemCatalogoForm
 from .models import CategoriaItem, ItemCatalogo
 
 
@@ -14,7 +15,7 @@ def categoria_lista(request):
     ativo = request.GET.get("ativo", "ativas").strip()
     ordenar = request.GET.get("sort", "nome")
 
-    categorias = CategoriaItem.objects.all()
+    categorias = queryset_da_empresa(CategoriaItem.objects.all(), request.user)
 
     if busca:
         categorias = categorias.filter(nome__icontains=busca)
@@ -44,12 +45,14 @@ def categoria_lista(request):
 @require_capability("pode_gerenciar_catalogo")
 def categoria_criar(request):
     if request.method == "POST":
-        form = CategoriaItemForm(request.POST)
+        form = CategoriaItemForm(request.POST, user=request.user)
         if form.is_valid():
-            form.save()
+            categoria = form.save(commit=False)
+            categoria.empresa = obter_grupo_empresa_ou_erro(request.user)
+            categoria.save()
             return redirect("catalogo:categoria_lista")
     else:
-        form = CategoriaItemForm()
+        form = CategoriaItemForm(user=request.user)
 
     return render(
         request,
@@ -60,8 +63,8 @@ def categoria_criar(request):
 
 @require_capability("pode_visualizar_catalogo")
 def categoria_visualizar(request, pk):
-    categoria = get_object_or_404(CategoriaItem, pk=pk)
-    form = CategoriaItemForm(instance=categoria)
+    categoria = get_object_or_404(queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk)
+    form = CategoriaItemForm(instance=categoria, user=request.user)
     return render(
         request,
         "catalogo/categoria_form.html",
@@ -71,11 +74,11 @@ def categoria_visualizar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def categoria_editar(request, pk):
-    categoria = get_object_or_404(CategoriaItem, pk=pk)
+    categoria = get_object_or_404(queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk)
     cor_anterior = categoria.cor
 
     if request.method == "POST":
-        form = CategoriaItemForm(request.POST, instance=categoria)
+        form = CategoriaItemForm(request.POST, instance=categoria, user=request.user)
         if form.is_valid():
             categoria = form.save()
             if categoria.cor != cor_anterior:
@@ -90,7 +93,7 @@ def categoria_editar(request, pk):
                 )
             return redirect("catalogo:categoria_lista")
     else:
-        form = CategoriaItemForm(instance=categoria)
+        form = CategoriaItemForm(instance=categoria, user=request.user)
 
     return render(
         request,
@@ -101,7 +104,7 @@ def categoria_editar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def categoria_excluir(request, pk):
-    categoria = get_object_or_404(CategoriaItem, pk=pk)
+    categoria = get_object_or_404(queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk)
     acao = "reativar" if not categoria.ativo else "inativar"
 
     if request.method == "POST":
@@ -127,7 +130,7 @@ def item_lista(request):
     ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "nome")
 
-    itens = ItemCatalogo.objects.select_related("categoria").all()
+    itens = queryset_da_empresa(ItemCatalogo.objects.select_related("categoria").all(), request.user)
 
     if busca:
         itens = itens.filter(
@@ -163,7 +166,7 @@ def item_lista(request):
         "categoria": categoria_id,
         "ativo": ativo,
         "sort": ordenar,
-        "categorias": CategoriaItem.objects.filter(ativo=True).order_by("nome"),
+        "categorias": queryset_da_empresa(CategoriaItem.objects.filter(ativo=True).order_by("nome"), request.user),
     }
     return render(request, "catalogo/item_lista.html", context)
 
@@ -171,12 +174,17 @@ def item_lista(request):
 @require_capability("pode_gerenciar_catalogo")
 def item_criar(request):
     if request.method == "POST":
-        form = ItemCatalogoForm(request.POST)
+        form = ItemCatalogoForm(request.POST, user=request.user)
         if form.is_valid():
-            form.save()
-            return redirect("catalogo:item_lista")
+            item = form.save(commit=False)
+            item.empresa = obter_grupo_empresa_ou_erro(request.user)
+            if item.categoria and item.categoria.empresa_id != item.empresa_id:
+                form.add_error("categoria", "Selecione uma categoria da sua empresa.")
+            else:
+                item.save()
+                return redirect("catalogo:item_lista")
     else:
-        form = ItemCatalogoForm()
+        form = ItemCatalogoForm(user=request.user)
 
     return render(
         request,
@@ -187,8 +195,8 @@ def item_criar(request):
 
 @require_capability("pode_visualizar_catalogo")
 def item_visualizar(request, pk):
-    item = get_object_or_404(ItemCatalogo, pk=pk)
-    form = ItemCatalogoForm(instance=item)
+    item = get_object_or_404(queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk)
+    form = ItemCatalogoForm(instance=item, user=request.user)
     return render(
         request,
         "catalogo/item_form.html",
@@ -198,15 +206,15 @@ def item_visualizar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def item_editar(request, pk):
-    item = get_object_or_404(ItemCatalogo, pk=pk)
+    item = get_object_or_404(queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk)
 
     if request.method == "POST":
-        form = ItemCatalogoForm(request.POST, instance=item)
+        form = ItemCatalogoForm(request.POST, instance=item, user=request.user)
         if form.is_valid():
             form.save()
             return redirect("catalogo:item_lista")
     else:
-        form = ItemCatalogoForm(instance=item)
+        form = ItemCatalogoForm(instance=item, user=request.user)
 
     return render(
         request,
@@ -217,7 +225,7 @@ def item_editar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def item_excluir(request, pk):
-    item = get_object_or_404(ItemCatalogo, pk=pk)
+    item = get_object_or_404(queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk)
     acao = "reativar" if not item.ativo else "inativar"
 
     if request.method == "POST":
@@ -233,4 +241,34 @@ def item_excluir(request, pk):
         request,
         "catalogo/item_excluir.html",
         {"item": item, "acao": acao},
+    )
+
+
+@require_capability("pode_gerenciar_catalogo")
+def catalogo_importar_excel(request):
+    if request.method == "POST":
+        form = ImportarCatalogoExcelForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                from .services import importar_catalogo_excel
+
+                categorias_criadas, itens_criados = importar_catalogo_excel(
+                    form.cleaned_data["arquivo"],
+                    obter_grupo_empresa_ou_erro(request.user),
+                )
+            except ValueError as exc:
+                form.add_error("arquivo", str(exc))
+            else:
+                messages.success(
+                    request,
+                    f"Importação concluída: {categorias_criadas} categorias e {itens_criados} itens processados.",
+                )
+                return redirect("catalogo:item_lista")
+    else:
+        form = ImportarCatalogoExcelForm()
+
+    return render(
+        request,
+        "catalogo/importar_excel.html",
+        {"form": form, "titulo": "Importar categorias e itens"},
     )

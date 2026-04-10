@@ -583,10 +583,22 @@ tr:hover td {
   color: #925d16;
 }
 
+.badge-success {
+  background: rgba(79, 165, 106, 0.12);
+  border-color: rgba(79, 165, 106, 0.18);
+  color: #2f7d49;
+}
+
 .badge-info {
   background: rgba(47, 120, 219, 0.1);
   border-color: rgba(47, 120, 219, 0.14);
   color: #2d6bbf;
+}
+
+.badge-danger {
+  background: rgba(209, 69, 69, 0.12);
+  border-color: rgba(209, 69, 69, 0.18);
+  color: #b63e3e;
 }
 
 .badge-danger-soft {
@@ -767,7 +779,7 @@ tr:hover td {
 }
 
 .actions-col {
-  min-width: 200px;
+  min-width: 220px;
   text-align: center;
 }
 
@@ -943,6 +955,11 @@ tr:hover td {
 }
 
 .item-row-detail td {
+  padding: 0;
+  background: rgba(243, 248, 255, 0.96);
+}
+
+.item-row-inline-edit td {
   padding: 0;
   background: rgba(243, 248, 255, 0.96);
 }

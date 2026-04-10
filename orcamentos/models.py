@@ -7,6 +7,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Max
 
+from core.tenancy import obter_grupo_empresa_padrao
 
 DUAS_CASAS = Decimal("0.01")
 
@@ -25,7 +26,7 @@ class Orcamento(models.Model):
         ("cancelado", "Cancelado"),
     ]
 
-    numero = models.CharField(max_length=30, unique=True)
+    numero = models.CharField(max_length=30)
 
     cliente = models.ForeignKey(
         "clientes.Cliente",
@@ -92,6 +93,13 @@ class Orcamento(models.Model):
         default=False,
         help_text="Se marcado, o relatório do cliente mostra descontos e acréscimos detalhados.",
     )
+    empresa = models.ForeignKey(
+        "auth.Group",
+        on_delete=models.PROTECT,
+        related_name="orcamentos",
+        null=True,
+        blank=True,
+    )
 
     criado_por = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -111,6 +119,9 @@ class Orcamento(models.Model):
 
     class Meta:
         ordering = ["-criado_em"]
+        constraints = [
+            models.UniqueConstraint(fields=["empresa", "numero"], name="orcamento_empresa_numero_uniq"),
+        ]
 
     def __str__(self):
         return f"{self.numero} - {self.cliente}"
@@ -118,7 +129,10 @@ class Orcamento(models.Model):
     @classmethod
     def gerar_proximo_numero(cls, ano: int) -> str:
         prefixo = f"ORC-{ano}-"
-        ultimo_numero = cls.objects.filter(numero__startswith=prefixo).aggregate(max_numero=Max("numero"))["max_numero"]
+        queryset = cls.objects.filter(numero__startswith=prefixo)
+        if getattr(cls, "_empresa_numero_context", None) is not None:
+            queryset = queryset.filter(empresa=cls._empresa_numero_context)
+        ultimo_numero = queryset.aggregate(max_numero=Max("numero"))["max_numero"]
         sequencial = 1
         if ultimo_numero:
             try:
@@ -181,9 +195,18 @@ class Orcamento(models.Model):
             self.save(update_fields=["subtotal_itens", "total_final", "atualizado_em"])
 
     def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            if self.criado_por_id and self.criado_por.groups.exists():
+                self.empresa = self.criado_por.groups.order_by("name", "id").first()
+            else:
+                self.empresa = obter_grupo_empresa_padrao()
+        type(self)._empresa_numero_context = self.empresa
         self.definir_numero_automatico()
         self.full_clean()
-        super().save(*args, **kwargs)
+        try:
+            super().save(*args, **kwargs)
+        finally:
+            type(self)._empresa_numero_context = None
 
 
 class ItemOrcamento(models.Model):

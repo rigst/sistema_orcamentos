@@ -9,6 +9,7 @@ from .views import (
     item_criar,
     item_editar,
     item_excluir,
+    catalogo_importar_excel,
     item_lista,
     item_visualizar,
 )
@@ -23,6 +24,7 @@ urlpatterns = [
     path("categorias/<int:pk>/excluir/", categoria_excluir, name="categoria_excluir"),
     path("itens/", item_lista, name="item_lista"),
     path("itens/novo/", item_criar, name="item_criar"),
+    path("itens/importar/", catalogo_importar_excel, name="item_importar_excel"),
     path("itens/<int:pk>/", item_visualizar, name="item_visualizar"),
     path("itens/<int:pk>/editar/", item_editar, name="item_editar"),
     path("itens/<int:pk>/excluir/", item_excluir, name="item_excluir"),

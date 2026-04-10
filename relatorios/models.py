@@ -1,5 +1,7 @@
 from django.db import models
 
+from core.tenancy import obter_grupo_empresa_padrao
+
 
 class ConfiguracaoEmpresa(models.Model):
     nome_empresa = models.CharField(max_length=255)
@@ -21,6 +23,13 @@ class ConfiguracaoEmpresa(models.Model):
     rodape_relatorio = models.TextField(blank=True)
     logo = models.ImageField(upload_to="empresa/logos/", blank=True, null=True)
     ativo = models.BooleanField(default=True)
+    empresa = models.ForeignKey(
+        "auth.Group",
+        on_delete=models.PROTECT,
+        related_name="configuracoes_empresa",
+        null=True,
+        blank=True,
+    )
 
     atualizado_em = models.DateTimeField(auto_now=True)
 
@@ -30,3 +39,8 @@ class ConfiguracaoEmpresa(models.Model):
 
     def __str__(self):
         return self.nome_empresa
+
+    def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            self.empresa = obter_grupo_empresa_padrao()
+        super().save(*args, **kwargs)

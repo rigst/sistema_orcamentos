@@ -12,6 +12,10 @@
         </div>
         <div class="inline-actions">
             {% if user.pode_gerenciar_catalogo %}
+                <a class="btn btn-secondary btn-icon-action" href="{% url 'catalogo:item_importar_excel' %}" title="Importar Excel" aria-label="Importar Excel">
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 4v10"/><path d="m8 10 4 4 4-4"/><path d="M5 18h14"/></svg>
+                    <span class="visually-hidden">Importar Excel</span>
+                </a>
                 <a class="btn btn-primary-lite btn-icon-action" href="{% url 'catalogo:item_criar' %}" title="Novo item" aria-label="Novo item">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                     <span class="visually-hidden">Novo item</span>

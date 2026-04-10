@@ -4,25 +4,47 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.db.models import Max
 
+from core.tenancy import obter_grupo_empresa_padrao
+
 
 class CategoriaItem(models.Model):
     COLOR_CHOICES = [
         ("#2563EB", "Azul"),
-        ("#0F766E", "Verde petróleo"),
-        ("#059669", "Verde"),
-        ("#CA8A04", "Mostarda"),
-        ("#EA580C", "Laranja"),
         ("#DC2626", "Vermelho"),
+        ("#EAB308", "Amarelo"),
+        ("#16A34A", "Verde"),
+        ("#EA580C", "Laranja"),
+        ("#7C3AED", "Roxo"),
         ("#DB2777", "Rosa"),
-        ("#7C3AED", "Violeta"),
-        ("#4F46E5", "Índigo"),
-        ("#475569", "Grafite"),
+        ("#92400E", "Marrom"),
+        ("#111827", "Preto"),
+        ("#FFFFFF", "Branco"),
     ]
 
-    nome = models.CharField(max_length=100, unique=True)
+    COLOR_SEQUENCE = [
+        "#2563EB",
+        "#DC2626",
+        "#EAB308",
+        "#16A34A",
+        "#EA580C",
+        "#7C3AED",
+        "#DB2777",
+        "#92400E",
+        "#111827",
+        "#FFFFFF",
+    ]
+
+    nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
     cor = models.CharField(max_length=7, choices=COLOR_CHOICES, default="#2563EB")
     ativo = models.BooleanField(default=True)
+    empresa = models.ForeignKey(
+        "auth.Group",
+        on_delete=models.PROTECT,
+        related_name="categorias_catalogo",
+        null=True,
+        blank=True,
+    )
 
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -31,9 +53,17 @@ class CategoriaItem(models.Model):
         ordering = ["nome"]
         verbose_name = "Categoria de item"
         verbose_name_plural = "Categorias de itens"
+        constraints = [
+            models.UniqueConstraint(fields=["empresa", "nome"], name="categoriaitem_empresa_nome_uniq"),
+        ]
 
     def __str__(self):
         return self.nome
+
+    def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            self.empresa = obter_grupo_empresa_padrao()
+        super().save(*args, **kwargs)
 
 
 class ItemCatalogo(models.Model):
@@ -50,7 +80,7 @@ class ItemCatalogo(models.Model):
         ("sv", "Serviço"),
     ]
 
-    codigo = models.CharField(max_length=50, unique=True)
+    codigo = models.CharField(max_length=50)
     nome = models.CharField(max_length=255)
     descricao_padrao = models.TextField(blank=True)
 
@@ -77,6 +107,13 @@ class ItemCatalogo(models.Model):
 
     observacoes = models.TextField(blank=True)
     ativo = models.BooleanField(default=True)
+    empresa = models.ForeignKey(
+        "auth.Group",
+        on_delete=models.PROTECT,
+        related_name="itens_catalogo",
+        null=True,
+        blank=True,
+    )
 
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -85,6 +122,9 @@ class ItemCatalogo(models.Model):
         ordering = ["nome"]
         verbose_name = "Item de catálogo"
         verbose_name_plural = "Itens de catálogo"
+        constraints = [
+            models.UniqueConstraint(fields=["empresa", "codigo"], name="itemcatalogo_empresa_codigo_uniq"),
+        ]
 
     def __str__(self):
         return f"{self.codigo} - {self.nome}"
@@ -92,7 +132,10 @@ class ItemCatalogo(models.Model):
     @classmethod
     def gerar_proximo_codigo(cls) -> str:
         prefixo = "CAT-ITEM-"
-        ultimo_codigo = cls.objects.filter(codigo__startswith=prefixo).aggregate(max_codigo=Max("codigo"))["max_codigo"]
+        queryset = cls.objects.filter(codigo__startswith=prefixo)
+        if getattr(cls, "_empresa_codigo_context", None) is not None:
+            queryset = queryset.filter(empresa=cls._empresa_codigo_context)
+        ultimo_codigo = queryset.aggregate(max_codigo=Max("codigo"))["max_codigo"]
         sequencial = 1
         if ultimo_codigo:
             try:
@@ -110,8 +153,12 @@ class ItemCatalogo(models.Model):
         self.codigo = self.gerar_proximo_codigo()
 
     def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            self.empresa = obter_grupo_empresa_padrao()
+        type(self)._empresa_codigo_context = self.empresa
         self.definir_codigo_automatico()
         self.full_clean()
-        super().save(*args, **kwargs)
-
-# Create your models here.
+        try:
+            super().save(*args, **kwargs)
+        finally:
+            type(self)._empresa_codigo_context = None
