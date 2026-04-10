@@ -20,6 +20,14 @@ class ConfiguracaoEmpresa(models.Model):
     cidade = models.CharField(max_length=100, blank=True)
     estado = models.CharField(max_length=2, blank=True)
 
+    dados_bancarios = models.TextField(blank=True)
+    chave_pix = models.CharField(max_length=255, blank=True)
+    validade_padrao_proposta = models.CharField(max_length=100, blank=True)
+    assinatura_nome = models.CharField(max_length=255, blank=True)
+    assinatura_cargo = models.CharField(max_length=255, blank=True)
+    assinatura_contato = models.CharField(max_length=255, blank=True)
+    texto_institucional_memorial = models.TextField(blank=True)
+
     rodape_relatorio = models.TextField(blank=True)
     logo = models.ImageField(upload_to="empresa/logos/", blank=True, null=True)
     ativo = models.BooleanField(default=True)

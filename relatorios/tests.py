@@ -118,6 +118,18 @@ class RelatoriosExportacaoTests(TestCase):
         item.item_catalogo = item_catalogo
         item.descricao = "Descricao longa do servico"
         item.save()
+        self.orcamento.evento_nome = "Expodireto 2026"
+        self.orcamento.evento_local = "Nao-Me-Toque/RS"
+        self.orcamento.evento_contato = "Mariana"
+        self.orcamento.condicoes_pagamento = "30% na aprovacao"
+        self.orcamento.contrato_razao_social = "Cliente Exportacao LTDA"
+        self.orcamento.save(update_fields=["evento_nome", "evento_local", "evento_contato", "condicoes_pagamento", "contrato_razao_social"])
+        configuracao = ConfiguracaoEmpresa.objects.get()
+        configuracao.dados_bancarios = "Banco 001 Ag 1234 Cc 99999-9"
+        configuracao.chave_pix = "pix@empresa.com"
+        configuracao.assinatura_nome = "Diretoria Comercial"
+        configuracao.texto_institucional_memorial = "Documento emitido para fins comerciais."
+        configuracao.save()
 
         response = self.client.get(reverse("relatorios:orcamento_memorial_pdf", args=[self.orcamento.pk]))
 
@@ -125,8 +137,12 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertTrue(response.content.startswith(b"%PDF-1.4"))
         self.assertIn("Memorial Descritivo".encode("utf-8"), response.content)
-        self.assertIn("Civil".encode("utf-8"), response.content)
+        self.assertIn("CIVIL".encode("utf-8"), response.content)
         self.assertIn("Descricao longa do servico".encode("utf-8"), response.content)
+        self.assertIn("Expodireto 2026".encode("utf-8"), response.content)
+        self.assertIn("30% na aprovacao".encode("utf-8"), response.content)
+        self.assertIn("Cliente Exportacao LTDA".encode("utf-8"), response.content)
+        self.assertIn("pix@empresa.com".encode("utf-8"), response.content)
 
 
 class RelatoriosValidacaoTests(TestCase):
@@ -166,6 +182,13 @@ class RelatoriosValidacaoTests(TestCase):
                 "telefone": "(11) 4002-8922",
                 "cep": "01310-100",
                 "estado": "SP",
+                "dados_bancarios": "Banco Exemplo",
+                "chave_pix": "financeiro@empresa.com",
+                "validade_padrao_proposta": "15 dias",
+                "assinatura_nome": "Diretoria",
+                "assinatura_cargo": "Comercial",
+                "assinatura_contato": "(11) 4002-8922",
+                "texto_institucional_memorial": "Texto padrao",
             },
         )
 
@@ -174,6 +197,8 @@ class RelatoriosValidacaoTests(TestCase):
         self.assertEqual(configuracao.cpf_cnpj, "12.345.678/0001-90")
         self.assertEqual(configuracao.telefone, "(11) 4002-8922")
         self.assertEqual(configuracao.cep, "01310-100")
+        self.assertEqual(configuracao.chave_pix, "financeiro@empresa.com")
+        self.assertEqual(configuracao.validade_padrao_proposta, "15 dias")
 
 
 class RelatoriosListaTests(TestCase):

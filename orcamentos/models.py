@@ -49,6 +49,15 @@ class Orcamento(models.Model):
     data_emissao = models.DateField()
     validade_em = models.DateField(null=True, blank=True)
 
+    evento_nome = models.CharField(max_length=255, blank=True)
+    evento_periodo = models.CharField(max_length=255, blank=True)
+    evento_local = models.CharField(max_length=255, blank=True)
+    evento_estande = models.CharField(max_length=100, blank=True)
+    evento_area = models.CharField(max_length=100, blank=True)
+    evento_contato = models.CharField(max_length=255, blank=True)
+    evento_telefone = models.CharField(max_length=20, blank=True)
+    evento_email = models.CharField(max_length=255, blank=True)
+
     subtotal_itens = models.DecimalField(
         max_digits=14,
         decimal_places=2,
@@ -94,6 +103,34 @@ class Orcamento(models.Model):
         default=False,
         help_text="Se marcado, o relatório do cliente mostra descontos e acréscimos detalhados.",
     )
+
+    condicoes_pagamento = models.TextField(blank=True)
+    valor_locacao = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    valor_servico = models.DecimalField(
+        max_digits=14,
+        decimal_places=2,
+        default=Decimal("0.00"),
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
+    servicos_taxas_inclusos = models.TextField(blank=True)
+
+    contrato_razao_social = models.CharField(max_length=255, blank=True)
+    contrato_cnpj = models.CharField(max_length=20, blank=True)
+    contrato_endereco = models.CharField(max_length=255, blank=True)
+    contrato_cidade = models.CharField(max_length=100, blank=True)
+    contrato_cep = models.CharField(max_length=10, blank=True)
+    contrato_responsavel_nome = models.CharField(max_length=255, blank=True)
+    contrato_responsavel_documento = models.CharField(max_length=30, blank=True)
+    contrato_cargo_funcao = models.CharField(max_length=255, blank=True)
+    contrato_telefone = models.CharField(max_length=20, blank=True)
+    contrato_email = models.EmailField(blank=True)
+    contrato_inscricao_estadual = models.CharField(max_length=30, blank=True)
+
     empresa = models.ForeignKey(
         "auth.Group",
         on_delete=models.PROTECT,

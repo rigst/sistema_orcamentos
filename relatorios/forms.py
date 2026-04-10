@@ -28,6 +28,13 @@ class ConfiguracaoEmpresaForm(forms.ModelForm):
             "bairro",
             "cidade",
             "estado",
+            "dados_bancarios",
+            "chave_pix",
+            "validade_padrao_proposta",
+            "assinatura_nome",
+            "assinatura_cargo",
+            "assinatura_contato",
+            "texto_institucional_memorial",
             "rodape_relatorio",
             "logo",
             "ativo",
@@ -43,6 +50,8 @@ class ConfiguracaoEmpresaForm(forms.ModelForm):
         configurar_campo_mascarado(self, "cep", "cep", placeholder="00000-000")
         self.fields["estado"].widget.attrs["data-force-uppercase"] = "1"
         self.fields["rodape_relatorio"].widget.attrs["rows"] = 3
+        self.fields["dados_bancarios"].widget.attrs["rows"] = 3
+        self.fields["texto_institucional_memorial"].widget.attrs["rows"] = 4
 
     def clean_nome_empresa(self):
         valor = (self.cleaned_data.get("nome_empresa") or "").strip()

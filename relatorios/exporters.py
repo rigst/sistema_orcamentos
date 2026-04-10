@@ -233,6 +233,27 @@ def obter_estilos_pdf():
             leading=13,
             textColor=colors.HexColor("#617A95"),
         ),
+        "memorial_section": ParagraphStyle(
+            "MemorialSection",
+            parent=base["Heading2"],
+            fontName=FONT_BOLD,
+            fontSize=13,
+            leading=16,
+            textColor=colors.HexColor("#17304A"),
+            spaceBefore=4,
+            spaceAfter=6,
+        ),
+        "memorial_bullet": ParagraphStyle(
+            "MemorialBullet",
+            parent=base["BodyText"],
+            fontName=FONT_REGULAR,
+            fontSize=11,
+            leading=15,
+            leftIndent=12,
+            bulletIndent=0,
+            textColor=colors.HexColor("#48627E"),
+            spaceAfter=4,
+        ),
         "label": ParagraphStyle(
             "Label",
             parent=base["BodyText"],
@@ -269,6 +290,19 @@ def desenhar_fundo(canvas, doc):
 
 def bloco_info(styles, label: str, valor: str):
     return Paragraph(f"<font name='{FONT_BOLD}' color='#617A95'>{label}</font><br/>{valor}", styles["body"])
+
+
+def quebrar_linhas_texto(valor: str | None) -> str:
+    return escape((valor or "").strip()).replace("\n", "<br/>")
+
+
+def adicionar_secao_texto(story, styles, titulo: str, conteudo: str | None):
+    texto = (conteudo or "").strip()
+    if not texto:
+        return
+    story.append(Spacer(1, 8))
+    story.append(Paragraph(titulo, styles["memorial_section"]))
+    story.append(Paragraph(quebrar_linhas_texto(texto), styles["body"]))
 
 
 def montar_topo_pdf(orcamento, configuracao, styles, titulo_documento: str, subtitulo: str | None = None):
@@ -556,12 +590,20 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
         orcamento.titulo,
     )
 
+    bloco_cliente = str(orcamento.cliente)
+    bloco_evento = orcamento.evento_nome or orcamento.titulo
+    bloco_local = orcamento.evento_local or formatar_data(orcamento.data_emissao)
     resumo = Table(
         [
             [
-                bloco_info(styles, "CLIENTE", str(orcamento.cliente)),
-                bloco_info(styles, "EMISSÃO", formatar_data(orcamento.data_emissao)),
+                bloco_info(styles, "CLIENTE", escape(bloco_cliente)),
+                bloco_info(styles, "EVENTO/PROJETO", escape(bloco_evento)),
                 bloco_info(styles, "TOTAL FINAL", formatar_moeda(orcamento.total_final)),
+            ],
+            [
+                bloco_info(styles, "EMISSÃO", formatar_data(orcamento.data_emissao)),
+                bloco_info(styles, "LOCAL", escape(bloco_local)),
+                bloco_info(styles, "VALIDADE", formatar_data(orcamento.validade_em)),
             ],
         ],
         colWidths=[55 * mm, 55 * mm, 56 * mm],
@@ -582,43 +624,61 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
 
     story = [topo, Spacer(1, 10), resumo, Spacer(1, 12), Paragraph("Memorial Descritivo", styles["title"])]
 
+    if configuracao and any([configuracao.cidade, configuracao.estado]):
+        local_empresa = configuracao.cidade or ""
+        if configuracao.estado:
+            local_empresa = f"{local_empresa}/{configuracao.estado}" if local_empresa else configuracao.estado
+        story.append(Paragraph(f"{local_empresa}, {formatar_data(orcamento.data_emissao)}.", styles["body"]))
+        story.append(Spacer(1, 8))
+
+    referencia_evento = escape(orcamento.evento_nome or orcamento.titulo)
+    detalhe_evento = []
+    if orcamento.evento_local:
+        detalhe_evento.append(f"no local <b>{escape(orcamento.evento_local)}</b>")
+    if orcamento.evento_periodo:
+        detalhe_evento.append(f"no período <b>{escape(orcamento.evento_periodo)}</b>")
+    if orcamento.evento_estande:
+        detalhe_evento.append(f"estande <b>{escape(orcamento.evento_estande)}</b>")
+    if orcamento.evento_area:
+        detalhe_evento.append(f"área de <b>{escape(orcamento.evento_area)}</b>")
+
+    introducao = (
+        f"Conforme solicitado, apresento o memorial descritivo referente ao orçamento "
+        f"<b>{orcamento.numero}</b>, para <b>{referencia_evento}</b>, "
+        f"destinado ao cliente <b>{escape(str(orcamento.cliente))}</b>"
+    )
+    if detalhe_evento:
+        introducao = f"{introducao}, {'; '.join(detalhe_evento)}"
+    introducao = f"{introducao}, conforme especificações abaixo."
+    story.append(Paragraph(introducao, styles["body"]))
+    story.append(Spacer(1, 10))
+
+    contatos_evento = []
+    if orcamento.evento_contato:
+        contatos_evento.append(f"<b>A/C:</b> {escape(orcamento.evento_contato)}")
+    if orcamento.evento_telefone:
+        contatos_evento.append(f"<b>Telefone:</b> {escape(orcamento.evento_telefone)}")
+    if orcamento.evento_email:
+        contatos_evento.append(f"<b>E-mail:</b> {escape(orcamento.evento_email)}")
+    if contatos_evento:
+        story.append(Paragraph("<br/>".join(contatos_evento), styles["body"]))
+        story.append(Spacer(1, 10))
+
     for grupo in orcamento.subtotais_por_categoria():
-        story.append(
-            Paragraph(
-                f"<font color='{grupo['categoria_cor']}'><b>{grupo['categoria_nome']}</b></font>",
-                styles["body_strong"],
-            )
-        )
+        story.append(Paragraph(grupo["categoria_nome"].upper(), styles["memorial_section"]))
+        story.append(Paragraph("ESPECIFICAÇÕES:", styles["label"]))
         story.append(Spacer(1, 4))
 
-        linhas = []
         for item in grupo["itens"]:
             descricao = (item.descricao or "").strip() or item.nome
-            linhas.append(
-                [
-                    Paragraph(formatar_decimal_br(item.quantidade), styles["body_strong"]),
-                    Paragraph(descricao.replace("\n", "<br/>"), styles["body"]),
-                    Paragraph(formatar_moeda(item.subtotal), styles["body_strong"]),
-                ]
+            quantidade = formatar_decimal_br(item.quantidade)
+            story.append(
+                Paragraph(
+                    f"{quantidade} {escape(item.get_unidade_medida_display())} de {descricao.replace(chr(10), '<br/>')}",
+                    styles["memorial_bullet"],
+                    bulletText="▪",
+                )
             )
-
-        tabela_categoria = Table(linhas, colWidths=[18 * mm, 108 * mm, 40 * mm])
-        tabela_categoria.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
-                    ("ROWBACKGROUNDS", (0, 0), (-1, -1), [colors.HexColor("#FCFDFF"), colors.white]),
-                    ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
-                    ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#E7EFF8")),
-                    ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                    ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                    ("TOPPADDING", (0, 0), (-1, -1), 10),
-                    ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-                    ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ]
-            )
-        )
-        story.extend([tabela_categoria, Spacer(1, 6)])
         story.append(
             Paragraph(
                 f"<b>Subtotal da categoria:</b> {formatar_moeda(grupo['subtotal'])}",
@@ -627,7 +687,86 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
         )
         story.append(Spacer(1, 10))
 
-    story.append(Paragraph(f"<b>Total final do orçamento:</b> {formatar_moeda(orcamento.total_final)}", styles["body_strong"]))
+    story.append(Paragraph("ESPECIFICAÇÕES FINANCEIRAS", styles["memorial_section"]))
+    story.append(Paragraph(f"Valor total final: <b>{formatar_moeda(orcamento.total_final)}</b>.", styles["body"]))
+    if orcamento.valor_locacao is not None:
+        story.append(Paragraph(f"Valor de locação: <b>{formatar_moeda(orcamento.valor_locacao)}</b>.", styles["body"]))
+    if orcamento.valor_servico is not None:
+        story.append(Paragraph(f"Valor de serviço: <b>{formatar_moeda(orcamento.valor_servico)}</b>.", styles["body"]))
+
+    validade_texto = formatar_data(orcamento.validade_em)
+    if configuracao and configuracao.validade_padrao_proposta and not orcamento.validade_em:
+        validade_texto = f"{configuracao.validade_padrao_proposta} dias"
+    if validade_texto and validade_texto != "-":
+        story.append(Paragraph(f"Validade da proposta: {escape(validade_texto)}.", styles["body"]))
+    if orcamento.condicoes_pagamento:
+        story.append(Paragraph(f"Condições de pagamento: {quebrar_linhas_texto(orcamento.condicoes_pagamento)}.", styles["body"]))
+    if configuracao and configuracao.dados_bancarios:
+        story.append(Paragraph(f"Dados bancários: {quebrar_linhas_texto(configuracao.dados_bancarios)}.", styles["body"]))
+    if configuracao and configuracao.chave_pix:
+        story.append(Paragraph(f"Chave PIX: {escape(configuracao.chave_pix)}.", styles["body"]))
+
+    adicionar_secao_texto(story, styles, "SERVIÇOS E TAXAS INCLUSOS", orcamento.servicos_taxas_inclusos)
+    adicionar_secao_texto(story, styles, "OBSERVAÇÕES", orcamento.observacoes_gerais)
+
+    dados_contratuais = []
+    if orcamento.contrato_razao_social:
+        dados_contratuais.append(f"<b>Razão social:</b> {escape(orcamento.contrato_razao_social)}")
+    if orcamento.contrato_cnpj:
+        dados_contratuais.append(f"<b>CNPJ:</b> {escape(orcamento.contrato_cnpj)}")
+    if orcamento.contrato_inscricao_estadual:
+        dados_contratuais.append(f"<b>Inscrição estadual:</b> {escape(orcamento.contrato_inscricao_estadual)}")
+    if orcamento.contrato_endereco:
+        dados_contratuais.append(f"<b>Endereço:</b> {escape(orcamento.contrato_endereco)}")
+    if orcamento.contrato_cidade:
+        cidade_contrato = escape(orcamento.contrato_cidade)
+        if orcamento.contrato_cep:
+            cidade_contrato = f"{cidade_contrato} | CEP {escape(orcamento.contrato_cep)}"
+        dados_contratuais.append(f"<b>Cidade:</b> {cidade_contrato}")
+    elif orcamento.contrato_cep:
+        dados_contratuais.append(f"<b>CEP:</b> {escape(orcamento.contrato_cep)}")
+    if orcamento.contrato_responsavel_nome:
+        responsavel = escape(orcamento.contrato_responsavel_nome)
+        if orcamento.contrato_cargo_funcao:
+            responsavel = f"{responsavel} ({escape(orcamento.contrato_cargo_funcao)})"
+        dados_contratuais.append(f"<b>Responsável:</b> {responsavel}")
+    if orcamento.contrato_responsavel_documento:
+        dados_contratuais.append(f"<b>Documento:</b> {escape(orcamento.contrato_responsavel_documento)}")
+    if orcamento.contrato_telefone:
+        dados_contratuais.append(f"<b>Telefone:</b> {escape(orcamento.contrato_telefone)}")
+    if orcamento.contrato_email:
+        dados_contratuais.append(f"<b>E-mail:</b> {escape(orcamento.contrato_email)}")
+    if dados_contratuais:
+        story.append(Spacer(1, 8))
+        story.append(Paragraph("DADOS CONTRATUAIS", styles["memorial_section"]))
+        story.append(Paragraph("<br/>".join(dados_contratuais), styles["body"]))
+
+    adicionar_secao_texto(
+        story,
+        styles,
+        "INFORMAÇÕES COMPLEMENTARES",
+        (
+            "\n\n".join(
+                parte
+                for parte in [
+                    getattr(configuracao, "texto_institucional_memorial", "") if configuracao else "",
+                    getattr(configuracao, "rodape_relatorio", "") if configuracao else "",
+                ]
+                if parte
+            )
+        ),
+    )
+
+    assinatura_linhas = []
+    if configuracao and configuracao.assinatura_nome:
+        assinatura_linhas.append(f"<b>{escape(configuracao.assinatura_nome)}</b>")
+    if configuracao and configuracao.assinatura_cargo:
+        assinatura_linhas.append(escape(configuracao.assinatura_cargo))
+    if configuracao and configuracao.assinatura_contato:
+        assinatura_linhas.append(escape(configuracao.assinatura_contato))
+    if assinatura_linhas:
+        story.append(Spacer(1, 16))
+        story.append(Paragraph("<br/>".join(assinatura_linhas), styles["body"]))
 
     doc.build(story, onFirstPage=desenhar_fundo, onLaterPages=desenhar_fundo)
     return buffer.getvalue()

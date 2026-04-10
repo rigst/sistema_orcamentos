@@ -3,7 +3,9 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import localdate
 
 from catalogo.models import ItemCatalogo
-from core.form_fields import substituir_por_decimal_br
+from core.form_fields import configurar_campo_mascarado, substituir_por_decimal_br
+from core.formatting import formatar_cep_br, formatar_cpf_cnpj_br, formatar_telefone_br
+from core.validators import validar_cep_basico, validar_cpf_cnpj_basico, validar_telefone_basico
 from .models import ItemOrcamento, Orcamento
 
 
@@ -19,10 +21,33 @@ class OrcamentoForm(forms.ModelForm):
             "status",
             "data_emissao",
             "validade_em",
+            "evento_nome",
+            "evento_periodo",
+            "evento_local",
+            "evento_estande",
+            "evento_area",
+            "evento_contato",
+            "evento_telefone",
+            "evento_email",
             "desconto_global_valor",
             "desconto_global_percentual",
             "acrescimo_global_valor",
             "acrescimo_global_percentual",
+            "condicoes_pagamento",
+            "valor_locacao",
+            "valor_servico",
+            "servicos_taxas_inclusos",
+            "contrato_razao_social",
+            "contrato_cnpj",
+            "contrato_endereco",
+            "contrato_cidade",
+            "contrato_cep",
+            "contrato_responsavel_nome",
+            "contrato_responsavel_documento",
+            "contrato_cargo_funcao",
+            "contrato_telefone",
+            "contrato_email",
+            "contrato_inscricao_estadual",
             "mostrar_ajustes_no_relatorio",
         ]
         widgets = {
@@ -38,10 +63,32 @@ class OrcamentoForm(forms.ModelForm):
             "titulo": "Ex.: Orçamento de reforma da recepção",
             "descricao_inicial": "Resumo inicial do orçamento",
             "observacoes_gerais": "Observações internas ou gerais",
+            "evento_nome": "Ex.: Expointer 2026",
+            "evento_periodo": "Ex.: de 24/08 a 01/09/2026",
+            "evento_local": "Ex.: Esteio - RS",
+            "evento_estande": "Ex.: 562",
+            "evento_area": "Ex.: 1.250m²",
+            "evento_contato": "Nome dos contatos do projeto",
+            "evento_email": "contato@cliente.com.br",
             "desconto_global_valor": "0.00",
             "desconto_global_percentual": "0.00",
             "acrescimo_global_valor": "0.00",
             "acrescimo_global_percentual": "0.00",
+            "condicoes_pagamento": "Descreva as condições comerciais",
+            "valor_locacao": "0.00",
+            "valor_servico": "0.00",
+            "servicos_taxas_inclusos": "Liste serviços e taxas inclusos",
+            "contrato_razao_social": "Razão social para contrato",
+            "contrato_cnpj": "00.000.000/0000-00",
+            "contrato_endereco": "Endereço completo",
+            "contrato_cidade": "Cidade",
+            "contrato_cep": "00000-000",
+            "contrato_responsavel_nome": "Responsável pela assinatura",
+            "contrato_responsavel_documento": "RG e CPF do responsável",
+            "contrato_cargo_funcao": "Cargo ou função",
+            "contrato_telefone": "(00) 00000-0000",
+            "contrato_email": "contrato@cliente.com.br",
+            "contrato_inscricao_estadual": "Inscrição estadual",
         }
 
         for nome, field in self.fields.items():
@@ -62,11 +109,24 @@ class OrcamentoForm(forms.ModelForm):
             "desconto_global_percentual",
             "acrescimo_global_valor",
             "acrescimo_global_percentual",
+            "valor_locacao",
+            "valor_servico",
         ]:
             self.fields[nome_campo].required = False
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor"))
 
         self.fields["mostrar_ajustes_no_relatorio"].required = False
+        configurar_campo_mascarado(self, "evento_telefone", "phone", placeholder="(00) 00000-0000")
+        configurar_campo_mascarado(self, "contrato_cnpj", "cpf_cnpj", placeholder="00.000.000/0000-00")
+        configurar_campo_mascarado(self, "contrato_telefone", "phone", placeholder="(00) 00000-0000")
+        configurar_campo_mascarado(self, "contrato_cep", "cep", placeholder="00000-000")
+        for nome in [
+            "descricao_inicial",
+            "observacoes_gerais",
+            "condicoes_pagamento",
+            "servicos_taxas_inclusos",
+        ]:
+            self.fields[nome].widget.attrs["rows"] = 3
         if not self.instance.pk and not self.is_bound:
             self.fields["data_emissao"].initial = localdate()
         if user is not None:
@@ -74,6 +134,34 @@ class OrcamentoForm(forms.ModelForm):
             from core.tenancy import queryset_da_empresa
 
             self.fields["cliente"].queryset = queryset_da_empresa(Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user)
+
+    def clean_evento_telefone(self):
+        valor = (self.cleaned_data.get("evento_telefone") or "").strip()
+        if not valor:
+            return ""
+        validar_telefone_basico(valor, campo="Telefone do evento")
+        return formatar_telefone_br(valor)
+
+    def clean_contrato_cnpj(self):
+        valor = (self.cleaned_data.get("contrato_cnpj") or "").strip()
+        if not valor:
+            return ""
+        validar_cpf_cnpj_basico(valor)
+        return formatar_cpf_cnpj_br(valor)
+
+    def clean_contrato_telefone(self):
+        valor = (self.cleaned_data.get("contrato_telefone") or "").strip()
+        if not valor:
+            return ""
+        validar_telefone_basico(valor, campo="Telefone contratual")
+        return formatar_telefone_br(valor)
+
+    def clean_contrato_cep(self):
+        valor = (self.cleaned_data.get("contrato_cep") or "").strip()
+        if not valor:
+            return ""
+        validar_cep_basico(valor)
+        return formatar_cep_br(valor)
 
 
 class ItemOrcamentoForm(forms.ModelForm):

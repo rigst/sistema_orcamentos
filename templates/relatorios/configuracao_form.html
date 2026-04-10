@@ -124,6 +124,51 @@
                         {{ form.rodape_relatorio }}
                         {{ form.rodape_relatorio.errors }}
                     </div>
+
+                    <div class="full">
+                        <hr>
+                        <h3>Configurações institucionais</h3>
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ form.dados_bancarios.id_for_label }}">Dados bancários{% if form.dados_bancarios.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        {{ form.dados_bancarios }}
+                        {{ form.dados_bancarios.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.chave_pix.id_for_label }}">Chave PIX{% if form.chave_pix.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        {{ form.chave_pix }}
+                        {{ form.chave_pix.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.validade_padrao_proposta.id_for_label }}">Validade padrão da proposta (dias){% if form.validade_padrao_proposta.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        {{ form.validade_padrao_proposta }}
+                        {{ form.validade_padrao_proposta.errors }}
+                    </div>
+
+                    <div>
+                        <label for="{{ form.assinatura_nome.id_for_label }}">Nome da assinatura{% if form.assinatura_nome.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        {{ form.assinatura_nome }}
+                        {{ form.assinatura_nome.errors }}
+                    </div>
+                    <div>
+                        <label for="{{ form.assinatura_cargo.id_for_label }}">Cargo da assinatura{% if form.assinatura_cargo.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        {{ form.assinatura_cargo }}
+                        {{ form.assinatura_cargo.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ form.assinatura_contato.id_for_label }}">Contato da assinatura{% if form.assinatura_contato.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        {{ form.assinatura_contato }}
+                        {{ form.assinatura_contato.errors }}
+                    </div>
+
+                    <div class="full">
+                        <label for="{{ form.texto_institucional_memorial.id_for_label }}">Texto institucional do memorial{% if form.texto_institucional_memorial.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        {{ form.texto_institucional_memorial }}
+                        {{ form.texto_institucional_memorial.errors }}
+                    </div>
                 </div>
             </fieldset>
 

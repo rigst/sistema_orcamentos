@@ -164,6 +164,59 @@ class OrcamentoViewsTests(TestCase):
         self.assertRedirects(response, reverse("orcamentos:editar", args=[novo.pk]))
         self.assertEqual(novo.numero, "ORC-2026-0002")
 
+    def test_orcamento_aceita_campos_de_evento_comercial_e_contrato(self):
+        response = self.client.post(
+            reverse("orcamentos:editar", args=[self.orcamento.pk]),
+            {
+                "numero": self.orcamento.numero,
+                "cliente": self.cliente.pk,
+                "titulo": self.orcamento.titulo,
+                "descricao_inicial": "",
+                "observacoes_gerais": "Observacoes gerais do projeto",
+                "status": self.orcamento.status,
+                "data_emissao": self.orcamento.data_emissao.isoformat(),
+                "validade_em": "2026-04-20",
+                "evento_nome": "Expointer 2026",
+                "evento_periodo": "24/08 a 01/09/2026",
+                "evento_local": "Esteio/RS",
+                "evento_estande": "A12",
+                "evento_area": "120m2",
+                "evento_contato": "Maria Silva",
+                "evento_telefone": "(51) 99999-0000",
+                "evento_email": "evento@cliente.com",
+                "desconto_global_valor": "0.00",
+                "desconto_global_percentual": "0.00",
+                "acrescimo_global_valor": "0.00",
+                "acrescimo_global_percentual": "0.00",
+                "condicoes_pagamento": "50% na assinatura e 50% na entrega",
+                "valor_locacao": "1000.00",
+                "valor_servico": "500.00",
+                "servicos_taxas_inclusos": "Montagem e desmontagem",
+                "contrato_razao_social": "Cliente Teste LTDA",
+                "contrato_cnpj": "12.345.678/0001-90",
+                "contrato_endereco": "Rua A, 100",
+                "contrato_cidade": "Porto Alegre",
+                "contrato_cep": "90000-000",
+                "contrato_responsavel_nome": "Joao Responsavel",
+                "contrato_responsavel_documento": "RG 123 / CPF 000",
+                "contrato_cargo_funcao": "Diretor",
+                "contrato_telefone": "(51) 98888-0000",
+                "contrato_email": "contrato@cliente.com",
+                "contrato_inscricao_estadual": "123456789",
+                "mostrar_ajustes_no_relatorio": "on",
+            },
+        )
+
+        self.assertRedirects(response, reverse("orcamentos:editar", args=[self.orcamento.pk]))
+        self.orcamento.refresh_from_db()
+        self.assertEqual(self.orcamento.evento_nome, "Expointer 2026")
+        self.assertEqual(self.orcamento.evento_telefone, "(51) 99999-0000")
+        self.assertEqual(self.orcamento.condicoes_pagamento, "50% na assinatura e 50% na entrega")
+        self.assertEqual(self.orcamento.valor_locacao, Decimal("1000.00"))
+        self.assertEqual(self.orcamento.valor_servico, Decimal("500.00"))
+        self.assertEqual(self.orcamento.contrato_cnpj, "12.345.678/0001-90")
+        self.assertEqual(self.orcamento.contrato_cep, "90000-000")
+
     def test_item_recebe_codigo_automatico_mesmo_sem_codigo_informado(self):
         response = self.client.post(
             reverse("orcamentos:item_criar", args=[self.orcamento.pk]),
