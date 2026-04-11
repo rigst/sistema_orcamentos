@@ -361,8 +361,60 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Apenas administradores podem reabrir ou editar")
+        self.assertContains(response, "Somente orçamentos em rascunho podem ser editados nesta página.")
         self.assertNotContains(response, "Adicionar item")
+
+    def test_orcamento_fora_de_rascunho_fica_em_modo_somente_leitura_na_edicao(self):
+        for status in ("enviado", "aprovado", "rejeitado", "cancelado"):
+            with self.subTest(status=status):
+                self.orcamento.status = status
+                self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+                response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
+
+                self.assertEqual(response.status_code, 200)
+                self.assertContains(response, "Somente orçamentos em rascunho podem ser editados nesta página.")
+                self.assertNotContains(response, "Adicionar item")
+
+    def test_orcamento_fora_de_rascunho_nao_pode_salvar_edicao(self):
+        self.orcamento.status = "enviado"
+        self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+        response = self.client.post(
+            reverse("orcamentos:editar", args=[self.orcamento.pk]),
+            {
+                "numero": self.orcamento.numero,
+                "cliente": self.cliente.pk,
+                "titulo": "Titulo alterado",
+                "descricao_inicial": "",
+                "observacoes_gerais": "",
+                "status": self.orcamento.status,
+                "data_emissao": self.orcamento.data_emissao.isoformat(),
+                "validade_em": "",
+                "desconto_global_valor": "0.00",
+                "desconto_global_percentual": "0.00",
+                "acrescimo_global_valor": "0.00",
+                "acrescimo_global_percentual": "0.00",
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_item_nao_pode_ser_criado_em_orcamento_fora_de_rascunho(self):
+        self.orcamento.status = "enviado"
+        self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+        response = self.client.post(
+            reverse("orcamentos:item_criar", args=[self.orcamento.pk]),
+            {
+                "nome": "Item bloqueado",
+                "quantidade": "1",
+                "valor_unitario": "10.00",
+            },
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(ItemOrcamento.objects.count(), 0)
 
     def test_orcamento_invalido_exibe_erro_para_usuario(self):
         response = self.client.post(

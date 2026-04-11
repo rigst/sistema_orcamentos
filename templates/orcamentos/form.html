@@ -37,8 +37,8 @@
                         <h3>Dados do orçamento</h3>
                         <div id="orcamento-draft-status" class="inline-feedback inline-feedback-inline"></div>
                     </div>
-                    {% if bloqueio_aprovado %}
-                        <p class="muted">Orçamento aprovado. Apenas administradores podem reabrir ou editar.</p>
+                    {% if bloqueio_status %}
+                        <p class="muted">Somente orçamentos em rascunho podem ser editados nesta página.</p>
                     {% elif modo_somente_leitura %}
                         <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>
                     {% endif %}

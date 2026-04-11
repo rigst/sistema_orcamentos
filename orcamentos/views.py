@@ -37,12 +37,12 @@ ITEM_SORT_MAP = {
 }
 
 
-def orcamento_bloqueado_para_edicao(user, orcamento):
-    return orcamento.status == "aprovado" and not getattr(user, "eh_admin_perfil", False)
+def orcamento_bloqueado_para_edicao(orcamento):
+    return orcamento.status != "rascunho"
 
 
 def exigir_orcamento_editavel(user, orcamento):
-    if orcamento_bloqueado_para_edicao(user, orcamento):
+    if orcamento_bloqueado_para_edicao(orcamento):
         raise PermissionDenied
 
 
@@ -132,7 +132,7 @@ def renderizar_editor_orcamento(
         "item_editando": item_editando,
         "item_form_edicao": item_form_edicao,
         "modo_somente_leitura": modo_somente_leitura,
-        "bloqueio_aprovado": orcamento_bloqueado_para_edicao(request.user, orcamento),
+        "bloqueio_status": orcamento_bloqueado_para_edicao(orcamento),
         "subtotais_categoria": orcamento.subtotais_por_categoria(),
     }
     context.update(obter_estado_itens(request, orcamento))
@@ -252,7 +252,7 @@ def orcamento_criar(request):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_editar(request, pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
-    modo_somente_leitura = not request.user.pode_gerenciar_orcamentos or orcamento_bloqueado_para_edicao(request.user, orcamento)
+    modo_somente_leitura = not request.user.pode_gerenciar_orcamentos or orcamento_bloqueado_para_edicao(orcamento)
 
     if request.method == "POST":
         if modo_somente_leitura:
@@ -301,8 +301,15 @@ def orcamento_excluir(request, pk):
 def orcamento_alterar_status(request, pk, novo_status):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
 
-    if orcamento_bloqueado_para_edicao(request.user, orcamento):
-        messages.error(request, "Orçamentos aprovados só podem ser reabertos ou alterados por administradores.")
+    if (
+        orcamento.status == "aprovado"
+        and novo_status == "rascunho"
+        and not request.user.eh_admin_perfil
+    ):
+        messages.error(
+            request,
+            "Orçamentos aprovados só podem ser reabertos ou alterados por administradores.",
+        )
         return redirect("orcamentos:lista")
 
     if novo_status in STATUS_PERMITIDOS:
