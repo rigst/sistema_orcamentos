@@ -59,6 +59,29 @@ class AdminPermissaoPerfilTests(TestCase):
         self.assertEqual(changelist_response.status_code, 200)
         self.assertEqual(add_response.status_code, 403)
 
+    def test_admin_de_empresa_so_ve_o_proprio_grupo_no_admin(self):
+        user = self.criar_usuario("admin_empresa", "admin")
+        Group.objects.create(name="Empresa B")
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("admin:auth_group_changelist"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Empresa padr")
+        self.assertNotContains(response, "Empresa B")
+
+    def test_admin_de_empresa_edita_grupo_como_empresa_sem_permissoes_globais(self):
+        user = self.criar_usuario("admin_grupo", "admin")
+        grupo = user.groups.get()
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("admin:auth_group_change", args=[grupo.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Cada grupo representa uma empresa isolada das demais no sistema.")
+        self.assertContains(response, 'for="id_name"', html=False)
+        self.assertNotContains(response, 'id_permissions')
+
 
 class UsuarioPermissaoPropriedadesTests(TestCase):
     def test_admin_tem_capacidades_de_gestao(self):

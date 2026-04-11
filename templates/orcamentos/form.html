@@ -7,7 +7,11 @@
     <div class="section-heading">
         <div>
             <h2>{{ titulo }}</h2>
-            <p>Edite os dados do orçamento e gerencie os itens diretamente nesta página.</p>
+            {% if somente_visualizacao %}
+                <p>Consulte os dados gerais e os itens do orçamento em modo estritamente visual.</p>
+            {% else %}
+                <p>Edite os dados do orçamento e gerencie os itens diretamente nesta página.</p>
+            {% endif %}
         </div>
         <div class="inline-actions">
             <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}" title="Voltar para orçamentos" aria-label="Voltar para orçamentos">
@@ -37,7 +41,9 @@
                         <h3>Dados do orçamento</h3>
                         <div id="orcamento-draft-status" class="inline-feedback inline-feedback-inline"></div>
                     </div>
-                    {% if bloqueio_status %}
+                    {% if somente_visualizacao %}
+                        <p class="muted">Esta tela é exclusiva para consulta e não permite alterações.</p>
+                    {% elif bloqueio_status %}
                         <p class="muted">Somente orçamentos em rascunho podem ser editados nesta página.</p>
                     {% elif modo_somente_leitura %}
                         <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>

@@ -6,7 +6,7 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.template.loader import render_to_string
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from urllib.parse import urlencode
 
 from core.permissions import require_capability
@@ -41,8 +41,12 @@ def orcamento_bloqueado_para_edicao(orcamento):
     return orcamento.status != "rascunho"
 
 
+def usuario_pode_editar_orcamento(user, orcamento):
+    return user.pode_gerenciar_orcamentos and not orcamento_bloqueado_para_edicao(orcamento)
+
+
 def exigir_orcamento_editavel(user, orcamento):
-    if orcamento_bloqueado_para_edicao(orcamento):
+    if not usuario_pode_editar_orcamento(user, orcamento):
         raise PermissionDenied
 
 
@@ -117,6 +121,7 @@ def renderizar_editor_orcamento(
     titulo="Editar orçamento",
     item_editando_override=None,
     item_form_edicao_override=None,
+    somente_visualizacao=False,
 ):
     itens = orcamento.itens.all()
     item_editando, item_form_edicao = obter_item_em_edicao(request, orcamento, modo_somente_leitura)
@@ -132,6 +137,7 @@ def renderizar_editor_orcamento(
         "item_editando": item_editando,
         "item_form_edicao": item_form_edicao,
         "modo_somente_leitura": modo_somente_leitura,
+        "somente_visualizacao": somente_visualizacao,
         "bloqueio_status": orcamento_bloqueado_para_edicao(orcamento),
         "subtotais_categoria": orcamento.subtotais_por_categoria(),
     }
@@ -252,7 +258,7 @@ def orcamento_criar(request):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_editar(request, pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
-    modo_somente_leitura = not request.user.pode_gerenciar_orcamentos or orcamento_bloqueado_para_edicao(orcamento)
+    modo_somente_leitura = not usuario_pode_editar_orcamento(request.user, orcamento)
 
     if request.method == "POST":
         if modo_somente_leitura:
@@ -276,6 +282,23 @@ def orcamento_editar(request, pk):
         form,
         item_form,
         modo_somente_leitura,
+    )
+
+
+@require_capability("pode_visualizar_orcamentos")
+@require_http_methods(["GET"])
+def orcamento_visualizar(request, pk):
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
+    form = OrcamentoForm(instance=orcamento, user=request.user)
+    item_form = ItemOrcamentoForm(user=request.user)
+    return renderizar_editor_orcamento(
+        request,
+        orcamento,
+        form,
+        item_form,
+        True,
+        titulo="Visualizar orçamento",
+        somente_visualizacao=True,
     )
 
 

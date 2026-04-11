@@ -9,7 +9,7 @@
                     <th>Base</th>
                     <th>Ajustes</th>
                     <th>Subtotal</th>
-                    {% if user.pode_gerenciar_orcamentos %}
+                    {% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %}
                         <th class="actions-col">Ações</th>
                     {% endif %}
                 </tr>
@@ -52,7 +52,7 @@
                             </div>
                         </td>
                         <td class="money">{{ item.subtotal|brl }}</td>
-                        {% if user.pode_gerenciar_orcamentos %}
+                        {% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %}
                             <td class="actions-col">
                                 <div class="actions-stack">
                                     <form method="post" action="{% url 'orcamentos:item_mover' orcamento.pk item.pk 'cima' %}" data-async-item-action="1">

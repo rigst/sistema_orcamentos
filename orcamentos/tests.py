@@ -311,6 +311,40 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "modo somente leitura")
 
+    def test_visualizacao_dedicada_bloqueia_edicao_geral_e_itens(self):
+        item = ItemOrcamento.objects.create(
+            orcamento=self.orcamento,
+            ordem=1,
+            nome="Item somente leitura",
+            unidade_medida="un",
+            quantidade=Decimal("2.00"),
+            valor_unitario=Decimal("15.00"),
+        )
+
+        response = self.client.get(reverse("orcamentos:visualizar", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "modo estritamente visual")
+        self.assertContains(response, "Esta tela é exclusiva para consulta e não permite alterações.")
+        self.assertNotContains(response, "Salvar orçamento")
+        self.assertNotContains(response, "Adicionar item")
+        self.assertNotContains(response, reverse("orcamentos:item_editar", args=[self.orcamento.pk, item.pk]))
+        self.assertNotContains(response, reverse("orcamentos:item_excluir", args=[self.orcamento.pk, item.pk]))
+
+    def test_visualizador_da_lista_aponta_para_rota_de_visualizacao(self):
+        visualizador = get_user_model().objects.create_user(
+            username="visualizador_lista_link",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        self.client.force_login(visualizador)
+
+        response = self.client.get(reverse("orcamentos:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("orcamentos:visualizar", args=[self.orcamento.pk]))
+        self.assertNotContains(response, reverse("orcamentos:editar", args=[self.orcamento.pk]))
+
     def test_visualizador_nao_ve_botoes_de_edicao_na_lista(self):
         visualizador = get_user_model().objects.create_user(
             username="visualizador_lista",

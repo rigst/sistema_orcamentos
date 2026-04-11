@@ -1,5 +1,6 @@
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from io import BytesIO
+import unicodedata
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
 
@@ -7,6 +8,8 @@ from .models import CategoriaItem, ItemCatalogo
 
 
 XLSX_NS = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
+DUAS_CASAS = Decimal("0.01")
+COLUNAS_IMPORTACAO = 6
 
 
 def _texto_planilha(shared_strings, cell):
@@ -29,6 +32,14 @@ def _carregar_shared_strings(zip_file):
     return strings
 
 
+def _indice_coluna(ref):
+    letras = "".join(char for char in str(ref or "") if char.isalpha()).upper()
+    indice = 0
+    for letra in letras:
+        indice = indice * 26 + (ord(letra) - ord("A") + 1)
+    return max(indice - 1, 0)
+
+
 def _linhas_xlsx(arquivo):
     try:
         with ZipFile(BytesIO(arquivo.read())) as zip_file:
@@ -49,9 +60,12 @@ def _linhas_xlsx(arquivo):
 
             sheet = ET.fromstring(zip_file.read(f"xl/{target}"))
             for row in sheet.findall("main:sheetData/main:row", XLSX_NS):
-                cells = []
+                cells = [""] * COLUNAS_IMPORTACAO
                 for cell in row.findall("main:c", XLSX_NS):
-                    cells.append(_texto_planilha(shared_strings, cell))
+                    indice = _indice_coluna(cell.attrib.get("r"))
+                    if indice >= COLUNAS_IMPORTACAO:
+                        continue
+                    cells[indice] = _texto_planilha(shared_strings, cell)
                 yield cells
     except Exception as exc:
         raise ValueError("Envie um arquivo .xlsx válido.") from exc
@@ -61,11 +75,73 @@ def _decimal(valor):
     texto = str(valor or "").strip()
     if not texto:
         return Decimal("0.00")
-    normalizado = texto.replace(".", "").replace(",", ".")
+    texto = texto.replace("R$", "").replace(" ", "")
+    if "," in texto:
+        if "." in texto:
+            normalizado = texto.replace(".", "").replace(",", ".")
+        else:
+            normalizado = texto.replace(",", ".")
+    else:
+        normalizado = texto
     try:
-        return Decimal(normalizado)
+        return Decimal(normalizado).quantize(DUAS_CASAS, rounding=ROUND_HALF_UP)
     except InvalidOperation as exc:
         raise ValueError(f"Valor inválido na importação: {valor}") from exc
+
+
+def _slug_unidade(valor):
+    texto = unicodedata.normalize("NFKD", str(valor or "").strip())
+    texto = "".join(char for char in texto if not unicodedata.combining(char))
+    return texto.casefold().replace(" ", "").replace(".", "")
+
+
+def _normalizar_unidade(unidade):
+    unidade_original = str(unidade or "").strip()
+    unidade_slug = _slug_unidade(unidade_original)
+
+    unidades = {
+        "": "un",
+        "-": "un",
+        "un": "un",
+        "unid": "un",
+        "unidade": "un",
+        "unidades": "un",
+        "hr": "hr",
+        "hora": "hr",
+        "horas": "hr",
+        "dia": "dia",
+        "diaria": "dia",
+        "diarias": "dia",
+        "m": "m",
+        "metro": "m",
+        "metros": "m",
+        "m2": "m2",
+        "m²": "m2",
+        "metroquadrado": "m2",
+        "metrosquadrados": "m2",
+        "m3": "m3",
+        "m³": "m3",
+        "metrocubico": "m3",
+        "metroscubicos": "m3",
+        "kg": "kg",
+        "quilo": "kg",
+        "quilos": "kg",
+        "cx": "cx",
+        "caixa": "cx",
+        "caixas": "cx",
+        "pct": "pct",
+        "pacote": "pct",
+        "pacotes": "pct",
+        "sv": "sv",
+        "servico": "sv",
+        "servicos": "sv",
+        "serviço": "sv",
+        "serviços": "sv",
+    }
+    unidade_normalizada = unidades.get(unidade_slug) or unidades.get(unidade_original.casefold())
+    if unidade_normalizada:
+        return unidade_normalizada
+    raise ValueError(f"Unidade inválida na importação: {unidade_original}")
 
 
 def importar_catalogo_excel(arquivo, empresa):
@@ -83,8 +159,9 @@ def importar_catalogo_excel(arquivo, empresa):
     for indice, linha in enumerate(linhas[1:], start=2):
         valores = list(linha[:6]) + [""] * max(0, 6 - len(linha))
         categoria_nome, item_nome, valor, unidade, descricao, observacao = [str(v or "").strip() for v in valores[:6]]
+        campos_preenchidos = [campo for campo in (categoria_nome, item_nome, valor, unidade, descricao, observacao) if campo]
 
-        if not categoria_nome and not item_nome:
+        if len(campos_preenchidos) <= 1:
             continue
         if not categoria_nome or not item_nome:
             raise ValueError(f"Linha {indice}: informe categoria e item.")
@@ -106,7 +183,7 @@ def importar_catalogo_excel(arquivo, empresa):
             empresa=empresa,
             categoria=categoria,
             nome=item_nome,
-            unidade_medida=(unidade or "un").lower(),
+            unidade_medida=_normalizar_unidade(unidade),
             valor_unitario_padrao=_decimal(valor),
             descricao_padrao=descricao,
             observacoes=observacao,

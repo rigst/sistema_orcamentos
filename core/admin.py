@@ -12,6 +12,7 @@ except admin.sites.NotRegistered:
 
 @admin.register(Group)
 class EmpresaGroupAdmin(admin.ModelAdmin):
+    fields = ("name",)
     list_display = ("name",)
     search_fields = ("name",)
 
@@ -38,3 +39,10 @@ class EmpresaGroupAdmin(admin.ModelAdmin):
         if grupo is None:
             return queryset.none()
         return queryset.filter(pk=grupo.pk)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if "name" in form.base_fields:
+            form.base_fields["name"].label = "Empresa"
+            form.base_fields["name"].help_text = "Cada grupo representa uma empresa isolada das demais no sistema."
+        return form

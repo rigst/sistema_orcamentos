@@ -14,6 +14,7 @@ from .views import (
     orcamento_editar,
     orcamento_excluir,
     orcamento_lista,
+    orcamento_visualizar,
 )
 
 app_name = "orcamentos"
@@ -22,6 +23,7 @@ urlpatterns = [
     path("", orcamento_lista, name="lista"),
     path("novo/", orcamento_criar, name="criar"),
     path("<int:pk>/editar/", orcamento_editar, name="editar"),
+    path("<int:pk>/visualizar/", orcamento_visualizar, name="visualizar"),
     path("<int:pk>/duplicar/", orcamento_duplicar, name="duplicar"),
     path("<int:pk>/excluir/", orcamento_excluir, name="excluir"),
     path("<int:pk>/status/<str:novo_status>/", orcamento_alterar_status, name="alterar_status"),
