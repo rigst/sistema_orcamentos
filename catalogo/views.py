@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.http import HttpResponse
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -7,6 +8,42 @@ from core.query import paginate_queryset
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from .forms import CategoriaItemForm, ImportarCatalogoExcelForm, ItemCatalogoForm
 from .models import CategoriaItem, ItemCatalogo
+
+
+def obter_queryset_itens_catalogo(request):
+    busca = request.GET.get("q", "").strip()
+    categoria_id = request.GET.get("categoria", "").strip()
+    ativo = request.GET.get("ativo", "ativos").strip()
+    ordenar = request.GET.get("sort", "nome")
+
+    itens = queryset_da_empresa(ItemCatalogo.objects.select_related("categoria").all(), request.user)
+
+    if busca:
+        itens = itens.filter(
+            Q(codigo__icontains=busca)
+            | Q(nome__icontains=busca)
+            | Q(descricao_padrao__icontains=busca)
+            | Q(categoria__nome__icontains=busca)
+        )
+
+    if categoria_id:
+        itens = itens.filter(categoria_id=categoria_id)
+
+    if ativo != "inativos":
+        itens = itens.filter(ativo=True)
+    else:
+        itens = itens.filter(ativo=False)
+
+    ordenacoes = {
+        "nome": "nome",
+        "codigo": "codigo",
+        "categoria": "categoria__nome",
+        "preco_maior": "-valor_unitario_padrao",
+        "preco_menor": "valor_unitario_padrao",
+        "recentes": "-atualizado_em",
+    }
+    itens = itens.order_by(ordenacoes.get(ordenar, "nome"))
+    return itens, busca, categoria_id, ativo, ordenar
 
 
 @require_capability("pode_visualizar_catalogo")
@@ -125,39 +162,8 @@ def categoria_excluir(request, pk):
 
 @require_capability("pode_visualizar_catalogo")
 def item_lista(request):
-    busca = request.GET.get("q", "").strip()
-    categoria_id = request.GET.get("categoria", "").strip()
-    ativo = request.GET.get("ativo", "ativos").strip()
-    ordenar = request.GET.get("sort", "nome")
-
-    itens = queryset_da_empresa(ItemCatalogo.objects.select_related("categoria").all(), request.user)
-
-    if busca:
-        itens = itens.filter(
-            Q(codigo__icontains=busca)
-            | Q(nome__icontains=busca)
-            | Q(descricao_padrao__icontains=busca)
-            | Q(categoria__nome__icontains=busca)
-        )
-
-    if categoria_id:
-        itens = itens.filter(categoria_id=categoria_id)
-
-    if ativo != "inativos":
-        itens = itens.filter(ativo=True)
-    else:
-        itens = itens.filter(ativo=False)
-
-    ordenacoes = {
-        "nome": "nome",
-        "codigo": "codigo",
-        "categoria": "categoria__nome",
-        "preco_maior": "-valor_unitario_padrao",
-        "preco_menor": "valor_unitario_padrao",
-        "recentes": "-atualizado_em",
-    }
-    itens = itens.order_by(ordenacoes.get(ordenar, "nome"))
-    page_obj = paginate_queryset(request, itens, per_page=12)
+    itens, busca, categoria_id, ativo, ordenar = obter_queryset_itens_catalogo(request)
+    page_obj = paginate_queryset(request, itens, per_page=25)
 
     context = {
         "itens": page_obj,
@@ -169,6 +175,18 @@ def item_lista(request):
         "categorias": queryset_da_empresa(CategoriaItem.objects.filter(ativo=True).order_by("nome"), request.user),
     }
     return render(request, "catalogo/item_lista.html", context)
+
+
+@require_capability("pode_visualizar_catalogo")
+def item_exportar_excel(request):
+    from .services import exportar_catalogo_excel
+
+    itens, *_ = obter_queryset_itens_catalogo(request)
+    conteudo = exportar_catalogo_excel(itens)
+
+    response = HttpResponse(conteudo, content_type="application/vnd.ms-excel")
+    response["Content-Disposition"] = 'attachment; filename="catalogo-itens.xls"'
+    return response
 
 
 @require_capability("pode_gerenciar_catalogo")
@@ -258,6 +276,11 @@ def catalogo_importar_excel(request):
                 )
             except ValueError as exc:
                 form.add_error("arquivo", str(exc))
+            except Exception:
+                form.add_error(
+                    "arquivo",
+                    "Não foi possível importar o arquivo. Revise as colunas, valores e unidades antes de tentar novamente.",
+                )
             else:
                 messages.success(
                     request,

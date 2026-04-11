@@ -123,6 +123,39 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertTrue(self.orcamento.mostrar_ajustes_no_relatorio)
         self.assertContains(response, "Opções do relatório atualizadas.")
 
+    def test_central_de_relatorio_exibe_opcoes_adicionais_e_exportacao_word(self):
+        response = self.client.get(reverse("relatorios:orcamento_central", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Mostrar descrição inicial")
+        self.assertContains(response, "Mostrar informações financeiras")
+        self.assertContains(response, reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk]))
+        self.assertContains(response, "Baixar Memorial em Word")
+
+    def test_central_de_relatorio_atualiza_multiplas_opcoes(self):
+        response = self.client.post(
+            reverse("relatorios:orcamento_central", args=[self.orcamento.pk]),
+            {
+                "mostrar_ajustes_no_relatorio": "on",
+                "mostrar_descricao_inicial_no_relatorio": "on",
+                "mostrar_rodape_institucional_no_relatorio": "on",
+                "mostrar_financeiro_no_memorial": "on",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.orcamento.refresh_from_db()
+        self.assertTrue(self.orcamento.mostrar_ajustes_no_relatorio)
+        self.assertTrue(self.orcamento.mostrar_descricao_inicial_no_relatorio)
+        self.assertFalse(self.orcamento.mostrar_observacoes_gerais_no_relatorio)
+        self.assertTrue(self.orcamento.mostrar_rodape_institucional_no_relatorio)
+        self.assertFalse(self.orcamento.mostrar_contatos_evento_no_memorial)
+        self.assertTrue(self.orcamento.mostrar_financeiro_no_memorial)
+        self.assertFalse(self.orcamento.mostrar_dados_contratuais_no_memorial)
+        self.assertFalse(self.orcamento.mostrar_informacoes_complementares_no_memorial)
+        self.assertContains(response, "Opções do relatório atualizadas.")
+
     def test_exportacao_excel_retorna_arquivo(self):
         response = self.client.get(reverse("relatorios:orcamento_excel", args=[self.orcamento.pk]))
 
@@ -177,6 +210,66 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertIn("30% na aprovacao".encode("utf-8"), response.content)
         self.assertIn("Cliente Exportacao LTDA".encode("utf-8"), response.content)
         self.assertIn("pix@empresa.com".encode("utf-8"), response.content)
+
+    def test_exportacao_memorial_word_retorna_arquivo(self):
+        self.orcamento.evento_contato = "Mariana"
+        self.orcamento.condicoes_pagamento = "30% na aprovacao"
+        self.orcamento.contrato_razao_social = "Cliente Exportacao LTDA"
+        self.orcamento.observacoes_gerais = "Observacoes para Word"
+        self.orcamento.save(
+            update_fields=[
+                "evento_contato",
+                "condicoes_pagamento",
+                "contrato_razao_social",
+                "observacoes_gerais",
+                "atualizado_em",
+            ]
+        )
+        configuracao = ConfiguracaoEmpresa.objects.get()
+        configuracao.chave_pix = "pix@empresa.com"
+        configuracao.save(update_fields=["chave_pix", "atualizado_em"])
+
+        response = self.client.get(reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/rtf")
+        self.assertIn('.rtf"', response["Content-Disposition"])
+        self.assertTrue(response.content.startswith(b"{\\rtf1"))
+        self.assertIn("Relatorio profissional".encode("utf-8"), response.content)
+        self.assertIn("Mariana".encode("utf-8"), response.content)
+        self.assertIn("Cliente Exportacao LTDA".encode("utf-8"), response.content)
+        self.assertIn("pix@empresa.com".encode("utf-8"), response.content)
+
+    def test_exportacao_memorial_word_omite_blocos_desmarcados(self):
+        self.orcamento.evento_contato = "Mariana"
+        self.orcamento.condicoes_pagamento = "30% na aprovacao"
+        self.orcamento.contrato_razao_social = "Cliente Exportacao LTDA"
+        self.orcamento.observacoes_gerais = "Observacoes ocultas"
+        self.orcamento.mostrar_contatos_evento_no_memorial = False
+        self.orcamento.mostrar_financeiro_no_memorial = False
+        self.orcamento.mostrar_dados_contratuais_no_memorial = False
+        self.orcamento.mostrar_observacoes_gerais_no_relatorio = False
+        self.orcamento.save(
+            update_fields=[
+                "evento_contato",
+                "condicoes_pagamento",
+                "contrato_razao_social",
+                "observacoes_gerais",
+                "mostrar_contatos_evento_no_memorial",
+                "mostrar_financeiro_no_memorial",
+                "mostrar_dados_contratuais_no_memorial",
+                "mostrar_observacoes_gerais_no_relatorio",
+                "atualizado_em",
+            ]
+        )
+
+        response = self.client.get(reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("Mariana".encode("utf-8"), response.content)
+        self.assertNotIn("Cliente Exportacao LTDA".encode("utf-8"), response.content)
+        self.assertNotIn("30% na aprovacao".encode("utf-8"), response.content)
+        self.assertNotIn("Observacoes ocultas".encode("utf-8"), response.content)
 
 
 class RelatoriosValidacaoTests(TestCase):
@@ -260,6 +353,12 @@ class RelatoriosListaTests(TestCase):
         configuracoes = list(response.context["configuracoes"])
         self.assertEqual(configuracoes[0].nome_empresa, "Empresa A")
 
+    def test_lista_exibe_botao_principal_com_texto(self):
+        response = self.client.get(reverse("relatorios:configuracao_lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nova configuração")
+
     def test_lista_de_configuracoes_e_paginada(self):
         for indice in range(11):
             ConfiguracaoEmpresa.objects.create(nome_empresa=f"Empresa Extra {indice:02d}")
@@ -307,6 +406,8 @@ class RelatoriosAtualizacaoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "orçamentos ainda não enviados")
+        self.assertContains(response, "Voltar para empresa")
+        self.assertContains(response, "Salvar empresa")
 
     def test_edicao_de_configuracao_exibe_mensagem_de_propagacao(self):
         configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Base")

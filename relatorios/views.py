@@ -10,7 +10,7 @@ from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from orcamentos.models import Orcamento
 from .forms import ConfiguracaoEmpresaForm
 from .exporters import gerar_excel_orcamento, gerar_pdf_orcamento, obter_alerta_status
-from .exporters import gerar_pdf_memorial_descritivo
+from .exporters import gerar_pdf_memorial_descritivo, gerar_word_memorial_descritivo
 from .models import ConfiguracaoEmpresa
 
 
@@ -140,8 +140,19 @@ def orcamento_relatorio_central(request, pk):
     if request.method == "POST":
         if not request.user.pode_gerenciar_orcamentos:
             raise PermissionDenied
-        orcamento.mostrar_ajustes_no_relatorio = request.POST.get("mostrar_ajustes_no_relatorio") == "on"
-        orcamento.save(update_fields=["mostrar_ajustes_no_relatorio", "atualizado_em"])
+        campos_opcoes = [
+            "mostrar_ajustes_no_relatorio",
+            "mostrar_descricao_inicial_no_relatorio",
+            "mostrar_observacoes_gerais_no_relatorio",
+            "mostrar_rodape_institucional_no_relatorio",
+            "mostrar_contatos_evento_no_memorial",
+            "mostrar_financeiro_no_memorial",
+            "mostrar_dados_contratuais_no_memorial",
+            "mostrar_informacoes_complementares_no_memorial",
+        ]
+        for campo in campos_opcoes:
+            setattr(orcamento, campo, request.POST.get(campo) == "on")
+        orcamento.save(update_fields=[*campos_opcoes, "atualizado_em"])
         messages.success(request, "Opções do relatório atualizadas.")
         return redirect("relatorios:orcamento_central", pk=orcamento.pk)
     configuracao = obter_configuracao_ativa(request.user)
@@ -190,4 +201,15 @@ def orcamento_exportar_memorial_pdf(request, pk):
 
     response = HttpResponse(conteudo, content_type="application/pdf")
     response["Content-Disposition"] = f'attachment; filename="memorial-descritivo-{orcamento.numero}.pdf"'
+    return response
+
+
+@require_capability("pode_visualizar_orcamentos")
+def orcamento_exportar_memorial_word(request, pk):
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
+    configuracao = obter_configuracao_ativa(request.user)
+    conteudo = gerar_word_memorial_descritivo(orcamento, configuracao)
+
+    response = HttpResponse(conteudo, content_type="application/rtf")
+    response["Content-Disposition"] = f'attachment; filename="memorial-descritivo-{orcamento.numero}.rtf"'
     return response

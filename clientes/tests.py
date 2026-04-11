@@ -138,6 +138,12 @@ class ClienteListaTests(TestCase):
         self.assertTrue(response.context["page_obj"].has_previous())
         self.assertContains(response, "Cliente Extra 12")
 
+    def test_lista_exibe_botao_principal_com_texto(self):
+        response = self.client.get(reverse("clientes:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Novo cliente")
+
 
 class ClienteExclusaoTests(TestCase):
     def setUp(self):
@@ -199,6 +205,8 @@ class ClienteAtualizacaoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "orçamentos ainda não enviados")
+        self.assertContains(response, "Voltar para clientes")
+        self.assertContains(response, "Salvar cliente")
 
     def test_edicao_de_cliente_exibe_mensagem_de_propagacao(self):
         cliente = Cliente.objects.create(nome_razao_social="Cliente Base")

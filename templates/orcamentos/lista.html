@@ -12,9 +12,9 @@
         </div>
         <div class="inline-actions">
             {% if user.pode_gerenciar_orcamentos %}
-                <a class="btn btn-primary-lite btn-icon-action" href="{% url 'orcamentos:criar' %}" title="Novo orçamento" aria-label="Novo orçamento">
+                <a class="btn btn-primary-lite" href="{% url 'orcamentos:criar' %}" title="Novo orçamento" aria-label="Novo orçamento">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                    <span class="visually-hidden">Novo orçamento</span>
+                    <span>Novo orçamento</span>
                 </a>
             {% endif %}
         </div>

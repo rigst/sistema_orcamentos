@@ -8,7 +8,7 @@
     <div class="section-heading">
         <div>
             <h2>Relatório do orçamento {{ orcamento.numero }}</h2>
-            <p>Exporte um documento profissional em PDF ou Excel com base no estado atual do orçamento.</p>
+            <p>Exporte documentos profissionais em PDF, Excel ou Word com base no estado atual do orçamento.</p>
         </div>
         <div class="inline-actions">
             <a class="btn btn-secondary" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}" title="Voltar ao orçamento" aria-label="Voltar ao orçamento">
@@ -93,9 +93,46 @@
                     <h3>Opções do relatório</h3>
                     <form method="post">
                         {% csrf_token %}
-                        <div class="checkbox-row">
-                            <input type="checkbox" id="id_mostrar_ajustes_no_relatorio" name="mostrar_ajustes_no_relatorio" {% if orcamento.mostrar_ajustes_no_relatorio %}checked{% endif %}>
-                            <label for="id_mostrar_ajustes_no_relatorio">Mostrar descontos e acréscimos no relatório do cliente</label>
+                        <div class="report-options-group">
+                            <h4>PDF do orçamento</h4>
+                            <p class="report-options-helper">Define o que aparece no PDF comercial enviado ao cliente.</p>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_ajustes_no_relatorio" name="mostrar_ajustes_no_relatorio" {% if orcamento.mostrar_ajustes_no_relatorio %}checked{% endif %}>
+                                <label for="id_mostrar_ajustes_no_relatorio">Mostrar descontos e acréscimos</label>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_descricao_inicial_no_relatorio" name="mostrar_descricao_inicial_no_relatorio" {% if orcamento.mostrar_descricao_inicial_no_relatorio %}checked{% endif %}>
+                                <label for="id_mostrar_descricao_inicial_no_relatorio">Mostrar descrição inicial</label>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_observacoes_gerais_no_relatorio" name="mostrar_observacoes_gerais_no_relatorio" {% if orcamento.mostrar_observacoes_gerais_no_relatorio %}checked{% endif %}>
+                                <label for="id_mostrar_observacoes_gerais_no_relatorio">Mostrar observações gerais no PDF e no memorial</label>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_rodape_institucional_no_relatorio" name="mostrar_rodape_institucional_no_relatorio" {% if orcamento.mostrar_rodape_institucional_no_relatorio %}checked{% endif %}>
+                                <label for="id_mostrar_rodape_institucional_no_relatorio">Mostrar rodapé institucional</label>
+                            </div>
+                        </div>
+
+                        <div class="report-options-group">
+                            <h4>Memorial Descritivo</h4>
+                            <p class="report-options-helper">Controla as seções exportadas no memorial em PDF e Word.</p>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_contatos_evento_no_memorial" name="mostrar_contatos_evento_no_memorial" {% if orcamento.mostrar_contatos_evento_no_memorial %}checked{% endif %}>
+                                <label for="id_mostrar_contatos_evento_no_memorial">Mostrar contatos do evento</label>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_financeiro_no_memorial" name="mostrar_financeiro_no_memorial" {% if orcamento.mostrar_financeiro_no_memorial %}checked{% endif %}>
+                                <label for="id_mostrar_financeiro_no_memorial">Mostrar informações financeiras</label>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_dados_contratuais_no_memorial" name="mostrar_dados_contratuais_no_memorial" {% if orcamento.mostrar_dados_contratuais_no_memorial %}checked{% endif %}>
+                                <label for="id_mostrar_dados_contratuais_no_memorial">Mostrar dados contratuais</label>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="id_mostrar_informacoes_complementares_no_memorial" name="mostrar_informacoes_complementares_no_memorial" {% if orcamento.mostrar_informacoes_complementares_no_memorial %}checked{% endif %}>
+                                <label for="id_mostrar_informacoes_complementares_no_memorial">Mostrar informações complementares</label>
+                            </div>
                         </div>
                         <div class="inline-actions inline-actions-end" style="margin-top: 1rem;">
                             <button class="btn btn-primary" type="submit" title="Salvar opções do relatório" aria-label="Salvar opções do relatório">
@@ -111,7 +148,8 @@
                 <div class="report-export-list report-export-list-compact">
                     <a class="btn btn-soft" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
                     <a class="btn btn-soft" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>
-                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_memorial_pdf' orcamento.pk %}">Baixar Memorial Descritivo</a>
+                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_memorial_pdf' orcamento.pk %}">Baixar Memorial em PDF</a>
+                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_memorial_word' orcamento.pk %}">Baixar Memorial em Word</a>
                 </div>
             </div>
         </aside>

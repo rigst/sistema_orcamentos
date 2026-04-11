@@ -12,9 +12,9 @@
         </div>
         <div class="inline-actions">
             {% if user.pode_gerenciar_relatorios %}
-                <a class="btn btn-primary-lite btn-icon-action" href="{% url 'relatorios:configuracao_criar' %}" title="Nova configuração" aria-label="Nova configuração">
+                <a class="btn btn-primary-lite" href="{% url 'relatorios:configuracao_criar' %}" title="Nova configuração" aria-label="Nova configuração">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                    <span class="visually-hidden">Nova configuração</span>
+                    <span>Nova configuração</span>
                 </a>
             {% endif %}
         </div>

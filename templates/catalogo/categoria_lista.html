@@ -12,9 +12,19 @@
         </div>
         <div class="inline-actions">
             {% if user.pode_gerenciar_catalogo %}
-                <a class="btn btn-primary-lite btn-icon-action" href="{% url 'catalogo:categoria_criar' %}" title="Nova categoria" aria-label="Nova categoria">
+                <a class="btn btn-secondary" href="{% url 'catalogo:item_importar_excel' %}" title="Importar Excel" aria-label="Importar Excel">
+                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 4v10"/><path d="m8 10 4 4 4-4"/><path d="M5 18h14"/></svg>
+                    <span>Importar Excel</span>
+                </a>
+            {% endif %}
+            <a class="btn btn-secondary" href="{% url 'catalogo:item_exportar_excel' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" title="Exportar Excel" aria-label="Exportar Excel">
+                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 16V6"/><path d="m8 10 4-4 4 4"/><path d="M5 18h14"/></svg>
+                <span>Exportar Excel</span>
+            </a>
+            {% if user.pode_gerenciar_catalogo %}
+                <a class="btn btn-primary-lite" href="{% url 'catalogo:categoria_criar' %}" title="Nova categoria" aria-label="Nova categoria">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                    <span class="visually-hidden">Nova categoria</span>
+                    <span>Nova categoria</span>
                 </a>
             {% endif %}
         </div>

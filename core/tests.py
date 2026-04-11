@@ -56,6 +56,15 @@ class DashboardTests(TestCase):
         self.assertContains(response, "Manual do sistema")
         self.assertContains(response, "Perfis e autorizações")
 
+    def test_manual_exibe_legenda_de_icones_sem_textos_longos(self):
+        response = self.client.get(reverse("manual"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Legenda dos ícones")
+        self.assertContains(response, "Visualizar")
+        self.assertNotContains(response, "Visualizar um cadastro sem editar.")
+        self.assertNotContains(response, "Abrir relatórios, PDF e Excel do orçamento.")
+
 
 class InfraestruturaTests(TestCase):
     def test_workflow_de_ci_existe_e_executa_check_e_test(self):

@@ -3,6 +3,10 @@ from io import BytesIO
 import unicodedata
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
+from xml.sax.saxutils import escape
+
+from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from .models import CategoriaItem, ItemCatalogo
 
@@ -101,7 +105,7 @@ def _normalizar_unidade(unidade):
 
     unidades = {
         "": "un",
-        "-": "un",
+        "-": "-",
         "un": "un",
         "unid": "un",
         "unidade": "un",
@@ -144,6 +148,64 @@ def _normalizar_unidade(unidade):
     raise ValueError(f"Unidade inválida na importação: {unidade_original}")
 
 
+def exportar_catalogo_excel(itens) -> bytes:
+    linhas_itens = []
+    for item in itens.select_related("categoria"):
+        linhas_itens.append(
+            f"""
+            <Row>
+                <Cell><Data ss:Type="String">{escape(item.categoria.nome if item.categoria else "")}</Data></Cell>
+                <Cell><Data ss:Type="String">{escape(item.nome)}</Data></Cell>
+                <Cell><Data ss:Type="Number">{item.valor_unitario_padrao}</Data></Cell>
+                <Cell><Data ss:Type="String">{escape(item.unidade_medida)}</Data></Cell>
+                <Cell><Data ss:Type="String">{escape(item.descricao_padrao or "")}</Data></Cell>
+                <Cell><Data ss:Type="String">{escape(item.observacoes or "")}</Data></Cell>
+            </Row>
+            """
+        )
+
+    xml = f"""<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Header">
+   <Font ss:Bold="1"/>
+   <Interior ss:Color="#DCE9FF" ss:Pattern="Solid"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Catalogo">
+  <Table>
+   <Row ss:StyleID="Header">
+    <Cell><Data ss:Type="String">CATEGORIA</Data></Cell>
+    <Cell><Data ss:Type="String">ITEM</Data></Cell>
+    <Cell><Data ss:Type="String">VALOR</Data></Cell>
+    <Cell><Data ss:Type="String">UNIDADE</Data></Cell>
+    <Cell><Data ss:Type="String">DESCRIÇÃO</Data></Cell>
+    <Cell><Data ss:Type="String">OBSERVAÇÃO</Data></Cell>
+   </Row>
+   {''.join(linhas_itens)}
+  </Table>
+ </Worksheet>
+</Workbook>
+"""
+    return xml.encode("utf-8")
+
+
+def _formatar_erro_validacao(exc):
+    if hasattr(exc, "message_dict"):
+        mensagens = []
+        for campo, erros in exc.message_dict.items():
+            rotulo = campo.replace("_", " ")
+            mensagens.extend(f"{rotulo}: {erro}" for erro in erros)
+        return "; ".join(mensagens)
+    if hasattr(exc, "messages"):
+        return "; ".join(exc.messages)
+    return str(exc)
+
+
 def importar_catalogo_excel(arquivo, empresa):
     linhas = list(_linhas_xlsx(arquivo))
     if len(linhas) < 2:
@@ -156,40 +218,57 @@ def importar_catalogo_excel(arquivo, empresa):
     categorias_criadas = 0
     itens_criados = 0
 
-    for indice, linha in enumerate(linhas[1:], start=2):
-        valores = list(linha[:6]) + [""] * max(0, 6 - len(linha))
-        categoria_nome, item_nome, valor, unidade, descricao, observacao = [str(v or "").strip() for v in valores[:6]]
-        campos_preenchidos = [campo for campo in (categoria_nome, item_nome, valor, unidade, descricao, observacao) if campo]
+    try:
+        with transaction.atomic():
+            for indice, linha in enumerate(linhas[1:], start=2):
+                valores = list(linha[:6]) + [""] * max(0, 6 - len(linha))
+                categoria_nome, item_nome, valor, unidade, descricao, observacao = [str(v or "").strip() for v in valores[:6]]
+                campos_preenchidos = [campo for campo in (categoria_nome, item_nome, valor, unidade, descricao, observacao) if campo]
 
-        if len(campos_preenchidos) <= 1:
-            continue
-        if not categoria_nome or not item_nome:
-            raise ValueError(f"Linha {indice}: informe categoria e item.")
+                if len(campos_preenchidos) <= 1:
+                    continue
+                if not categoria_nome or not item_nome:
+                    raise ValueError(f"Linha {indice}: informe categoria e item.")
 
-        chave_categoria = categoria_nome.casefold()
-        categoria = categorias_cache.get(chave_categoria)
-        if categoria is None:
-            cor = CategoriaItem.COLOR_SEQUENCE[len(categorias_cache) % len(CategoriaItem.COLOR_SEQUENCE)]
-            categoria = CategoriaItem.objects.create(
-                empresa=empresa,
-                nome=categoria_nome,
-                cor=cor,
-                ativo=True,
-            )
-            categorias_cache[chave_categoria] = categoria
-            categorias_criadas += 1
+                chave_categoria = categoria_nome.casefold()
+                categoria = categorias_cache.get(chave_categoria)
+                if categoria is None:
+                    cor = CategoriaItem.COLOR_SEQUENCE[len(categorias_cache) % len(CategoriaItem.COLOR_SEQUENCE)]
+                    categoria = CategoriaItem.objects.create(
+                        empresa=empresa,
+                        nome=categoria_nome,
+                        cor=cor,
+                        ativo=True,
+                    )
+                    categorias_cache[chave_categoria] = categoria
+                    categorias_criadas += 1
 
-        item = ItemCatalogo(
-            empresa=empresa,
-            categoria=categoria,
-            nome=item_nome,
-            unidade_medida=_normalizar_unidade(unidade),
-            valor_unitario_padrao=_decimal(valor),
-            descricao_padrao=descricao,
-            observacoes=observacao,
-            ativo=True,
-        )
-        item.save()
-        itens_criados += 1
+                try:
+                    unidade_normalizada = _normalizar_unidade(unidade)
+                    valor_normalizado = _decimal(valor)
+                except ValueError as exc:
+                    raise ValueError(f"Linha {indice}: {exc}") from exc
+
+                item = ItemCatalogo(
+                    empresa=empresa,
+                    categoria=categoria,
+                    nome=item_nome,
+                    unidade_medida=unidade_normalizada,
+                    valor_unitario_padrao=valor_normalizado,
+                    descricao_padrao=descricao,
+                    observacoes=observacao,
+                    ativo=True,
+                )
+                try:
+                    item.save()
+                except ValidationError as exc:
+                    raise ValueError(f"Linha {indice}: {_formatar_erro_validacao(exc)}") from exc
+                itens_criados += 1
+    except ValueError:
+        raise
+    except Exception as exc:
+        raise ValueError(
+            "Não foi possível concluir a importação. Revise o arquivo e tente novamente."
+        ) from exc
 
     return categorias_criadas, itens_criados

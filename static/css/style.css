@@ -252,7 +252,9 @@ section {
 .form-panel ul.errorlist {
   list-style: none;
   margin-top: 0.5rem;
-  color: #ffd2d2;
+  color: #b63e3e;
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
 .form-panel fieldset {
@@ -1436,14 +1438,33 @@ tr:hover td {
 }
 
 .manual-icon-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
+  display: inline-block;
 }
 
 .manual-icon-label .action-icon {
   width: 18px;
   height: 18px;
+  margin-right: 0.55rem;
+  vertical-align: text-bottom;
+}
+
+.report-options-group + .report-options-group {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.report-options-group h4 {
+  margin-bottom: 0.25rem;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.report-options-helper {
+  margin-bottom: 0.6rem;
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  line-height: 1.55;
 }
 
 .manual-layout {

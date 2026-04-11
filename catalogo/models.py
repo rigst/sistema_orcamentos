@@ -18,7 +18,7 @@ class CategoriaItem(models.Model):
         ("#DB2777", "Rosa"),
         ("#92400E", "Marrom"),
         ("#111827", "Preto"),
-        ("#FFFFFF", "Branco"),
+        ("#475569", "Grafite"),
     ]
 
     COLOR_SEQUENCE = [
@@ -31,7 +31,7 @@ class CategoriaItem(models.Model):
         "#DB2777",
         "#92400E",
         "#111827",
-        "#FFFFFF",
+        "#475569",
     ]
 
     nome = models.CharField(max_length=100)
@@ -71,13 +71,14 @@ class ItemCatalogo(models.Model):
         ("un", "Unidade"),
         ("hr", "Hora"),
         ("dia", "Diária"),
-        ("m", "Metro"),
-        ("m2", "Metro quadrado"),
-        ("m3", "Metro cúbico"),
+        ("m", "m"),
+        ("m2", "m2"),
+        ("m3", "m3"),
         ("kg", "Quilo"),
         ("cx", "Caixa"),
         ("pct", "Pacote"),
         ("sv", "Serviço"),
+        ("-", "-"),
     ]
 
     codigo = models.CharField(max_length=50)

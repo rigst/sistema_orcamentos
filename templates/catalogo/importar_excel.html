@@ -24,6 +24,7 @@
 
             <div class="form-note">
                 <strong>Colunas esperadas:</strong> categoria, item, valor, unidade, descrição, observação.
+                As unidades aceitas incluem `m`, `m2`, `m3`, `un`, `unid.` e `-`.
             </div>
 
             <div>
@@ -33,8 +34,8 @@
             </div>
 
             <div class="inline-actions">
-                <button class="btn btn-primary" type="submit">Importar</button>
                 <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}">Voltar</a>
+                <button class="btn btn-primary" type="submit">Importar</button>
             </div>
         </form>
     </div>

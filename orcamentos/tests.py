@@ -298,6 +298,41 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(item.valor_unitario, Decimal("0.00"))
         self.assertEqual(item.subtotal, Decimal("0.00"))
 
+    def test_item_importado_do_catalogo_nao_marca_personalizacao_sem_edicao(self):
+        categoria = CategoriaItem.objects.create(nome="Piso importado")
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="IMP-01",
+            nome="Brita (camada de 2cm)",
+            categoria=categoria,
+            unidade_medida="m2",
+            valor_unitario_padrao=Decimal("85.71"),
+        )
+
+        response = self.client.post(
+            reverse("orcamentos:item_criar", args=[self.orcamento.pk]),
+            {
+                "item_catalogo": item_catalogo.pk,
+                "ordem": 1,
+                "codigo_item": "",
+                "nome": "",
+                "descricao": "",
+                "unidade_medida": "",
+                "quantidade": "1",
+                "valor_unitario": "",
+                "desconto_valor": "0",
+                "desconto_percentual": "0",
+                "acrescimo_valor": "0",
+                "acrescimo_percentual": "0",
+                "observacoes": "",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Personalizado em relação ao catálogo")
+        item = ItemOrcamento.objects.get()
+        self.assertFalse(item.diverge_catalogo)
+
     def test_visualizador_pode_ver_orcamento_em_modo_somente_leitura(self):
         visualizador = get_user_model().objects.create_user(
             username="visualizador",
@@ -344,6 +379,13 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, reverse("orcamentos:visualizar", args=[self.orcamento.pk]))
         self.assertNotContains(response, reverse("orcamentos:editar", args=[self.orcamento.pk]))
+
+    def test_lista_exibe_botao_principal_novo_orcamento_com_texto(self):
+        response = self.client.get(reverse("orcamentos:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, reverse("orcamentos:criar"))
+        self.assertContains(response, "Novo orçamento")
 
     def test_visualizador_nao_ve_botoes_de_edicao_na_lista(self):
         visualizador = get_user_model().objects.create_user(

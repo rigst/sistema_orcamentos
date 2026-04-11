@@ -17,6 +17,10 @@ def arredondar(valor: Decimal) -> Decimal:
     return valor.quantize(DUAS_CASAS, rounding=ROUND_HALF_UP)
 
 
+def normalizar_texto_comparacao(valor):
+    return " ".join(str(valor or "").split())
+
+
 class Orcamento(models.Model):
     STATUS_CHOICES = [
         ("rascunho", "Rascunho"),
@@ -102,6 +106,34 @@ class Orcamento(models.Model):
     mostrar_ajustes_no_relatorio = models.BooleanField(
         default=False,
         help_text="Se marcado, o relatório do cliente mostra descontos e acréscimos detalhados.",
+    )
+    mostrar_descricao_inicial_no_relatorio = models.BooleanField(
+        default=True,
+        help_text="Se marcado, o PDF do orçamento inclui a descrição inicial.",
+    )
+    mostrar_observacoes_gerais_no_relatorio = models.BooleanField(
+        default=True,
+        help_text="Se marcado, o PDF e o memorial incluem as observações gerais.",
+    )
+    mostrar_rodape_institucional_no_relatorio = models.BooleanField(
+        default=True,
+        help_text="Se marcado, o PDF do orçamento inclui o rodapé institucional da empresa.",
+    )
+    mostrar_contatos_evento_no_memorial = models.BooleanField(
+        default=True,
+        help_text="Se marcado, o memorial inclui os contatos do evento ou projeto.",
+    )
+    mostrar_financeiro_no_memorial = models.BooleanField(
+        default=True,
+        help_text="Se marcado, o memorial inclui condições financeiras e dados bancários.",
+    )
+    mostrar_dados_contratuais_no_memorial = models.BooleanField(
+        default=True,
+        help_text="Se marcado, o memorial inclui os dados contratuais.",
+    )
+    mostrar_informacoes_complementares_no_memorial = models.BooleanField(
+        default=True,
+        help_text="Se marcado, o memorial inclui textos institucionais complementares.",
     )
 
     condicoes_pagamento = models.TextField(blank=True)
@@ -283,13 +315,14 @@ class ItemOrcamento(models.Model):
         ("un", "Unidade"),
         ("hr", "Hora"),
         ("dia", "Diária"),
-        ("m", "Metro"),
-        ("m2", "Metro quadrado"),
-        ("m3", "Metro cúbico"),
+        ("m", "m"),
+        ("m2", "m2"),
+        ("m3", "m3"),
         ("kg", "Quilo"),
         ("cx", "Caixa"),
         ("pct", "Pacote"),
         ("sv", "Serviço"),
+        ("-", "-"),
     ]
 
     orcamento = models.ForeignKey(
@@ -378,11 +411,13 @@ class ItemOrcamento(models.Model):
             return []
 
         divergencias = []
-        if (self.nome or "").strip() != (self.item_catalogo.nome or "").strip():
+        if normalizar_texto_comparacao(self.nome) != normalizar_texto_comparacao(self.item_catalogo.nome):
             divergencias.append("nome")
-        if self.unidade_medida != self.item_catalogo.unidade_medida:
+        if (self.unidade_medida or "").strip() != (self.item_catalogo.unidade_medida or "").strip():
             divergencias.append("unidade")
-        if self.valor_unitario != self.item_catalogo.valor_unitario_padrao:
+        if arredondar(self.valor_unitario or Decimal("0.00")) != arredondar(
+            self.item_catalogo.valor_unitario_padrao or Decimal("0.00")
+        ):
             divergencias.append("valor")
         return divergencias
 

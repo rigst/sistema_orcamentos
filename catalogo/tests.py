@@ -135,6 +135,18 @@ class CatalogoValidacaoTests(TestCase):
         categoria = CategoriaItem.objects.get(nome="Categoria colorida")
         self.assertEqual(categoria.cor, "#EA580C")
 
+    def test_formularios_de_categoria_e_item_exibem_botoes_com_icone_e_texto(self):
+        categoria_response = self.client.get(reverse("catalogo:categoria_criar"))
+        item_response = self.client.get(reverse("catalogo:item_criar"))
+
+        self.assertEqual(categoria_response.status_code, 200)
+        self.assertContains(categoria_response, "Voltar para categorias")
+        self.assertContains(categoria_response, "Salvar categoria")
+
+        self.assertEqual(item_response.status_code, 200)
+        self.assertContains(item_response, "Voltar para itens")
+        self.assertContains(item_response, "Salvar item")
+
 
 class CatalogoListaTests(TestCase):
     def setUp(self):
@@ -183,7 +195,7 @@ class CatalogoListaTests(TestCase):
 
     def test_lista_de_itens_e_paginada(self):
         categoria = CategoriaItem.objects.get(nome="Categoria A")
-        for indice in range(13):
+        for indice in range(26):
             ItemCatalogo.objects.create(
                 codigo=f"EXTRA-{indice:02d}",
                 nome=f"Extra {indice:02d}",
@@ -196,7 +208,24 @@ class CatalogoListaTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context["page_obj"].has_previous())
-        self.assertContains(response, "Extra 12")
+        self.assertEqual(response.context["page_obj"].paginator.per_page, 25)
+        self.assertContains(response, "Extra 25")
+
+    def test_lista_exibe_unidade_m2_com_rotulo_curto(self):
+        categoria = CategoriaItem.objects.create(nome="Medidas")
+        ItemCatalogo.objects.create(
+            codigo="M2-01",
+            nome="Piso",
+            categoria=categoria,
+            unidade_medida="m2",
+            valor_unitario_padrao="5.00",
+        )
+
+        response = self.client.get(reverse("catalogo:item_lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, ">m2<", html=False)
+        self.assertNotContains(response, "Metro quadrado")
 
     def test_lista_exibe_categoria_com_cor(self):
         categoria = CategoriaItem.objects.create(nome="Colorida", cor="#DB2777")
@@ -213,6 +242,57 @@ class CatalogoListaTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Colorida")
         self.assertContains(response, "#DB2777")
+
+    def test_lista_exibe_botoes_principais_com_texto_e_ordem_de_importacao_antes_da_exportacao(self):
+        response = self.client.get(reverse("catalogo:item_lista"))
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = response.content.decode("utf-8")
+        self.assertIn("Importar Excel", conteudo)
+        self.assertIn("Exportar Excel", conteudo)
+        self.assertIn("Novo item", conteudo)
+        self.assertLess(conteudo.index("Importar Excel"), conteudo.index("Exportar Excel"))
+
+    def test_lista_de_categorias_exibe_botao_principal_com_texto(self):
+        response = self.client.get(reverse("catalogo:categoria_lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Nova categoria")
+
+    def test_lista_de_categorias_exibe_botoes_de_importacao_e_exportacao(self):
+        response = self.client.get(reverse("catalogo:categoria_lista"))
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = response.content.decode("utf-8")
+        self.assertIn("Importar Excel", conteudo)
+        self.assertIn("Exportar Excel", conteudo)
+        self.assertIn("Nova categoria", conteudo)
+        self.assertLess(conteudo.index("Importar Excel"), conteudo.index("Exportar Excel"))
+
+    def test_exportacao_excel_do_catalogo_usa_colunas_do_importador(self):
+        categoria = CategoriaItem.objects.create(nome="Exportacao")
+        ItemCatalogo.objects.create(
+            codigo="EXP-01",
+            nome="Painel",
+            categoria=categoria,
+            unidade_medida="-",
+            valor_unitario_padrao="25.00",
+            descricao_padrao="Descricao exportada",
+            observacoes="Observacao exportada",
+        )
+
+        response = self.client.get(reverse("catalogo:item_exportar_excel"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response["Content-Type"], "application/vnd.ms-excel")
+        self.assertIn('attachment; filename="catalogo-itens.xls"', response["Content-Disposition"])
+        conteudo = response.content.decode("utf-8")
+        self.assertIn("CATEGORIA", conteudo)
+        self.assertIn("ITEM", conteudo)
+        self.assertIn("UNIDADE", conteudo)
+        self.assertIn("Exportacao", conteudo)
+        self.assertIn("Painel", conteudo)
+        self.assertIn(">-<", conteudo)
 
 
 class CatalogoInativacaoTests(TestCase):
@@ -296,6 +376,7 @@ class CatalogoImportacaoExcelTests(TestCase):
             perfil="admin",
         )
         self.empresa = self.user.groups.get()
+        self.client.force_login(self.user)
 
     def criar_xlsx(self, rows):
         sheet_rows = []
@@ -380,7 +461,7 @@ class CatalogoImportacaoExcelTests(TestCase):
         self.assertEqual(ItemCatalogo.objects.get(nome="Brita").unidade_medida, "m2")
         self.assertEqual(ItemCatalogo.objects.get(nome="Brita").valor_unitario_padrao, Decimal("85.71"))
         self.assertEqual(ItemCatalogo.objects.get(nome="Recepcionista").unidade_medida, "un")
-        self.assertEqual(ItemCatalogo.objects.get(nome="Sem piso").unidade_medida, "un")
+        self.assertEqual(ItemCatalogo.objects.get(nome="Sem piso").unidade_medida, "-")
 
     def test_importacao_ignora_linhas_de_secao_com_texto_fora_da_coluna_categoria(self):
         arquivo = self.criar_xlsx([
@@ -404,3 +485,39 @@ class CatalogoImportacaoExcelTests(TestCase):
 
         with self.assertRaisesMessage(ValueError, "Unidade inválida na importação: litro"):
             importar_catalogo_excel(arquivo, self.empresa)
+
+    def test_importacao_cancela_tudo_quando_encontra_erro(self):
+        arquivo = self.criar_xlsx([
+            ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
+            ("PISO", "Item válido", 10, "m2", "", ""),
+            ("PISO", "Item inválido", 10, "litro", "", ""),
+        ])
+
+        with self.assertRaisesMessage(ValueError, "Unidade inválida na importação: litro"):
+            importar_catalogo_excel(arquivo, self.empresa)
+
+        self.assertEqual(CategoriaItem.objects.filter(empresa=self.empresa).count(), 0)
+        self.assertEqual(ItemCatalogo.objects.filter(empresa=self.empresa).count(), 0)
+
+    def test_tela_de_importacao_exibe_mensagem_amigavel_sem_quebrar_fluxo(self):
+        arquivo = self.criar_xlsx([
+            ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
+            ("PISO", "Item inválido", 10, "litro", "", ""),
+        ])
+
+        response = self.client.post(
+            reverse("catalogo:item_importar_excel"),
+            {"arquivo": arquivo},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Linha 2: Unidade inválida na importação: litro")
+        self.assertEqual(CategoriaItem.objects.filter(empresa=self.empresa).count(), 0)
+        self.assertEqual(ItemCatalogo.objects.filter(empresa=self.empresa).count(), 0)
+
+    def test_tela_de_importacao_exibe_voltar_antes_do_botao_importar(self):
+        response = self.client.get(reverse("catalogo:item_importar_excel"))
+
+        self.assertEqual(response.status_code, 200)
+        conteudo = response.content.decode("utf-8")
+        self.assertLess(conteudo.index(">Voltar<"), conteudo.index(">Importar<"))
