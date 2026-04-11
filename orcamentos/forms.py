@@ -1,3 +1,6 @@
+import re
+from datetime import timedelta
+
 from django import forms
 from django.core.exceptions import ValidationError
 from django.utils.timezone import localdate
@@ -9,11 +12,24 @@ from core.validators import validar_cep_basico, validar_cpf_cnpj_basico, validar
 from .models import ItemOrcamento, Orcamento
 
 
+def calcular_validade_inicial_configuracao(configuracao, data_emissao):
+    texto = str(getattr(configuracao, "validade_padrao_proposta", "") or "").strip()
+    correspondencia = re.search(r"\d+", texto)
+    if not correspondencia or not data_emissao:
+        return None
+    try:
+        dias = int(correspondencia.group())
+    except (TypeError, ValueError):
+        return None
+    return data_emissao + timedelta(days=dias)
+
+
 class OrcamentoForm(forms.ModelForm):
     class Meta:
         model = Orcamento
         fields = [
             "numero",
+            "configuracao_empresa",
             "cliente",
             "titulo",
             "descricao_inicial",
@@ -130,8 +146,29 @@ class OrcamentoForm(forms.ModelForm):
         if user is not None:
             from clientes.models import Cliente
             from core.tenancy import queryset_da_empresa
+            from relatorios.models import ConfiguracaoEmpresa
+            from django.db.models import Q
 
             self.fields["cliente"].queryset = queryset_da_empresa(Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user)
+            configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
+            if self.instance.pk and self.instance.configuracao_empresa_id:
+                configuracoes = configuracoes.filter(Q(ativo=True) | Q(pk=self.instance.configuracao_empresa_id))
+            else:
+                configuracoes = configuracoes.filter(ativo=True)
+            configuracoes = configuracoes.order_by("nome_empresa", "-atualizado_em")
+            self.fields["configuracao_empresa"].queryset = configuracoes
+            self.fields["configuracao_empresa"].required = False
+
+            if not self.instance.pk and not self.is_bound:
+                configuracao_inicial = configuracoes.first()
+                if configuracao_inicial:
+                    self.initial.setdefault("configuracao_empresa", configuracao_inicial.pk)
+                    self.fields["configuracao_empresa"].initial = configuracao_inicial.pk
+                    data_emissao_inicial = self.fields["data_emissao"].initial or localdate()
+                    validade_inicial = calcular_validade_inicial_configuracao(configuracao_inicial, data_emissao_inicial)
+                    if validade_inicial and not self.initial.get("validade_em"):
+                        self.initial["validade_em"] = validade_inicial
+                        self.fields["validade_em"].initial = validade_inicial
 
     def clean_evento_telefone(self):
         valor = (self.cleaned_data.get("evento_telefone") or "").strip()
@@ -139,6 +176,17 @@ class OrcamentoForm(forms.ModelForm):
             return ""
         validar_telefone_basico(valor, campo="Telefone do evento")
         return formatar_telefone_br(valor)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        configuracao = cleaned_data.get("configuracao_empresa")
+        validade_em = cleaned_data.get("validade_em")
+        data_emissao = cleaned_data.get("data_emissao")
+        if configuracao and not validade_em:
+            validade_calculada = calcular_validade_inicial_configuracao(configuracao, data_emissao)
+            if validade_calculada:
+                cleaned_data["validade_em"] = validade_calculada
+        return cleaned_data
 
     def clean_contrato_cnpj(self):
         valor = (self.cleaned_data.get("contrato_cnpj") or "").strip()

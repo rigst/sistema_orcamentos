@@ -94,16 +94,26 @@ def registrar_fontes_pdf():
 
 
 def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio) -> bytes:
+    def texto_planilha(valor) -> str:
+        return escape(str(valor or "")).replace("\n", "&#10;")
+
     empresa = configuracao.nome_empresa if configuracao else "Sua empresa"
     cliente = str(orcamento.cliente)
     linhas_itens = []
-    for item in orcamento.itens.all().order_by("ordem", "id"):
+    for item in orcamento.itens.select_related("item_catalogo__categoria").all().order_by("ordem", "id"):
+        categoria_nome = (
+            item.item_catalogo.categoria.nome
+            if item.item_catalogo_id and item.item_catalogo and item.item_catalogo.categoria_id
+            else "Sem categoria"
+        )
         linhas_itens.append(
             f"""
             <Row>
                 <Cell><Data ss:Type="Number">{item.ordem}</Data></Cell>
                 <Cell><Data ss:Type="String">{escape(item.codigo_item or "")}</Data></Cell>
+                <Cell><Data ss:Type="String">{texto_planilha(categoria_nome)}</Data></Cell>
                 <Cell><Data ss:Type="String">{escape(item.nome)}</Data></Cell>
+                <Cell><Data ss:Type="String">{texto_planilha(item.descricao or "")}</Data></Cell>
                 <Cell><Data ss:Type="Number">{item.quantidade}</Data></Cell>
                 <Cell><Data ss:Type="String">{escape(item.get_unidade_medida_display())}</Data></Cell>
                 <Cell><Data ss:Type="Number">{item.valor_unitario}</Data></Cell>
@@ -114,6 +124,35 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
                 <Cell><Data ss:Type="Number">{item.subtotal}</Data></Cell>
             </Row>
             """
+        )
+
+    linhas_subtotais_categoria = []
+    for grupo in orcamento.subtotais_por_categoria():
+        linhas_subtotais_categoria.append(
+            f"""
+            <Row>
+                <Cell><Data ss:Type="String">{texto_planilha(grupo["categoria_nome"])}</Data></Cell>
+                <Cell ss:StyleID="Currency"><Data ss:Type="Number">{grupo["subtotal"]}</Data></Cell>
+            </Row>
+            """
+        )
+
+    linhas_contexto = []
+    if orcamento.mostrar_descricao_inicial_no_relatorio and orcamento.descricao_inicial:
+        linhas_contexto.append(
+            f'<Row><Cell><Data ss:Type="String">Descrição inicial: {texto_planilha(orcamento.descricao_inicial)}</Data></Cell></Row>'
+        )
+    if orcamento.mostrar_observacoes_gerais_no_relatorio and orcamento.observacoes_gerais:
+        linhas_contexto.append(
+            f'<Row><Cell><Data ss:Type="String">Observações gerais: {texto_planilha(orcamento.observacoes_gerais)}</Data></Cell></Row>'
+        )
+    if (
+        orcamento.mostrar_rodape_institucional_no_relatorio
+        and configuracao
+        and configuracao.rodape_relatorio
+    ):
+        linhas_contexto.append(
+            f'<Row><Cell><Data ss:Type="String">Rodapé institucional: {texto_planilha(configuracao.rodape_relatorio)}</Data></Cell></Row>'
         )
 
     xml = f"""<?xml version="1.0"?>
@@ -143,11 +182,14 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
    <Row><Cell><Data ss:Type="String">Status: {escape(orcamento.get_status_display())}</Data></Cell></Row>
    <Row><Cell><Data ss:Type="String">Emissão: {formatar_data(orcamento.data_emissao)}</Data></Cell></Row>
    <Row><Cell><Data ss:Type="String">Validade: {formatar_data(orcamento.validade_em)}</Data></Cell></Row>
+   {''.join(linhas_contexto)}
    <Row />
    <Row ss:StyleID="Header">
     <Cell><Data ss:Type="String">Ordem</Data></Cell>
     <Cell><Data ss:Type="String">Código</Data></Cell>
+    <Cell><Data ss:Type="String">Categoria</Data></Cell>
     <Cell><Data ss:Type="String">Item</Data></Cell>
+    <Cell><Data ss:Type="String">Descrição</Data></Cell>
     <Cell><Data ss:Type="String">Qtd</Data></Cell>
     <Cell><Data ss:Type="String">Unidade</Data></Cell>
     <Cell><Data ss:Type="String">Valor unitário</Data></Cell>
@@ -158,6 +200,9 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
     <Cell><Data ss:Type="String">Subtotal</Data></Cell>
    </Row>
    {''.join(linhas_itens)}
+   <Row />
+   <Row ss:StyleID="Header"><Cell><Data ss:Type="String">Subtotais por categoria</Data></Cell></Row>
+   {''.join(linhas_subtotais_categoria)}
    <Row />
    <Row><Cell><Data ss:Type="String">Subtotal dos itens</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">{orcamento.subtotal_itens}</Data></Cell></Row>
    <Row><Cell><Data ss:Type="String">Desconto global em valor</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">{orcamento.desconto_global_valor}</Data></Cell></Row>

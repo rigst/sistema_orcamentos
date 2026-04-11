@@ -132,6 +132,24 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertContains(response, reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk]))
         self.assertContains(response, "Baixar Memorial em Word")
 
+    def test_relatorios_respeitam_configuracao_vinculada_ao_orcamento(self):
+        self.orcamento.configuracao_empresa = ConfiguracaoEmpresa.objects.create(
+            nome_empresa="Empresa Escolhida",
+            cidade="Curitiba",
+        )
+        self.orcamento.save(update_fields=["configuracao_empresa", "atualizado_em"])
+        ConfiguracaoEmpresa.objects.create(
+            nome_empresa="Empresa Mais Recente",
+            cidade="Campinas",
+        )
+
+        response = self.client.get(reverse("relatorios:orcamento_central", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Empresa Escolhida")
+        self.assertContains(response, "Curitiba")
+        self.assertNotContains(response, "Empresa Mais Recente")
+
     def test_central_de_relatorio_atualiza_multiplas_opcoes(self):
         response = self.client.post(
             reverse("relatorios:orcamento_central", args=[self.orcamento.pk]),
@@ -157,12 +175,38 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertContains(response, "Opções do relatório atualizadas.")
 
     def test_exportacao_excel_retorna_arquivo(self):
+        categoria = CategoriaItem.objects.create(nome="Civil", cor="#2563EB")
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="CIV-EXCEL-01",
+            nome="Servico civil",
+            categoria=categoria,
+            unidade_medida="sv",
+            valor_unitario_padrao=Decimal("100.00"),
+            descricao_padrao="Descricao do item no excel",
+        )
+        item = self.orcamento.itens.first()
+        item.item_catalogo = item_catalogo
+        item.descricao = "Descricao detalhada"
+        item.save(update_fields=["item_catalogo", "descricao", "atualizado_em"])
+        self.orcamento.descricao_inicial = "Introducao do PDF"
+        self.orcamento.observacoes_gerais = "Observacoes do documento"
+        self.orcamento.save(update_fields=["descricao_inicial", "observacoes_gerais", "atualizado_em"])
+        configuracao = ConfiguracaoEmpresa.objects.get()
+        configuracao.rodape_relatorio = "Rodape institucional"
+        configuracao.save(update_fields=["rodape_relatorio", "atualizado_em"])
+
         response = self.client.get(reverse("relatorios:orcamento_excel", args=[self.orcamento.pk]))
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/vnd.ms-excel")
         self.assertIn("attachment;", response["Content-Disposition"])
         self.assertIn(b"Or\xc3\xa7amento em rascunho", response.content)
+        self.assertIn("Categoria".encode("utf-8"), response.content)
+        self.assertIn("Civil".encode("utf-8"), response.content)
+        self.assertIn("Descricao detalhada".encode("utf-8"), response.content)
+        self.assertIn("Descrição inicial: Introducao do PDF".encode("utf-8"), response.content)
+        self.assertIn("Observações gerais: Observacoes do documento".encode("utf-8"), response.content)
+        self.assertIn("Rodapé institucional: Rodape institucional".encode("utf-8"), response.content)
 
     def test_exportacao_pdf_retorna_arquivo(self):
         response = self.client.get(reverse("relatorios:orcamento_pdf", args=[self.orcamento.pk]))
@@ -406,7 +450,7 @@ class RelatoriosAtualizacaoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "orçamentos ainda não enviados")
-        self.assertContains(response, "Voltar para empresa")
+        self.assertContains(response, ">Voltar<", html=False)
         self.assertContains(response, "Salvar empresa")
 
     def test_edicao_de_configuracao_exibe_mensagem_de_propagacao(self):

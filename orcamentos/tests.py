@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
+from relatorios.models import ConfiguracaoEmpresa
 from .models import ItemOrcamento, Orcamento
 
 
@@ -194,6 +195,42 @@ class OrcamentoViewsTests(TestCase):
         novo = Orcamento.objects.exclude(pk=self.orcamento.pk).get()
         self.assertRedirects(response, reverse("orcamentos:editar", args=[novo.pk]))
         self.assertEqual(novo.numero, "ORC-2026-0002")
+
+    def test_orcamento_pode_selecionar_configuracao_da_empresa_e_puxar_validade_padrao(self):
+        configuracao_padrao = ConfiguracaoEmpresa.objects.create(
+            nome_empresa="Empresa Base",
+            validade_padrao_proposta="15 dias",
+        )
+        outra_configuracao = ConfiguracaoEmpresa.objects.create(
+            nome_empresa="Empresa Secundaria",
+            validade_padrao_proposta="30",
+        )
+
+        response = self.client.post(
+            reverse("orcamentos:criar"),
+            {
+                "numero": "",
+                "configuracao_empresa": outra_configuracao.pk,
+                "cliente": self.cliente.pk,
+                "titulo": "Orçamento com empresa selecionada",
+                "descricao_inicial": "",
+                "observacoes_gerais": "",
+                "status": "rascunho",
+                "data_emissao": "2026-04-09",
+                "validade_em": "",
+                "desconto_global_valor": "0.00",
+                "desconto_global_percentual": "0.00",
+                "acrescimo_global_valor": "0.00",
+                "acrescimo_global_percentual": "0.00",
+                "mostrar_ajustes_no_relatorio": "",
+            },
+        )
+
+        novo = Orcamento.objects.exclude(pk=self.orcamento.pk).get()
+        self.assertRedirects(response, reverse("orcamentos:editar", args=[novo.pk]))
+        self.assertEqual(novo.configuracao_empresa_id, outra_configuracao.pk)
+        self.assertEqual(novo.validade_em.isoformat(), "2026-05-09")
+        self.assertNotEqual(novo.configuracao_empresa_id, configuracao_padrao.pk)
 
     def test_orcamento_aceita_campos_de_evento_comercial_e_contrato(self):
         response = self.client.post(

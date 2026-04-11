@@ -140,11 +140,11 @@ class CatalogoValidacaoTests(TestCase):
         item_response = self.client.get(reverse("catalogo:item_criar"))
 
         self.assertEqual(categoria_response.status_code, 200)
-        self.assertContains(categoria_response, "Voltar para categorias")
+        self.assertContains(categoria_response, ">Voltar<", html=False)
         self.assertContains(categoria_response, "Salvar categoria")
 
         self.assertEqual(item_response.status_code, 200)
-        self.assertContains(item_response, "Voltar para itens")
+        self.assertContains(item_response, ">Voltar<", html=False)
         self.assertContains(item_response, "Salvar item")
 
 

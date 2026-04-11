@@ -163,6 +163,14 @@ class Orcamento(models.Model):
     contrato_email = models.EmailField(blank=True)
     contrato_inscricao_estadual = models.CharField(max_length=30, blank=True)
 
+    configuracao_empresa = models.ForeignKey(
+        "relatorios.ConfiguracaoEmpresa",
+        on_delete=models.PROTECT,
+        related_name="orcamentos",
+        null=True,
+        blank=True,
+    )
+
     empresa = models.ForeignKey(
         "auth.Group",
         on_delete=models.PROTECT,
@@ -229,6 +237,11 @@ class Orcamento(models.Model):
             raise ValidationError(
                 {"validade_em": "A validade não pode ser anterior à data de emissão."}
             )
+        if self.configuracao_empresa_id and self.empresa_id:
+            if self.configuracao_empresa.empresa_id != self.empresa_id:
+                raise ValidationError(
+                    {"configuracao_empresa": "Selecione uma configuração da mesma empresa do orçamento."}
+                )
 
     def calcular_subtotal_itens(self) -> Decimal:
         total = sum((item.subtotal for item in self.itens.all()), Decimal("0.00"))
@@ -301,6 +314,14 @@ class Orcamento(models.Model):
                 self.empresa = self.criado_por.groups.order_by("name", "id").first()
             else:
                 self.empresa = obter_grupo_empresa_padrao()
+        if self.configuracao_empresa_id is None and self.empresa_id:
+            from relatorios.models import ConfiguracaoEmpresa
+
+            self.configuracao_empresa = (
+                ConfiguracaoEmpresa.objects.filter(empresa=self.empresa, ativo=True)
+                .order_by("-atualizado_em", "nome_empresa")
+                .first()
+            )
         type(self)._empresa_numero_context = self.empresa
         self.definir_numero_automatico()
         self.full_clean()

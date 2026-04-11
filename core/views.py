@@ -13,7 +13,10 @@ from orcamentos.models import Orcamento
 def dashboard(request):
     periodo = request.GET.get("periodo", "30")
     ultimos_orcamentos = queryset_da_empresa(
-        Orcamento.objects.select_related("cliente").filter(ativo=True).order_by("-criado_em"),
+        Orcamento.objects.select_related("cliente")
+        .filter(ativo=True)
+        .exclude(status__in=["rejeitado", "cancelado"])
+        .order_by("-criado_em"),
         request.user,
     )
     orcamentos = queryset_da_empresa(Orcamento.objects.filter(ativo=True), request.user)

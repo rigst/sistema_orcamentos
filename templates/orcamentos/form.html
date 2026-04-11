@@ -73,9 +73,18 @@
                             </div>
                         {% endif %}
                         <div>
+                            <label for="{{ form.configuracao_empresa.id_for_label }}">Empresa do orçamento{% if form.configuracao_empresa.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            {{ form.configuracao_empresa }}
+                            {{ form.configuracao_empresa.errors }}
+                        </div>
+                        <div>
                             <label for="{{ form.cliente.id_for_label }}">Cliente{% if form.cliente.field.required %}<span class="required-mark">*</span>{% endif %}</label>
                             {{ form.cliente }}
                             {{ form.cliente.errors }}
+                        </div>
+
+                        <div class="full">
+                            <p class="muted">A empresa selecionada define automaticamente logo, cabeçalho, rodapé, dados bancários, validade padrão e assinatura usados nos relatórios. Você pode trocar essa seleção depois, se necessário.</p>
                         </div>
 
                         <div class="full">

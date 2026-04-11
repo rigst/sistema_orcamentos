@@ -49,6 +49,48 @@ class DashboardTests(TestCase):
         self.assertContains(response, "Últimos 30 dias")
         self.assertNotContains(response, "Rascunho antigo")
 
+    def test_dashboard_oculta_cancelados_rejeitados_e_inativos_dos_ultimos_orcamentos(self):
+        Orcamento.objects.create(
+            numero="ORC-DASH-3",
+            cliente=self.cliente,
+            titulo="Rejeitado recente",
+            status="rejeitado",
+            data_emissao=timezone.localdate(),
+            total_final=Decimal("300.00"),
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+        Orcamento.objects.create(
+            numero="ORC-DASH-4",
+            cliente=self.cliente,
+            titulo="Cancelado recente",
+            status="cancelado",
+            data_emissao=timezone.localdate(),
+            total_final=Decimal("400.00"),
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+        Orcamento.objects.create(
+            numero="ORC-DASH-5",
+            cliente=self.cliente,
+            titulo="Inativo recente",
+            status="aprovado",
+            ativo=False,
+            data_emissao=timezone.localdate(),
+            total_final=Decimal("500.00"),
+            criado_por=self.user,
+            atualizado_por=self.user,
+        )
+
+        response = self.client.get(reverse("dashboard"), {"periodo": "todos"})
+
+        self.assertEqual(response.status_code, 200)
+        titulos = [orcamento.titulo for orcamento in response.context["ultimos_orcamentos"]]
+        self.assertIn("Aprovado recente", titulos)
+        self.assertNotIn("Rejeitado recente", titulos)
+        self.assertNotIn("Cancelado recente", titulos)
+        self.assertNotIn("Inativo recente", titulos)
+
     def test_manual_do_sistema_esta_disponivel(self):
         response = self.client.get(reverse("manual"))
 

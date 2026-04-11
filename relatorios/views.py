@@ -55,6 +55,16 @@ def obter_configuracao_ativa(user):
     return queryset_da_empresa(ConfiguracaoEmpresa.objects.filter(ativo=True), user).order_by("-atualizado_em").first()
 
 
+def obter_configuracao_do_orcamento(orcamento, user):
+    if getattr(orcamento, "configuracao_empresa_id", None):
+        configuracao_vinculada = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user).filter(
+            pk=orcamento.configuracao_empresa_id
+        ).first()
+        if configuracao_vinculada:
+            return configuracao_vinculada
+    return obter_configuracao_ativa(user)
+
+
 @require_capability("pode_gerenciar_relatorios")
 def configuracao_criar(request):
     if request.method == "POST":
@@ -136,7 +146,10 @@ def configuracao_excluir(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_relatorio_central(request, pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        pk=pk,
+    )
     if request.method == "POST":
         if not request.user.pode_gerenciar_orcamentos:
             raise PermissionDenied
@@ -155,7 +168,7 @@ def orcamento_relatorio_central(request, pk):
         orcamento.save(update_fields=[*campos_opcoes, "atualizado_em"])
         messages.success(request, "Opções do relatório atualizadas.")
         return redirect("relatorios:orcamento_central", pk=orcamento.pk)
-    configuracao = obter_configuracao_ativa(request.user)
+    configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
     alerta_status = obter_alerta_status(orcamento)
     return render(
         request,
@@ -171,8 +184,11 @@ def orcamento_relatorio_central(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_excel(request, pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
-    configuracao = obter_configuracao_ativa(request.user)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        pk=pk,
+    )
+    configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
     alerta_status = obter_alerta_status(orcamento)
     conteudo = gerar_excel_orcamento(orcamento, configuracao, alerta_status)
 
@@ -183,8 +199,11 @@ def orcamento_exportar_excel(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_pdf(request, pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
-    configuracao = obter_configuracao_ativa(request.user)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        pk=pk,
+    )
+    configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
     alerta_status = obter_alerta_status(orcamento)
     conteudo = gerar_pdf_orcamento(orcamento, configuracao, alerta_status)
 
@@ -195,8 +214,11 @@ def orcamento_exportar_pdf(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_memorial_pdf(request, pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
-    configuracao = obter_configuracao_ativa(request.user)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        pk=pk,
+    )
+    configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
     conteudo = gerar_pdf_memorial_descritivo(orcamento, configuracao)
 
     response = HttpResponse(conteudo, content_type="application/pdf")
@@ -206,8 +228,11 @@ def orcamento_exportar_memorial_pdf(request, pk):
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_memorial_word(request, pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
-    configuracao = obter_configuracao_ativa(request.user)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        pk=pk,
+    )
+    configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
     conteudo = gerar_word_memorial_descritivo(orcamento, configuracao)
 
     response = HttpResponse(conteudo, content_type="application/rtf")
