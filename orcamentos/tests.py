@@ -67,10 +67,11 @@ class OrcamentoViewsTests(TestCase):
                 "quantidade": "xpto",
                 "valor_unitario": "10.00",
             },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Este campo é obrigatório.")
+        self.assertIn("Este campo é obrigatório.", response.json()["modal_html"])
         self.assertEqual(ItemOrcamento.objects.count(), 0)
 
     def test_item_catalogo_preenche_campos_faltantes(self):
@@ -481,7 +482,7 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "R$ 195,00")
 
-    def test_edicao_embutida_aparece_na_tela_principal(self):
+    def test_edicao_de_item_e_carregada_para_o_modal(self):
         item = ItemOrcamento.objects.create(
             orcamento=self.orcamento,
             ordem=1,
@@ -493,13 +494,17 @@ class OrcamentoViewsTests(TestCase):
         )
 
         response = self.client.get(
-            reverse("orcamentos:editar", args=[self.orcamento.pk]),
-            {"item_edit": item.pk},
+            reverse("orcamentos:item_editar", args=[self.orcamento.pk, item.pk]),
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Fechar edição")
-        self.assertContains(response, "Salvar item")
+        self.assertJSONEqual(
+            response.content,
+            {"modal_html": response.json()["modal_html"]},
+        )
+        self.assertIn("Cancelar", response.json()["modal_html"])
+        self.assertIn("Salvar item", response.json()["modal_html"])
 
     def test_item_pode_ser_duplicado_para_edicao(self):
         item = ItemOrcamento.objects.create(

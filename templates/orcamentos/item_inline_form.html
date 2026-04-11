@@ -1,19 +1,18 @@
 <div class="item-builder" data-item-builder>
-    {% if item %}
-        <div class="section-heading section-heading-compact" style="margin-bottom: 1rem;">
-            <div>
+    <div class="section-heading section-heading-compact item-modal-heading">
+        <div>
+            <div class="item-modal-title-row">
                 <h3>{{ titulo|default:"Editar item do orçamento" }}</h3>
-            </div>
-            <div>
-                <a class="btn btn-secondary btn-icon-action" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}" title="Fechar edição" aria-label="Fechar edição">
-                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    <span class="visually-hidden">Fechar edição</span>
-                </a>
+                <div id="item-draft-status-{{ item.pk|default:'novo' }}" class="inline-feedback inline-feedback-inline"></div>
             </div>
         </div>
-    {% endif %}
-
-    <div id="item-draft-status-{{ item.pk|default:'novo' }}" class="inline-feedback"></div>
+        <div>
+            <button class="btn btn-secondary" type="button" data-close-item-modal="1" title="Cancelar" aria-label="Cancelar">
+                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <span>Cancelar</span>
+            </button>
+        </div>
+    </div>
     <form method="post" action="{% if item %}{% url 'orcamentos:item_editar' orcamento.pk item.pk %}{% else %}{% url 'orcamentos:item_criar' orcamento.pk %}{% endif %}" class="item-builder-form" data-item-form data-unsaved-warning="1" data-draft-key="orcamento:{{ orcamento.pk }}:item:{% if item %}{{ item.pk }}{% else %}novo{% endif %}" data-draft-status-target="#item-draft-status-{{ item.pk|default:'novo' }}" data-clear-draft-on-submit="1">
         {% csrf_token %}
         <input type="hidden" name="item_q" value="{{ item_q }}">
@@ -29,14 +28,10 @@
 
         <div class="item-builder-grid">
             <section class="item-block">
-                <div class="item-block-header">
-                    <h4>Item do catálogo</h4>
-                </div>
-
                 <div class="catalog-picker">
                     <div class="full">
                         <label for="catalog-search-{{ item.pk|default:'novo' }}">Buscar item do catálogo</label>
-                        <div class="inline-actions">
+                        <div class="catalog-search-row">
                             <input type="text" id="catalog-search-{{ item.pk|default:'novo' }}" placeholder="Buscar por código ou nome" data-catalog-search>
                             <button class="btn btn-secondary btn-icon-action" type="button" data-catalog-search-button title="Buscar item do catálogo" aria-label="Buscar item do catálogo">
                                 <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>
@@ -58,6 +53,7 @@
                                     data-unidade="{{ catalogo_item.unidade_medida }}"
                                     data-valor="{{ catalogo_item.valor_unitario_padrao }}"
                                     data-categoria="{{ catalogo_item.categoria.nome|default:'' }}"
+                                    data-categoria-cor="{{ catalogo_item.categoria.cor|default:'' }}"
                                     {% if item_form.item_catalogo.value|stringformat:'s' == catalogo_item.pk|stringformat:'s' %}selected{% endif %}>
                                     {{ catalogo_item.codigo }} - {{ catalogo_item.nome }}
                                 </option>
@@ -132,22 +128,16 @@
             </section>
         </div>
 
-        <div class="inline-actions" style="margin-top: 1rem;">
-            <button class="btn btn-primary btn-icon-action" type="submit" title="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}" aria-label="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}">
+        <div class="inline-actions inline-actions-end" style="margin-top: 1rem;">
+            <button class="btn btn-primary" type="submit" title="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}" aria-label="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}">
                 {% if item %}
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
-                    <span class="visually-hidden">Salvar item</span>
+                    <span>Salvar item</span>
                 {% else %}
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                    <span class="visually-hidden">Adicionar item ao orçamento</span>
+                    <span>Adicionar item</span>
                 {% endif %}
             </button>
-            {% if item %}
-                <a class="btn btn-secondary btn-icon-action" href="{% url 'orcamentos:editar' orcamento.pk %}?{% if item_q %}item_q={{ item_q|urlencode }}&{% endif %}{% if item_categoria %}item_categoria={{ item_categoria|urlencode }}&{% endif %}item_sort={{ item_sort|urlencode }}" title="Cancelar edição" aria-label="Cancelar edição">
-                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                    <span class="visually-hidden">Cancelar edição</span>
-                </a>
-            {% endif %}
         </div>
     </form>
 </div>

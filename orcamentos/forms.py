@@ -48,7 +48,6 @@ class OrcamentoForm(forms.ModelForm):
             "contrato_telefone",
             "contrato_email",
             "contrato_inscricao_estadual",
-            "mostrar_ajustes_no_relatorio",
         ]
         widgets = {
             "data_emissao": forms.DateInput(attrs={"type": "date"}),
@@ -115,7 +114,6 @@ class OrcamentoForm(forms.ModelForm):
             self.fields[nome_campo].required = False
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor"))
 
-        self.fields["mostrar_ajustes_no_relatorio"].required = False
         configurar_campo_mascarado(self, "evento_telefone", "phone", placeholder="(00) 00000-0000")
         configurar_campo_mascarado(self, "contrato_cnpj", "cpf_cnpj", placeholder="00.000.000/0000-00")
         configurar_campo_mascarado(self, "contrato_telefone", "phone", placeholder="(00) 00000-0000")
@@ -224,6 +222,7 @@ class ItemOrcamentoForm(forms.ModelForm):
         self.fields["codigo_item"].widget = forms.HiddenInput()
         self.fields["nome"].widget = forms.HiddenInput()
         self.fields["unidade_medida"].widget = forms.HiddenInput()
+        self.fields["descricao"].widget.attrs["rows"] = 2
         self.fields["observacoes"].widget = forms.HiddenInput()
 
     def aplicar_defaults_catalogo(self, cleaned_data):

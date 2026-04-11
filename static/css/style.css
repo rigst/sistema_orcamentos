@@ -247,6 +247,47 @@ section {
   border: 0;
 }
 
+.form-submenu {
+  margin-top: 1rem;
+  border: 1px solid rgba(71, 101, 138, 0.14);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(250, 252, 255, 0.98), rgba(244, 248, 255, 0.96));
+  overflow: hidden;
+}
+
+.form-submenu summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 1rem 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.form-submenu summary::-webkit-details-marker {
+  display: none;
+}
+
+.form-submenu summary::after {
+  content: "";
+  width: 0.65rem;
+  height: 0.65rem;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: rotate(45deg);
+  transition: transform var(--transition);
+}
+
+.form-submenu[open] summary::after {
+  transform: rotate(225deg);
+}
+
+.form-submenu-body {
+  padding: 0 1.15rem 1.15rem;
+}
+
 .form-panel form.is-collapsed fieldset,
 .form-panel form.is-collapsed .inline-actions {
   display: none;
@@ -674,6 +715,10 @@ tr:hover td {
   border-radius: 20px;
 }
 
+.editor-shell > #item-create-panel-region {
+  display: none;
+}
+
 .item-entry-panel-compact .section-heading h3,
 .item-entry-panel-compact .item-block-header h4 {
   font-size: 0.96rem;
@@ -683,8 +728,21 @@ tr:hover td {
   gap: 0.8rem;
 }
 
+.item-entry-panel-compact .form-grid,
+.item-entry-panel-compact .catalog-picker,
+.item-entry-panel-compact .item-builder-grid,
+.item-entry-panel-compact .inline-feedback,
+.item-entry-panel-compact .item-builder {
+  padding-left: 0.35rem;
+  padding-right: 0.35rem;
+}
+
 .item-entry-panel-compact textarea {
   min-height: 92px;
+}
+
+.item-entry-panel-compact textarea[name="descricao"] {
+  min-height: 3.8rem;
 }
 
 .item-builder {
@@ -702,6 +760,12 @@ tr:hover td {
   border-radius: 18px;
   border: 1px solid var(--border-strong);
   background: rgba(247, 250, 255, 0.92);
+}
+
+.catalog-summary[data-category-active="1"] {
+  background: color-mix(in srgb, var(--category-color, #2563eb) 12%, white);
+  border-color: color-mix(in srgb, var(--category-color, #2563eb) 24%, white);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--category-color, #2563eb) 10%, white);
 }
 
 .item-builder-preview strong,
@@ -768,6 +832,26 @@ tr:hover td {
   display: grid;
   gap: 0.9rem;
   margin-bottom: 1rem;
+}
+
+.catalog-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 24rem) 40px;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: start;
+  width: min(100%, calc(24rem + 40px + 0.65rem));
+}
+
+.catalog-search-row input {
+  width: 100%;
+  min-width: 0;
+}
+
+.catalog-search-row .btn {
+  width: 40px;
+  min-width: 40px;
+  justify-self: start;
 }
 
 .catalog-summary {
@@ -918,6 +1002,11 @@ tr:hover td {
   font-size: 0.92rem;
 }
 
+.inline-feedback-inline {
+  min-height: 0;
+  margin-bottom: 0;
+}
+
 .item-feedback-success {
   border-color: rgba(144, 211, 164, 0.28);
   background: rgba(144, 211, 164, 0.10);
@@ -970,6 +1059,49 @@ tr:hover td {
 
 .item-row-card {
   padding: 1rem;
+}
+
+.item-modal[hidden] {
+  display: none;
+}
+
+.item-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+}
+
+.item-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(23, 48, 74, 0.42);
+  backdrop-filter: blur(8px);
+}
+
+.item-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(920px, calc(100vw - 2rem));
+  max-height: calc(100vh - 3rem);
+  margin: 1.5rem auto;
+  overflow: auto;
+}
+
+.item-modal-content .item-entry-panel {
+  border-radius: 24px;
+  border: 1px solid rgba(71, 101, 138, 0.18);
+  background: linear-gradient(180deg, #ffffff, #f7faff);
+  box-shadow: 0 24px 48px rgba(23, 48, 74, 0.18);
+}
+
+.item-modal-content .item-builder {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+.modal-open {
+  overflow: hidden;
 }
 
 .item-row-card-grid {
@@ -1081,6 +1213,17 @@ tr:hover td {
   align-items: center;
 }
 
+.item-modal-heading {
+  margin-bottom: 0;
+}
+
+.item-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
 .table-section {
   display: grid;
   gap: 1rem;
@@ -1094,6 +1237,17 @@ tr:hover td {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 1rem;
+}
+
+.totals-category-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.totals-strip-general {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .totals-card {

@@ -41,6 +41,28 @@ class RelatoriosPermissaoTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Empresa Visivel")
 
+    def test_visualizador_nao_pode_alterar_opcoes_do_relatorio(self):
+        user = get_user_model().objects.create_user(
+            username="visualizador_relatorio",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        cliente = Cliente.objects.create(nome_razao_social="Cliente Permissao")
+        orcamento = Orcamento.objects.create(
+            numero="ORC-REL-0009",
+            cliente=cliente,
+            titulo="Teste permissao",
+            status="rascunho",
+            data_emissao="2026-04-09",
+            criado_por=user,
+            atualizado_por=user,
+        )
+        self.client.force_login(user)
+
+        response = self.client.post(reverse("relatorios:orcamento_central", args=[orcamento.pk]), {"mostrar_ajustes_no_relatorio": "on"})
+
+        self.assertEqual(response.status_code, 403)
+
 
 class RelatoriosExportacaoTests(TestCase):
     def gerar_logo_teste(self):
@@ -88,6 +110,18 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertContains(response, "Orçamento em rascunho")
         self.assertContains(response, "Logo da empresa")
         self.assertContains(response, "R$ 15.000,00")
+
+    def test_central_de_relatorio_atualiza_opcao_de_mostrar_ajustes(self):
+        response = self.client.post(
+            reverse("relatorios:orcamento_central", args=[self.orcamento.pk]),
+            {"mostrar_ajustes_no_relatorio": "on"},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.orcamento.refresh_from_db()
+        self.assertTrue(self.orcamento.mostrar_ajustes_no_relatorio)
+        self.assertContains(response, "Opções do relatório atualizadas.")
 
     def test_exportacao_excel_retorna_arquivo(self):
         response = self.client.get(reverse("relatorios:orcamento_excel", args=[self.orcamento.pk]))

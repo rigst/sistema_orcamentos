@@ -129,7 +129,16 @@ def renderizar_editor_orcamento(
     return render(request, "orcamentos/form.html", context)
 
 
-def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=None, item_form_edicao=None, mensagem=None):
+def responder_ajax_item(
+    request,
+    orcamento,
+    *,
+    item_form=None,
+    item_editando=None,
+    item_form_edicao=None,
+    mensagem=None,
+    modal_html=None,
+):
     context_base = {
         "orcamento": orcamento,
         "item_editando": item_editando,
@@ -139,7 +148,11 @@ def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=Non
     context_base.update(obter_estado_itens(request, orcamento))
     payload = {
         "itens_html": render_to_string("orcamentos/partials/itens_tabela.html", context_base, request=request),
-        "totais_html": render_to_string("orcamentos/partials/totais_card.html", {"orcamento": orcamento}, request=request),
+        "totais_html": render_to_string(
+            "orcamentos/partials/totais_card.html",
+            {"orcamento": orcamento, "subtotais_categoria": orcamento.subtotais_por_categoria()},
+            request=request,
+        ),
         "flash_html": render_to_string("orcamentos/partials/item_feedback.html", {"mensagem": mensagem}, request=request),
     }
 
@@ -151,6 +164,8 @@ def responder_ajax_item(request, orcamento, *, item_form=None, item_editando=Non
             contexto_novo_item,
             request=request,
         )
+    if modal_html is not None:
+        payload["modal_html"] = modal_html
 
     return JsonResponse(payload)
 
@@ -292,6 +307,16 @@ def item_orcamento_criar(request, orcamento_pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
+    if request.method == "GET":
+        if is_ajax:
+            modal_html = render_to_string(
+                "orcamentos/partials/item_create_panel.html",
+                {"orcamento": orcamento, "item_form": ItemOrcamentoForm(user=request.user), **obter_estado_itens(request, orcamento)},
+                request=request,
+            )
+            return JsonResponse({"modal_html": modal_html})
+        return redirect("orcamentos:editar", pk=orcamento.pk)
+
     if request.method == "POST":
         form = ItemOrcamentoForm(request.POST, user=request.user)
         if form.is_valid():
@@ -313,10 +338,16 @@ def item_orcamento_criar(request, orcamento_pk):
             return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
 
         if is_ajax:
+            modal_html = render_to_string(
+                "orcamentos/partials/item_create_panel.html",
+                {"orcamento": orcamento, "item_form": form, **obter_estado_itens(request, orcamento)},
+                request=request,
+            )
             return responder_ajax_item(
                 request,
                 orcamento,
                 item_form=form,
+                modal_html=modal_html,
             )
 
         return renderizar_editor_orcamento(
@@ -336,43 +367,64 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-    if request.method == "POST":
-        form = ItemOrcamentoForm(request.POST, instance=item, user=request.user)
-        if form.is_valid():
-            item = form.save()
-            normalizar_ordens_itens(orcamento)
-            mensagem = f"Item '{item.nome}' atualizado."
-            if is_ajax:
-                return responder_ajax_item(
-                    request,
-                    orcamento,
-                    item_form=ItemOrcamentoForm(user=request.user),
-                    mensagem=mensagem,
-                )
+    if request.method == "GET":
+        if is_ajax:
+            modal_html = render_to_string(
+                "orcamentos/partials/item_edit_panel.html",
+                {
+                    "orcamento": orcamento,
+                    "item_editando": item,
+                    "item_form_edicao": ItemOrcamentoForm(instance=item, user=request.user),
+                    **obter_estado_itens(request, orcamento),
+                },
+                request=request,
+            )
+            return JsonResponse({"modal_html": modal_html})
+        return redirect(f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao")
 
-            messages.success(request, mensagem)
-            return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
-
+    form = ItemOrcamentoForm(request.POST, instance=item, user=request.user)
+    if form.is_valid():
+        item = form.save()
+        normalizar_ordens_itens(orcamento)
+        mensagem = f"Item '{item.nome}' atualizado."
         if is_ajax:
             return responder_ajax_item(
                 request,
                 orcamento,
                 item_form=ItemOrcamentoForm(user=request.user),
-                item_editando=item,
-                item_form_edicao=form,
+                mensagem=mensagem,
             )
 
-        return renderizar_editor_orcamento(
+        messages.success(request, mensagem)
+        return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
+
+    if is_ajax:
+        modal_html = render_to_string(
+            "orcamentos/partials/item_edit_panel.html",
+            {
+                "orcamento": orcamento,
+                "item_editando": item,
+                "item_form_edicao": form,
+                **obter_estado_itens(request, orcamento),
+            },
+            request=request,
+        )
+        return responder_ajax_item(
             request,
             orcamento,
-            OrcamentoForm(instance=orcamento, user=request.user),
-            ItemOrcamentoForm(user=request.user),
-            False,
-            item_editando_override=item,
-            item_form_edicao_override=form,
+            item_form=ItemOrcamentoForm(user=request.user),
+            modal_html=modal_html,
         )
 
-    return redirect(f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao")
+    return renderizar_editor_orcamento(
+        request,
+        orcamento,
+        OrcamentoForm(instance=orcamento, user=request.user),
+        ItemOrcamentoForm(user=request.user),
+        False,
+        item_editando_override=item,
+        item_form_edicao_override=form,
+    )
 
 
 @require_capability("pode_gerenciar_orcamentos")

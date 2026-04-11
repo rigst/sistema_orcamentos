@@ -88,6 +88,24 @@
         </div>
 
         <aside class="editor-sidebar">
+            {% if user.pode_gerenciar_orcamentos %}
+                <div class="panel">
+                    <h3>Opções do relatório</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="checkbox-row">
+                            <input type="checkbox" id="id_mostrar_ajustes_no_relatorio" name="mostrar_ajustes_no_relatorio" {% if orcamento.mostrar_ajustes_no_relatorio %}checked{% endif %}>
+                            <label for="id_mostrar_ajustes_no_relatorio">Mostrar descontos e acréscimos no relatório do cliente</label>
+                        </div>
+                        <div class="inline-actions inline-actions-end" style="margin-top: 1rem;">
+                            <button class="btn btn-primary" type="submit" title="Salvar opções do relatório" aria-label="Salvar opções do relatório">
+                                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
+                                <span>Salvar opções</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            {% endif %}
             <div class="panel">
                 <h3>Exportar</h3>
                 <div class="report-export-list report-export-list-compact">

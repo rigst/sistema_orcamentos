@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -136,6 +137,13 @@ def configuracao_excluir(request, pk):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_relatorio_central(request, pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user), pk=pk)
+    if request.method == "POST":
+        if not request.user.pode_gerenciar_orcamentos:
+            raise PermissionDenied
+        orcamento.mostrar_ajustes_no_relatorio = request.POST.get("mostrar_ajustes_no_relatorio") == "on"
+        orcamento.save(update_fields=["mostrar_ajustes_no_relatorio", "atualizado_em"])
+        messages.success(request, "Opções do relatório atualizadas.")
+        return redirect("relatorios:orcamento_central", pk=orcamento.pk)
     configuracao = obter_configuracao_ativa(request.user)
     alerta_status = obter_alerta_status(orcamento)
     return render(
