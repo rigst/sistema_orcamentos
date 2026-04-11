@@ -1058,6 +1058,31 @@ tr:hover td {
   margin-top: 0.5rem;
 }
 
+.auth-visitor-section {
+  margin-top: 1.25rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(71, 101, 138, 0.14);
+}
+
+.auth-visitor-section p {
+  color: var(--text-soft);
+  margin-bottom: 0.35rem;
+}
+
+.auth-disclaimer {
+  margin-top: 1.25rem;
+  padding: 0.95rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(71, 101, 138, 0.12);
+  background: rgba(244, 248, 255, 0.86);
+}
+
+.auth-disclaimer p {
+  color: var(--text-soft);
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
 .form-errors {
   margin-bottom: 1rem;
   padding: 0.9rem 1rem;

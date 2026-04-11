@@ -26,7 +26,7 @@ class UsuarioLoginView(LoginView):
             username=username,
             password=secrets.token_urlsafe(24),
             perfil="visitante",
-            nome_exibicao=f"Visitante {token.upper()}",
+            nome_exibicao="Visitante",
         )
         usuario.groups.add(grupo)
         login(self.request, usuario)

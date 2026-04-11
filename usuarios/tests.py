@@ -3,6 +3,10 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from clientes.models import Cliente
+from orcamentos.models import Orcamento
+from relatorios.models import ConfiguracaoEmpresa
+
 
 class AdminPermissaoPerfilTests(TestCase):
     def criar_usuario(self, username, perfil):
@@ -87,6 +91,14 @@ class UsuarioPermissaoPropriedadesTests(TestCase):
 
 
 class UsuarioVisitanteTests(TestCase):
+    def test_tela_de_login_exibe_acesso_visitante_separado_e_aviso_de_projeto(self):
+        response = self.client.get(reverse("login"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Entrar como visitante")
+        self.assertContains(response, "cria um perfil temporário automaticamente")
+        self.assertContains(response, "projeto com foco em aprendizado e portfólio")
+
     def test_login_como_visitante_cria_usuario_temporario_e_remove_no_logout(self):
         response = self.client.post(reverse("login"), {"entrar_visitante": "1"})
 
@@ -99,3 +111,47 @@ class UsuarioVisitanteTests(TestCase):
 
         self.assertFalse(get_user_model().objects.filter(pk=visitante.pk).exists())
         self.assertFalse(Group.objects.filter(pk=grupo.pk).exists())
+
+    def test_visitante_exibe_nomes_amigaveis(self):
+        self.client.post(reverse("login"), {"entrar_visitante": "1"})
+
+        visitante = get_user_model().objects.get(perfil="visitante")
+
+        self.assertEqual(str(visitante), "Visitante")
+        self.assertEqual(visitante.nome_empresa, "Empresa Visitante")
+
+    def test_visitante_nao_ve_dados_de_outra_empresa(self):
+        empresa = Group.objects.create(name="Empresa Real")
+        usuario = get_user_model().objects.create_user(
+            username="empresa_real",
+            password="senha-forte-123",
+            perfil="orcamentista",
+        )
+        usuario.groups.set([empresa])
+        cliente = Cliente.objects.create(nome_razao_social="Cliente Sigiloso", empresa=empresa)
+        Orcamento.objects.create(
+            numero="ORC-2026-0009",
+            cliente=cliente,
+            titulo="Orcamento Sigiloso",
+            data_emissao="2026-04-11",
+            empresa=empresa,
+            criado_por=usuario,
+            atualizado_por=usuario,
+        )
+        ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Sigilosa", empresa=empresa)
+
+        self.client.post(reverse("login"), {"entrar_visitante": "1"})
+
+        response_clientes = self.client.get(reverse("clientes:lista"))
+        response_dashboard = self.client.get(reverse("dashboard"))
+        response_relatorios = self.client.get(reverse("relatorios:configuracao_lista"))
+        response_cliente_direto = self.client.get(reverse("clientes:visualizar", args=[cliente.pk]))
+
+        self.assertEqual(response_clientes.status_code, 200)
+        self.assertNotContains(response_clientes, "Cliente Sigiloso")
+        self.assertEqual(response_dashboard.status_code, 200)
+        self.assertNotContains(response_dashboard, "Orcamento Sigiloso")
+        self.assertNotContains(response_dashboard, "Cliente Sigiloso")
+        self.assertEqual(response_relatorios.status_code, 200)
+        self.assertNotContains(response_relatorios, "Empresa Sigilosa")
+        self.assertEqual(response_cliente_direto.status_code, 404)

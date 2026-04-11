@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from core.tenancy import VISITOR_GROUP_PREFIX
+
 
 class Usuario(AbstractUser):
     PERFIL_CHOICES = [
@@ -71,7 +73,11 @@ class Usuario(AbstractUser):
     @property
     def nome_empresa(self):
         grupo = self.groups.order_by("name", "id").first()
+        if self.eh_visitante and grupo and grupo.name.startswith(VISITOR_GROUP_PREFIX):
+            return "Empresa Visitante"
         return grupo.name if grupo else "Sem empresa"
 
     def __str__(self):
+        if self.eh_visitante:
+            return "Visitante"
         return self.nome_exibicao or self.get_full_name() or self.username

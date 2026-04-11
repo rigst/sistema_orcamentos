@@ -25,8 +25,19 @@
                 {{ form.password }}
             </div>
             <button class="btn btn-primary auth-submit" type="submit">Entrar</button>
-            <button class="btn btn-secondary auth-submit" type="submit" name="entrar_visitante" value="1">Entrar como visitante</button>
         </form>
+
+        <div class="auth-visitor-section">
+            <p>Quer apenas conhecer a interface? O acesso visitante cria um perfil temporário automaticamente.</p>
+            <form method="post">
+                {% csrf_token %}
+                <button class="btn btn-secondary auth-submit" type="submit" name="entrar_visitante" value="1">Entrar como visitante</button>
+            </form>
+        </div>
+
+        <div class="auth-disclaimer">
+            <p>Este sistema é um projeto com foco em aprendizado e portfólio. Não se trata de um produto comercial ou versão final, e pode passar por ajustes durante o desenvolvimento.</p>
+        </div>
     </div>
 </section>
 {% endblock %}
