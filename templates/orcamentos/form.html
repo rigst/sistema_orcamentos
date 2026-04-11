@@ -33,14 +33,17 @@
         <div class="form-panel">
             <div class="section-heading section-heading-compact">
                 <div>
-                    <h3>Dados do orçamento</h3>
-                    {% if modo_somente_leitura %}
+                    <div class="section-heading-title-row">
+                        <h3>Dados do orçamento</h3>
+                        <div id="orcamento-draft-status" class="inline-feedback inline-feedback-inline"></div>
+                    </div>
+                    {% if bloqueio_aprovado %}
+                        <p class="muted">Orçamento aprovado. Apenas administradores podem reabrir ou editar.</p>
+                    {% elif modo_somente_leitura %}
                         <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>
                     {% endif %}
                 </div>
             </div>
-
-            <div id="orcamento-draft-status" class="inline-feedback"></div>
             <form method="post" id="orcamento-main-form" data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
                 {% csrf_token %}
                 {% if not orcamento %}
@@ -299,7 +302,7 @@
             <div id="item-feedback-region" aria-live="polite"></div>
 
             {% if not modo_somente_leitura %}
-                <div class="inline-actions inline-actions-end" style="margin-bottom: 1rem;">
+                <div class="inline-actions" style="margin-bottom: 1rem;">
                     <button class="btn btn-primary" type="button" data-open-item-modal="1" data-modal-url="{% url 'orcamentos:item_criar' orcamento.pk %}">
                         <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                         <span>Adicionar item</span>

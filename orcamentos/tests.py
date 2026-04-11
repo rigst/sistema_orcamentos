@@ -58,6 +58,36 @@ class OrcamentoViewsTests(TestCase):
         self.orcamento.refresh_from_db()
         self.assertEqual(self.orcamento.status, "rascunho")
 
+    def test_orcamento_aprovado_nao_volta_para_rascunho_para_nao_admin(self):
+        self.orcamento.status = "aprovado"
+        self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+        response = self.client.post(
+            reverse("orcamentos:alterar_status", args=[self.orcamento.pk, "rascunho"]),
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "só podem ser reabertos ou alterados por administradores")
+        self.orcamento.refresh_from_db()
+        self.assertEqual(self.orcamento.status, "aprovado")
+
+    def test_admin_pode_reabrir_orcamento_aprovado_para_rascunho(self):
+        admin = get_user_model().objects.create_user(
+            username="admin_orcamento",
+            password="senha-forte-123",
+            perfil="admin",
+        )
+        self.client.force_login(admin)
+        self.orcamento.status = "aprovado"
+        self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+        response = self.client.post(reverse("orcamentos:alterar_status", args=[self.orcamento.pk, "rascunho"]))
+
+        self.assertRedirects(response, reverse("orcamentos:lista"))
+        self.orcamento.refresh_from_db()
+        self.assertEqual(self.orcamento.status, "rascunho")
+
     def test_item_invalido_retorna_form_com_erro(self):
         response = self.client.post(
             reverse("orcamentos:item_criar", args=[self.orcamento.pk]),
@@ -324,6 +354,16 @@ class OrcamentoViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_orcamentista_ve_orcamento_aprovado_em_modo_somente_leitura(self):
+        self.orcamento.status = "aprovado"
+        self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+        response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Apenas administradores podem reabrir ou editar")
+        self.assertNotContains(response, "Adicionar item")
+
     def test_orcamento_invalido_exibe_erro_para_usuario(self):
         response = self.client.post(
             reverse("orcamentos:editar", args=[self.orcamento.pk]),
@@ -535,6 +575,63 @@ class OrcamentoViewsTests(TestCase):
         self.assertContains(response, "Inativo")
         self.assertNotContains(response, "title=\"Aprovar\"")
         self.assertNotContains(response, "title=\"Enviar\"")
+
+    def test_orcamento_em_rascunho_exibe_fluxo_inicial_de_status(self):
+        response = self.client.get(reverse("orcamentos:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'title="Enviar"')
+        self.assertContains(response, 'title="Cancelar"')
+        self.assertNotContains(response, 'title="Rascunho"')
+        self.assertNotContains(response, 'title="Aprovar"')
+        self.assertNotContains(response, 'title="Rejeitar"')
+
+    def test_orcamento_aprovado_nao_exibe_retorno_para_rascunho_para_nao_admin(self):
+        self.orcamento.status = "aprovado"
+        self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+        response = self.client.get(reverse("orcamentos:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'title="Rascunho"')
+        self.assertNotContains(response, 'title="Aprovar"')
+        self.assertNotContains(response, 'title="Rejeitar"')
+        self.assertNotContains(response, 'title="Cancelar"')
+
+    def test_admin_exibe_retorno_para_rascunho_em_orcamento_aprovado(self):
+        admin = get_user_model().objects.create_user(
+            username="admin_lista_orcamento",
+            password="senha-forte-123",
+            perfil="admin",
+        )
+        self.client.force_login(admin)
+        self.orcamento.status = "aprovado"
+        self.orcamento.save(update_fields=["status", "atualizado_em"])
+
+        response = self.client.get(reverse("orcamentos:lista"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'title="Rascunho"')
+
+    def test_duplicar_orcamento_cria_novo_rascunho_com_itens(self):
+        ItemOrcamento.objects.create(
+            orcamento=self.orcamento,
+            ordem=1,
+            nome="Item duplicado",
+            descricao="Descricao",
+            unidade_medida="un",
+            quantidade=Decimal("2.00"),
+            valor_unitario=Decimal("15.00"),
+        )
+
+        response = self.client.post(reverse("orcamentos:duplicar", args=[self.orcamento.pk]), follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Orcamento.objects.count(), 2)
+        novo_orcamento = Orcamento.objects.exclude(pk=self.orcamento.pk).get()
+        self.assertEqual(novo_orcamento.status, "rascunho")
+        self.assertEqual(novo_orcamento.itens.count(), 1)
+        self.assertNotEqual(novo_orcamento.numero, self.orcamento.numero)
 
     def test_orcamento_exibe_cor_da_categoria_do_item(self):
         categoria = CategoriaItem.objects.create(nome="Eletrica", cor="#0F766E")

@@ -11,39 +11,47 @@
     <header class="site-header">
         <div class="container">
             <nav class="nav">
-                <a href="{% url 'dashboard' %}" class="brand">Stölben<span>Orçamentos</span></a>
+                <div class="nav-top">
+                    <a href="{% url 'dashboard' %}" class="brand">Stölben<span>Orçamentos</span></a>
+
+                    {% if user.is_authenticated %}
+                        <div class="header-user-meta">
+                            <span>Olá, {{ user }}</span>
+                            <span class="header-separator">|</span>
+                            <span>{{ user.nome_empresa }}</span>
+                            <span class="header-separator">|</span>
+                            <span class="user-role">{{ user.get_perfil_display }}</span>
+                            <span class="header-separator">|</span>
+                            <span class="header-logout">
+                                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button class="nav-logout" type="submit">Sair</button>
+                                </form>
+                            </span>
+                        </div>
+                    {% endif %}
+                </div>
 
                 {% if user.is_authenticated %}
-                    <div class="header-user-meta">
-                        <span>Olá, {{ user }}</span>
-                        <span class="header-separator">|</span>
-                        <span>{{ user.nome_empresa }}</span>
-                        <span class="header-separator">|</span>
-                        <span class="user-role">{{ user.get_perfil_display }}</span>
+                    <div class="nav-bottom">
+                        <ul class="nav-links">
+                            <li><a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
+                            {% if user.pode_visualizar_orcamentos %}
+                                <li><a href="{% url 'orcamentos:lista' %}" {% if request.resolver_match.namespace == 'orcamentos' %}class="active"{% endif %}>Orçamentos</a></li>
+                            {% endif %}
+                            {% if user.pode_visualizar_catalogo %}
+                                <li><a href="{% url 'catalogo:categoria_lista' %}" {% if request.resolver_match.namespace == 'catalogo' and request.resolver_match.url_name == 'categoria_lista' %}class="active"{% endif %}>Categorias</a></li>
+                                <li><a href="{% url 'catalogo:item_lista' %}" {% if request.resolver_match.namespace == 'catalogo' and request.resolver_match.url_name == 'item_lista' %}class="active"{% endif %}>Itens</a></li>
+                            {% endif %}
+                            {% if user.pode_visualizar_clientes %}
+                                <li><a href="{% url 'clientes:lista' %}" {% if request.resolver_match.namespace == 'clientes' %}class="active"{% endif %}>Clientes</a></li>
+                            {% endif %}
+                            {% if user.pode_visualizar_relatorios %}
+                                <li><a href="{% url 'relatorios:configuracao_lista' %}" {% if request.resolver_match.namespace == 'relatorios' %}class="active"{% endif %}>Empresa</a></li>
+                            {% endif %}
+                            <li><a href="{% url 'manual' %}" {% if request.resolver_match.url_name == 'manual' %}class="active"{% endif %}>Manual</a></li>
+                        </ul>
                     </div>
-                    <ul class="nav-links">
-                        <li><a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
-                        {% if user.pode_visualizar_orcamentos %}
-                            <li><a href="{% url 'orcamentos:lista' %}" {% if request.resolver_match.namespace == 'orcamentos' %}class="active"{% endif %}>Orçamentos</a></li>
-                        {% endif %}
-                        {% if user.pode_visualizar_catalogo %}
-                            <li><a href="{% url 'catalogo:categoria_lista' %}" {% if request.resolver_match.namespace == 'catalogo' and request.resolver_match.url_name == 'categoria_lista' %}class="active"{% endif %}>Categorias</a></li>
-                            <li><a href="{% url 'catalogo:item_lista' %}" {% if request.resolver_match.namespace == 'catalogo' and request.resolver_match.url_name == 'item_lista' %}class="active"{% endif %}>Itens</a></li>
-                        {% endif %}
-                        {% if user.pode_visualizar_clientes %}
-                            <li><a href="{% url 'clientes:lista' %}" {% if request.resolver_match.namespace == 'clientes' %}class="active"{% endif %}>Clientes</a></li>
-                        {% endif %}
-                        {% if user.pode_visualizar_relatorios %}
-                            <li><a href="{% url 'relatorios:configuracao_lista' %}" {% if request.resolver_match.namespace == 'relatorios' %}class="active"{% endif %}>Empresa</a></li>
-                        {% endif %}
-                        <li><a href="{% url 'manual' %}" {% if request.resolver_match.url_name == 'manual' %}class="active"{% endif %}>Manual</a></li>
-                        <li>
-                            <form action="{% url 'logout' %}" method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <button class="nav-logout" type="submit">Sair</button>
-                            </form>
-                        </li>
-                    </ul>
                 {% endif %}
             </nav>
         </div>

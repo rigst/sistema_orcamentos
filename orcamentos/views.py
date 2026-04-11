@@ -37,6 +37,15 @@ ITEM_SORT_MAP = {
 }
 
 
+def orcamento_bloqueado_para_edicao(user, orcamento):
+    return orcamento.status == "aprovado" and not getattr(user, "eh_admin_perfil", False)
+
+
+def exigir_orcamento_editavel(user, orcamento):
+    if orcamento_bloqueado_para_edicao(user, orcamento):
+        raise PermissionDenied
+
+
 def normalizar_ordens_itens(orcamento):
     itens = list(orcamento.itens.all().order_by("ordem", "id"))
     for ordem, item in enumerate(itens, start=1):
@@ -123,6 +132,7 @@ def renderizar_editor_orcamento(
         "item_editando": item_editando,
         "item_form_edicao": item_form_edicao,
         "modo_somente_leitura": modo_somente_leitura,
+        "bloqueio_aprovado": orcamento_bloqueado_para_edicao(request.user, orcamento),
         "subtotais_categoria": orcamento.subtotais_por_categoria(),
     }
     context.update(obter_estado_itens(request, orcamento))
@@ -242,7 +252,7 @@ def orcamento_criar(request):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_editar(request, pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
-    modo_somente_leitura = not request.user.pode_gerenciar_orcamentos
+    modo_somente_leitura = not request.user.pode_gerenciar_orcamentos or orcamento_bloqueado_para_edicao(request.user, orcamento)
 
     if request.method == "POST":
         if modo_somente_leitura:
@@ -291,6 +301,10 @@ def orcamento_excluir(request, pk):
 def orcamento_alterar_status(request, pk, novo_status):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
 
+    if orcamento_bloqueado_para_edicao(request.user, orcamento):
+        messages.error(request, "Orçamentos aprovados só podem ser reabertos ou alterados por administradores.")
+        return redirect("orcamentos:lista")
+
     if novo_status in STATUS_PERMITIDOS:
         orcamento.status = novo_status
         orcamento.atualizado_por = request.user
@@ -303,8 +317,78 @@ def orcamento_alterar_status(request, pk, novo_status):
 
 
 @require_capability("pode_gerenciar_orcamentos")
+@require_POST
+def orcamento_duplicar(request, pk):
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
+
+    with transaction.atomic():
+        novo_orcamento = Orcamento.objects.create(
+            cliente=orcamento.cliente,
+            titulo=orcamento.titulo,
+            descricao_inicial=orcamento.descricao_inicial,
+            observacoes_gerais=orcamento.observacoes_gerais,
+            status="rascunho",
+            ativo=True,
+            data_emissao=orcamento.data_emissao,
+            validade_em=orcamento.validade_em,
+            evento_nome=orcamento.evento_nome,
+            evento_periodo=orcamento.evento_periodo,
+            evento_local=orcamento.evento_local,
+            evento_estande=orcamento.evento_estande,
+            evento_area=orcamento.evento_area,
+            evento_contato=orcamento.evento_contato,
+            evento_telefone=orcamento.evento_telefone,
+            evento_email=orcamento.evento_email,
+            desconto_global_valor=orcamento.desconto_global_valor,
+            desconto_global_percentual=orcamento.desconto_global_percentual,
+            acrescimo_global_valor=orcamento.acrescimo_global_valor,
+            acrescimo_global_percentual=orcamento.acrescimo_global_percentual,
+            mostrar_ajustes_no_relatorio=orcamento.mostrar_ajustes_no_relatorio,
+            condicoes_pagamento=orcamento.condicoes_pagamento,
+            valor_locacao=orcamento.valor_locacao,
+            valor_servico=orcamento.valor_servico,
+            servicos_taxas_inclusos=orcamento.servicos_taxas_inclusos,
+            contrato_razao_social=orcamento.contrato_razao_social,
+            contrato_cnpj=orcamento.contrato_cnpj,
+            contrato_endereco=orcamento.contrato_endereco,
+            contrato_cidade=orcamento.contrato_cidade,
+            contrato_cep=orcamento.contrato_cep,
+            contrato_responsavel_nome=orcamento.contrato_responsavel_nome,
+            contrato_responsavel_documento=orcamento.contrato_responsavel_documento,
+            contrato_cargo_funcao=orcamento.contrato_cargo_funcao,
+            contrato_telefone=orcamento.contrato_telefone,
+            contrato_email=orcamento.contrato_email,
+            contrato_inscricao_estadual=orcamento.contrato_inscricao_estadual,
+            empresa=orcamento.empresa,
+            criado_por=request.user,
+            atualizado_por=request.user,
+        )
+        for item in orcamento.itens.all().order_by("ordem", "id"):
+            ItemOrcamento.objects.create(
+                orcamento=novo_orcamento,
+                item_catalogo=item.item_catalogo,
+                ordem=item.ordem,
+                nome=item.nome,
+                descricao=item.descricao,
+                unidade_medida=item.unidade_medida,
+                quantidade=item.quantidade,
+                valor_unitario=item.valor_unitario,
+                desconto_valor=item.desconto_valor,
+                desconto_percentual=item.desconto_percentual,
+                acrescimo_valor=item.acrescimo_valor,
+                acrescimo_percentual=item.acrescimo_percentual,
+                observacoes=item.observacoes,
+            )
+        novo_orcamento.recalcular_totais()
+
+    messages.success(request, f"Orçamento duplicado como {novo_orcamento.numero}.")
+    return redirect("orcamentos:editar", pk=novo_orcamento.pk)
+
+
+@require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_criar(request, orcamento_pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    exigir_orcamento_editavel(request.user, orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     if request.method == "GET":
@@ -364,6 +448,7 @@ def item_orcamento_criar(request, orcamento_pk):
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_editar(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -430,6 +515,7 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_excluir(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
 
     if request.method == "POST":
@@ -454,6 +540,7 @@ def item_orcamento_excluir(request, orcamento_pk, item_pk):
 @require_POST
 def item_orcamento_duplicar(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -484,6 +571,7 @@ def item_orcamento_duplicar(request, orcamento_pk, item_pk):
 @require_POST
 def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -516,6 +604,7 @@ def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
 @require_POST
 def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 

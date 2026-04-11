@@ -10,6 +10,7 @@ from .views import (
     item_orcamento_preview,
     orcamento_alterar_status,
     orcamento_criar,
+    orcamento_duplicar,
     orcamento_editar,
     orcamento_excluir,
     orcamento_lista,
@@ -21,6 +22,7 @@ urlpatterns = [
     path("", orcamento_lista, name="lista"),
     path("novo/", orcamento_criar, name="criar"),
     path("<int:pk>/editar/", orcamento_editar, name="editar"),
+    path("<int:pk>/duplicar/", orcamento_duplicar, name="duplicar"),
     path("<int:pk>/excluir/", orcamento_excluir, name="excluir"),
     path("<int:pk>/status/<str:novo_status>/", orcamento_alterar_status, name="alterar_status"),
 
