@@ -115,6 +115,49 @@ a {
   text-align: right;
 }
 
+.header-company-switch {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.header-company-select {
+  width: auto;
+  min-height: 32px;
+  padding: 0.26rem 1.8rem 0.26rem 0.7rem;
+  border-radius: 999px;
+  border: 1px solid rgba(71, 101, 138, 0.2);
+  background-color: rgba(255, 255, 255, 0.74);
+  color: var(--text-soft);
+  font-size: 0.84rem;
+  font-weight: 500;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(71, 101, 138, 0.58) 50%),
+    linear-gradient(135deg, rgba(71, 101, 138, 0.58) 50%, transparent 50%);
+  background-position:
+    calc(100% - 0.95rem) 48%,
+    calc(100% - 0.65rem) 48%;
+  background-size: 0.34rem 0.34rem, 0.34rem 0.34rem;
+  background-repeat: no-repeat;
+}
+
+.header-company-select:hover {
+  border-color: rgba(71, 101, 138, 0.34);
+  color: var(--text);
+}
+
+.header-company-select:focus-visible {
+  border-color: rgba(47, 120, 219, 0.45);
+  box-shadow: 0 0 0 3px rgba(47, 120, 219, 0.12);
+}
+
+.header-company-select option {
+  color: var(--text);
+}
+
 .header-separator {
   color: var(--muted);
 }
@@ -1578,6 +1621,10 @@ tr:hover td {
     text-align: center;
   }
 
+  .header-company-select {
+    max-width: min(52vw, 220px);
+  }
+
   .nav-bottom {
     justify-content: center;
   }
@@ -1607,4 +1654,44 @@ tr:hover td {
   .actions-col {
     min-width: 150px;
   }
+}
+
+/* Header company switch: keep this override at the end to beat generic form controls */
+.header-user-meta .header-company-switch {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+}
+
+.header-user-meta .header-company-select {
+  width: fit-content !important;
+  min-height: 24px !important;
+  min-width: 0 !important;
+  padding: 0.02rem 0.2rem 0.02rem 0.12rem !important;
+  border-radius: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(71, 101, 138, 0.2) !important;
+  background: transparent !important;
+  color: var(--text-soft) !important;
+  font-size: inherit !important;
+  font-weight: 400 !important;
+  line-height: inherit !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: none !important;
+  appearance: auto !important;
+  -webkit-appearance: menulist !important;
+  flex: 0 0 auto !important;
+  transition: border-color var(--transition), color var(--transition), box-shadow var(--transition);
+}
+
+.header-user-meta .header-company-select:hover {
+  border-bottom-color: rgba(71, 101, 138, 0.34) !important;
+  color: var(--text) !important;
+}
+
+.header-user-meta .header-company-select:focus,
+.header-user-meta .header-company-select:focus-visible {
+  border-bottom-color: rgba(47, 120, 219, 0.55) !important;
+  box-shadow: 0 1px 0 0 rgba(47, 120, 219, 0.2) !important;
+  background: transparent !important;
 }

@@ -2,6 +2,7 @@ from datetime import date, timedelta
 from decimal import Decimal
 from pathlib import Path
 
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
@@ -116,3 +117,45 @@ class InfraestruturaTests(TestCase):
         conteudo = workflow.read_text(encoding="utf-8")
         self.assertIn("python manage.py check", conteudo)
         self.assertIn("python manage.py test", conteudo)
+
+
+class MultiEmpresaAtivaTests(TestCase):
+    def setUp(self):
+        self.empresa_a = Group.objects.create(name="Empresa A")
+        self.empresa_b = Group.objects.create(name="Empresa B")
+        self.user = get_user_model().objects.create_user(
+            username="usuario_multiempresa",
+            password="senha-forte-123",
+            perfil="admin",
+        )
+        self.user.groups.set([self.empresa_a, self.empresa_b])
+        self.client.force_login(self.user)
+
+        Cliente.objects.create(nome_razao_social="Cliente A", empresa=self.empresa_a)
+        Cliente.objects.create(nome_razao_social="Cliente B", empresa=self.empresa_b)
+
+    def test_header_exibe_seletor_quando_usuario_tem_varias_empresas(self):
+        response = self.client.get(reverse("dashboard"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'name="empresa_id"', html=False)
+        self.assertContains(response, "Empresa A")
+        self.assertContains(response, "Empresa B")
+
+    def test_trocar_empresa_ativa_altera_isolamento_dos_dados(self):
+        response_inicial = self.client.get(reverse("clientes:lista"))
+        self.assertContains(response_inicial, "Cliente A")
+        self.assertNotContains(response_inicial, "Cliente B")
+
+        self.client.post(
+            reverse("alternar_empresa"),
+            {
+                "empresa_id": self.empresa_b.pk,
+                "next": reverse("clientes:lista"),
+            },
+            follow=True,
+        )
+
+        response_trocado = self.client.get(reverse("clientes:lista"))
+        self.assertContains(response_trocado, "Cliente B")
+        self.assertNotContains(response_trocado, "Cliente A")

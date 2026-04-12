@@ -1,11 +1,15 @@
 from datetime import timedelta
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, DecimalField, Sum, Value
 from django.db.models.functions import Coalesce
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.http import require_POST
 
-from core.tenancy import queryset_da_empresa
+from core.tenancy import definir_grupo_empresa_ativo, queryset_da_empresa
 from orcamentos.models import Orcamento
 
 
@@ -91,3 +95,20 @@ def manual(request):
             "perfis_manual": perfis,
         },
     )
+
+
+@login_required
+@require_POST
+def alternar_empresa(request):
+    grupo_id = request.POST.get("empresa_id")
+    grupo = definir_grupo_empresa_ativo(request, request.user, grupo_id)
+
+    if grupo is None:
+        messages.error(request, "Empresa inválida para este usuário.")
+    else:
+        messages.success(request, f"Empresa ativa alterada para {grupo.name}.")
+
+    destino = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("dashboard")
+    if not url_has_allowed_host_and_scheme(destino, allowed_hosts={request.get_host()}):
+        destino = reverse("dashboard")
+    return redirect(destino)

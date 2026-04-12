@@ -4,6 +4,7 @@ from django.core.exceptions import PermissionDenied
 
 DEFAULT_EMPRESA_GROUP_NAME = "Empresa padrão"
 VISITOR_GROUP_PREFIX = "__visitante__"
+EMPRESA_ATIVA_SESSION_KEY = "empresa_ativa_id"
 
 
 def obter_grupo_empresa_padrao():
@@ -14,7 +15,13 @@ def obter_grupo_empresa_padrao():
 def obter_grupo_empresa_usuario(user):
     if not getattr(user, "is_authenticated", False):
         return None
-    return user.groups.order_by("name", "id").first()
+    grupos = user.groups.order_by("name", "id")
+    grupo_id_ativo = getattr(user, "_empresa_ativa_id", None)
+    if grupo_id_ativo:
+        grupo_ativo = grupos.filter(pk=grupo_id_ativo).first()
+        if grupo_ativo is not None:
+            return grupo_ativo
+    return grupos.first()
 
 
 def obter_grupo_empresa_ou_erro(user):
@@ -40,3 +47,21 @@ def pertence_a_empresa(obj, user, field_name="empresa_id"):
 
 def nome_grupo_visitante(username):
     return f"{VISITOR_GROUP_PREFIX}{username}"
+
+
+def definir_grupo_empresa_ativo(request, user, grupo_id):
+    if not getattr(user, "is_authenticated", False):
+        return None
+
+    try:
+        grupo_id_int = int(grupo_id)
+    except (TypeError, ValueError):
+        return None
+
+    grupo = user.groups.filter(pk=grupo_id_int).first()
+    if grupo is None:
+        return None
+
+    request.session[EMPRESA_ATIVA_SESSION_KEY] = grupo.pk
+    user._empresa_ativa_id = grupo.pk
+    return grupo

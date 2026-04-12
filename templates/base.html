@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StölbenOrçamentos{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=empresa-min-3">
 </head>
 <body>
     <header class="site-header">
@@ -18,7 +18,26 @@
                         <div class="header-user-meta">
                             <span>Olá, {{ user }}</span>
                             <span class="header-separator">|</span>
-                            <span>{{ user.nome_empresa }}</span>
+                            {% if empresas_usuario|length > 1 %}
+                                <form action="{% url 'alternar_empresa' %}" method="post" class="header-company-switch">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                    <label for="empresa-ativa-select" style="display:none;">Empresa ativa</label>
+                                    <select id="empresa-ativa-select" name="empresa_id" class="header-company-select" onchange="this.form.submit()">
+                                        {% for empresa_item in empresas_usuario %}
+                                            <option value="{{ empresa_item.pk }}" {% if empresa_ativa and empresa_item.pk == empresa_ativa.pk %}selected{% endif %}>
+                                                {{ empresa_item.name }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </form>
+                            {% elif user.eh_visitante %}
+                                <span>Empresa Visitante</span>
+                            {% elif empresa_ativa %}
+                                <span>{{ empresa_ativa.name }}</span>
+                            {% else %}
+                                <span>{{ user.nome_empresa }}</span>
+                            {% endif %}
                             <span class="header-separator">|</span>
                             <span class="user-role">{{ user.get_perfil_display }}</span>
                             <span class="header-separator">|</span>
