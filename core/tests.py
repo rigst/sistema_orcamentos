@@ -9,6 +9,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from clientes.models import Cliente
+from core.models import Empresa
 from orcamentos.models import Orcamento
 
 
@@ -150,7 +151,7 @@ class MultiEmpresaAtivaTests(TestCase):
         self.client.post(
             reverse("alternar_empresa"),
             {
-                "empresa_id": self.empresa_b.pk,
+                "empresa_id": Empresa.objects.get(grupo=self.empresa_b).pk,
                 "next": reverse("clientes:lista"),
             },
             follow=True,

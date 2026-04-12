@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StölbenOrçamentos{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=flash-min-3">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <header class="site-header">
@@ -23,10 +23,10 @@
                                     {% csrf_token %}
                                     <input type="hidden" name="next" value="{{ request.get_full_path }}">
                                     <label for="empresa-ativa-select" style="display:none;">Empresa ativa</label>
-                                    <select id="empresa-ativa-select" name="empresa_id" class="header-company-select" onchange="this.form.submit()">
+                                    <select id="empresa-ativa-select" name="empresa_id" class="header-company-select js-auto-submit">
                                         {% for empresa_item in empresas_usuario %}
                                             <option value="{{ empresa_item.pk }}" {% if empresa_ativa and empresa_item.pk == empresa_ativa.pk %}selected{% endif %}>
-                                                {{ empresa_item.name }}
+                                                {{ empresa_item.nome }}
                                             </option>
                                         {% endfor %}
                                     </select>
@@ -34,7 +34,7 @@
                             {% elif user.eh_visitante %}
                                 <span>Empresa Visitante</span>
                             {% elif empresa_ativa %}
-                                <span>{{ empresa_ativa.name }}</span>
+                                <span>{{ empresa_ativa.nome }}</span>
                             {% else %}
                                 <span>{{ user.nome_empresa }}</span>
                             {% endif %}
@@ -90,7 +90,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <script>
+    <script nonce="{{ request.csp_nonce }}">
     (() => {
       const normalizeDecimal = (value) => {
         const raw = String(value || "").replace(/[^\d,.-]/g, "").trim();
@@ -380,6 +380,30 @@
         scope.querySelectorAll("form[data-draft-key]").forEach(bindDraftPersistence);
       };
 
+      const bindAutoSubmitControls = (scope = document) => {
+        scope.querySelectorAll(".js-auto-submit").forEach((field) => {
+          if (field.dataset.autoSubmitBound === "1") return;
+          field.dataset.autoSubmitBound = "1";
+          field.addEventListener("change", () => {
+            const form = field.form;
+            if (form) form.submit();
+          });
+        });
+      };
+
+      const bindConfirmForms = (scope = document) => {
+        scope.querySelectorAll("form[data-confirm]").forEach((form) => {
+          if (form.dataset.confirmBound === "1") return;
+          form.dataset.confirmBound = "1";
+          form.addEventListener("submit", (event) => {
+            const msg = form.dataset.confirm || "";
+            if (msg && !window.confirm(msg)) {
+              event.preventDefault();
+            }
+          });
+        });
+      };
+
       document.addEventListener("submit", (event) => {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) return;
@@ -400,10 +424,14 @@
       initDecimalInputs();
       initUnsavedWarnings();
       initDraftPersistence();
+      bindAutoSubmitControls();
+      bindConfirmForms();
       document.addEventListener("codex:refresh-decimals", (event) => {
         initDecimalInputs(event.detail?.scope || document);
         initUnsavedWarnings(event.detail?.scope || document);
         initDraftPersistence(event.detail?.scope || document);
+        bindAutoSubmitControls(event.detail?.scope || document);
+        bindConfirmForms(event.detail?.scope || document);
       });
     })();
     </script>

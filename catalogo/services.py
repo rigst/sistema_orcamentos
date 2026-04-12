@@ -329,7 +329,7 @@ def importar_catalogo_excel(arquivo, empresa):
                     raise ValueError(f"Linha {indice}: {_formatar_erro_validacao(exc)}") from exc
                 itens_criados += 1
     except ValueError:
-        logger.warning("Falha de validação ao importar catálogo", extra={"empresa_id": getattr(empresa, "pk", None)})
+        logger.info("Falha de validação ao importar catálogo", extra={"empresa_id": getattr(empresa, "pk", None)})
         raise
     except Exception as exc:
         logger.exception("Erro inesperado na importação de catálogo")

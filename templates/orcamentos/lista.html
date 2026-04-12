@@ -84,7 +84,7 @@
                                 {% if user.pode_gerenciar_orcamentos and orcamento.ativo %}
                                     <div class="actions-stack actions-stack-inline actions-stack-status">
                                         {% if user.eh_admin_perfil and orcamento.status == "aprovado" %}
-                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" onsubmit="return confirm('Confirmar retorno do orçamento para Rascunho?');">
+                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" data-confirm="Confirmar retorno do orçamento para Rascunho?">
                                                 {% csrf_token %}
                                                 <button class="btn btn-status-draft btn-icon-action" type="submit" title="Rascunho">
                                                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h8a6 6 0 1 1 0 12"/></svg>
@@ -92,7 +92,7 @@
                                                 </button>
                                             </form>
                                         {% elif orcamento.status == "enviado" or orcamento.status == "rejeitado" or orcamento.status == "cancelado" %}
-                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" onsubmit="return confirm('Confirmar retorno do orçamento para Rascunho?');">
+                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" data-confirm="Confirmar retorno do orçamento para Rascunho?">
                                                 {% csrf_token %}
                                                 <button class="btn btn-status-draft btn-icon-action" type="submit" title="Rascunho">
                                                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h8a6 6 0 1 1 0 12"/></svg>
@@ -101,7 +101,7 @@
                                             </form>
                                         {% endif %}
                                         {% if orcamento.status == "rascunho" or orcamento.status == "em_elaboracao" %}
-                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Enviado?');">
+                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" data-confirm="Confirmar mudança do orçamento para Enviado?">
                                                 {% csrf_token %}
                                                 <button class="btn btn-soft btn-icon-action" type="submit" title="Enviar">
                                                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M21 3 10 14"/><path d="m21 3-7 18-4-7-7-4 18-7Z"/></svg>
@@ -110,7 +110,7 @@
                                             </form>
                                         {% endif %}
                                         {% if orcamento.status == "enviado" %}
-                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Aprovado?');">
+                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}" data-confirm="Confirmar mudança do orçamento para Aprovado?">
                                                 {% csrf_token %}
                                                 <button class="btn btn-status-approved btn-icon-action" type="submit" title="Aprovar">
                                                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M20 7 9 18l-5-5"/></svg>
@@ -119,7 +119,7 @@
                                             </form>
                                         {% endif %}
                                         {% if orcamento.status == "enviado" %}
-                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Rejeitado?');">
+                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}" data-confirm="Confirmar mudança do orçamento para Rejeitado?">
                                                 {% csrf_token %}
                                                 <button class="btn btn-status-rejected btn-icon-action" type="submit" title="Rejeitar">
                                                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
@@ -128,7 +128,7 @@
                                             </form>
                                         {% endif %}
                                         {% if orcamento.status == "rascunho" or orcamento.status == "em_elaboracao" or orcamento.status == "enviado" %}
-                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}" onsubmit="return confirm('Confirmar mudança do orçamento para Cancelado?');">
+                                            <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}" data-confirm="Confirmar mudança do orçamento para Cancelado?">
                                                 {% csrf_token %}
                                                 <button class="btn btn-status-cancelled btn-icon-action" type="submit" title="Cancelar">
                                                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M8.5 15.5 15.5 8.5"/></svg>

@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
+from core.models import Empresa
 from core.tenancy import VISITOR_GROUP_PREFIX, obter_grupo_empresa_usuario
 from orcamentos.models import Orcamento
 from relatorios.models import ConfiguracaoEmpresa
@@ -63,6 +64,7 @@ def limpar_dados_visitante(user):
     user.delete()
 
     if grupo and grupo.name.startswith(VISITOR_GROUP_PREFIX):
+        Empresa.objects.filter(grupo=grupo).delete()
         grupo.delete()
 
 

@@ -379,7 +379,7 @@
     </div>
 </section>
 
-<script>
+<script nonce="{{ request.csp_nonce }}">
 (() => {
   const initItemBuilders = (scope = document) => {
     scope.querySelectorAll("[data-item-builder]").forEach((root) => {

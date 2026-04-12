@@ -113,6 +113,23 @@ DATABASES = {
     }
 }
 
+CACHE_BACKEND = os.getenv("DJANGO_CACHE_BACKEND", "").strip().lower()
+REDIS_CACHE_URL = os.getenv("DJANGO_REDIS_CACHE_URL", "").strip()
+if CACHE_BACKEND == "redis" or REDIS_CACHE_URL:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.redis.RedisCache",
+            "LOCATION": REDIS_CACHE_URL or "redis://127.0.0.1:6379/1",
+        }
+    }
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "sistema-orcamentos-cache",
+        }
+    }
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -147,6 +164,12 @@ LOGOUT_REDIRECT_URL = "login"
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+USE_MANIFEST_STATICFILES = env_bool("DJANGO_USE_MANIFEST_STATICFILES", default=IS_PRODUCTION)
+if USE_MANIFEST_STATICFILES:
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"},
+    }
 
 MEDIA_URL = "media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -165,7 +188,7 @@ if env_bool("DJANGO_USE_X_FORWARDED_PROTO", default=False):
 ENABLE_CSP = env_bool("DJANGO_ENABLE_CSP", default=IS_PRODUCTION)
 CONTENT_SECURITY_POLICY = os.getenv(
     "DJANGO_CONTENT_SECURITY_POLICY",
-    "default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; "
+    "default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'nonce-{nonce}'; "
     "style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; "
     "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
 )

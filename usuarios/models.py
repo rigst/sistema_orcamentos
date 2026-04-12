@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from core.tenancy import VISITOR_GROUP_PREFIX
+from core.tenancy import VISITOR_GROUP_PREFIX, obter_empresa_ativa_usuario
 
 
 class Usuario(AbstractUser):
@@ -72,10 +72,11 @@ class Usuario(AbstractUser):
 
     @property
     def nome_empresa(self):
-        grupo = self.groups.order_by("name", "id").first()
+        empresa = obter_empresa_ativa_usuario(self)
+        grupo = empresa.grupo if empresa else self.groups.order_by("name", "id").first()
         if self.eh_visitante and grupo and grupo.name.startswith(VISITOR_GROUP_PREFIX):
             return "Empresa Visitante"
-        return grupo.name if grupo else "Sem empresa"
+        return empresa.nome if empresa else (grupo.name if grupo else "Sem empresa")
 
     def __str__(self):
         if self.eh_visitante:

@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_POST
 
-from core.tenancy import definir_grupo_empresa_ativo, queryset_da_empresa
+from core.tenancy import definir_empresa_ativa, queryset_da_empresa
 from orcamentos.models import Orcamento
 
 
@@ -100,13 +100,13 @@ def manual(request):
 @login_required
 @require_POST
 def alternar_empresa(request):
-    grupo_id = request.POST.get("empresa_id")
-    grupo = definir_grupo_empresa_ativo(request, request.user, grupo_id)
+    empresa_id = request.POST.get("empresa_id")
+    empresa = definir_empresa_ativa(request, request.user, empresa_id)
 
-    if grupo is None:
+    if empresa is None:
         messages.error(request, "Empresa inválida para este usuário.")
     else:
-        messages.success(request, f"Empresa ativa alterada para {grupo.name}.")
+        messages.success(request, f"Empresa ativa alterada para {empresa.nome}.")
 
     destino = request.POST.get("next") or request.META.get("HTTP_REFERER") or reverse("dashboard")
     if not url_has_allowed_host_and_scheme(destino, allowed_hosts={request.get_host()}):
