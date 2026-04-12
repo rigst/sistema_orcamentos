@@ -119,6 +119,12 @@ class InfraestruturaTests(TestCase):
         self.assertIn("python manage.py check", conteudo)
         self.assertIn("python manage.py test", conteudo)
 
+    def test_healthz_retorna_ok_sem_autenticacao(self):
+        response = self.client.get(reverse("healthz"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertJSONEqual(response.content, {"status": "ok"})
+
 
 class MultiEmpresaAtivaTests(TestCase):
     def setUp(self):

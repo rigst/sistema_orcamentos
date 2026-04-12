@@ -5,9 +5,10 @@ Aplicação Django para cadastro de clientes, catálogo de itens, montagem de or
 ## Requisitos
 
 - Python 3.12
-- `venv`
+- PostgreSQL 15+ (produção)
+- Redis 6+ (produção para cache/rate-limit)
 
-## Instalação
+## Instalação local
 
 ```bash
 python -m venv .venv
@@ -15,95 +16,171 @@ source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
 python manage.py migrate
-```
-
-## Rodando localmente
-
-```bash
-source .venv/bin/activate
 python manage.py runserver
 ```
 
-A aplicação ficará disponível em `http://127.0.0.1:8000/`.
-
 ## Verificações úteis
-
-Checagem do projeto:
 
 ```bash
 python manage.py check
-```
-
-Testes automatizados:
-
-```bash
 python manage.py test
 ```
 
 ## Variáveis de ambiente
 
-O projeto lê automaticamente um arquivo `.env` na raiz.
+O projeto lê automaticamente o arquivo `.env` na raiz.
 
-Para desenvolvimento local, o arquivo `.env.example` já é suficiente como base.
+Arquivos base:
 
-Variáveis principais:
+- desenvolvimento: `.env.example`
+- produção: `.env.production.example`
 
-- `DJANGO_ENV`
-- `DJANGO_SECRET_KEY`
-- `DJANGO_DEBUG`
+Variáveis de produção mais importantes:
+
+- `DJANGO_ENV=production`
+- `DJANGO_SECRET_KEY` (segredo)
+- `DJANGO_DEBUG=False`
 - `DJANGO_ALLOWED_HOSTS`
 - `DJANGO_CSRF_TRUSTED_ORIGINS`
-- `SQLITE_TIMEOUT`
-- `DJANGO_USE_X_FORWARDED_PROTO`
-- `DJANGO_CACHE_BACKEND`
-- `DJANGO_REDIS_CACHE_URL`
-- `DJANGO_USE_MANIFEST_STATICFILES`
-- `DJANGO_SESSION_COOKIE_SECURE`
-- `DJANGO_CSRF_COOKIE_SECURE`
-- `DJANGO_SECURE_SSL_REDIRECT`
-- `DJANGO_SECURE_HSTS_SECONDS`
-- `DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS`
-- `DJANGO_SECURE_HSTS_PRELOAD`
-- `DJANGO_SECURE_REFERRER_POLICY`
-- `DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY`
-- `DJANGO_SECURE_CROSS_ORIGIN_RESOURCE_POLICY`
-- `DJANGO_ENABLE_CSP`
-- `DJANGO_LOG_LEVEL`
-- `DJANGO_MAX_LOGO_UPLOAD_BYTES`
-- `DJANGO_MAX_LOGO_WIDTH`
-- `DJANGO_MAX_LOGO_HEIGHT`
-- `DJANGO_MAX_CATALOGO_UPLOAD_BYTES`
-- `DJANGO_MAX_XLSX_PARSE_SECONDS`
-- `DJANGO_MAX_XLSX_NON_EMPTY_CELLS`
-- `DJANGO_VISITANTE_RATE_LIMIT`
-- `DJANGO_VISITANTE_RATE_WINDOW_SECONDS`
-- `DJANGO_VISITANTE_TTL_HOURS`
+- `DATABASE_URL` (segredo: inclui usuário/senha do PostgreSQL)
+- `DJANGO_CACHE_BACKEND=redis`
+- `DJANGO_REDIS_CACHE_URL` (segredo se tiver senha)
+- `DJANGO_USE_X_FORWARDED_PROTO=True`
+- `DJANGO_USE_MANIFEST_STATICFILES=True`
 
-Para produção, use como base:
+## Deploy em VPS com subdomínio
 
+Exemplo alvo: `app.seudominio.com`, com outro site já rodando na mesma VPS.
+
+1. DNS
+- Crie registro `A` de `app.seudominio.com` apontando para o IP da VPS.
+
+2. Pacotes no servidor
 ```bash
-cp .env.production.example .env
+sudo apt update
+sudo apt install -y python3-venv python3-pip postgresql redis-server nginx certbot python3-certbot-nginx
 ```
 
-Em produção, estes itens são obrigatórios:
+3. Estrutura de pastas
+```bash
+sudo mkdir -p /var/www/sistema_orcamentos/{current,shared/media}
+sudo chown -R $USER:www-data /var/www/sistema_orcamentos
+```
 
-- definir `DJANGO_ENV=production`
-- definir `DJANGO_SECRET_KEY`
-- definir `DJANGO_DEBUG=False`
-- ajustar `DJANGO_ALLOWED_HOSTS`
-- ajustar `DJANGO_CSRF_TRUSTED_ORIGINS`
+4. Código e ambiente virtual
+```bash
+cd /var/www/sistema_orcamentos/current
+git clone <URL_DO_REPOSITORIO> .
+python3 -m venv /var/www/sistema_orcamentos/venv
+source /var/www/sistema_orcamentos/venv/bin/activate
+pip install -r requirements.txt
+```
+
+5. Banco PostgreSQL
+```bash
+sudo -u postgres psql
+CREATE DATABASE sistema_orcamentos;
+CREATE USER sistema_orcamentos_user WITH PASSWORD 'SENHA_FORTE_AQUI';
+GRANT ALL PRIVILEGES ON DATABASE sistema_orcamentos TO sistema_orcamentos_user;
+\q
+```
+
+6. Arquivo de segredos (`.env`) no servidor
+```bash
+cp .env.production.example /var/www/sistema_orcamentos/shared/.env
+```
+Edite `/var/www/sistema_orcamentos/shared/.env` e ajuste:
+- `DJANGO_SECRET_KEY` (obrigatório e secreto)
+- `DJANGO_ALLOWED_HOSTS=app.seudominio.com`
+- `DJANGO_CSRF_TRUSTED_ORIGINS=https://app.seudominio.com`
+- `DATABASE_URL=postgresql://sistema_orcamentos_user:SENHA_FORTE_AQUI@127.0.0.1:5432/sistema_orcamentos`
+- `DJANGO_REDIS_CACHE_URL=redis://127.0.0.1:6379/1` (ou com senha)
+
+7. Migrações, estáticos e superusuário
+```bash
+cd /var/www/sistema_orcamentos/current
+source /var/www/sistema_orcamentos/venv/bin/activate
+export $(grep -v '^#' /var/www/sistema_orcamentos/shared/.env | xargs)
+python manage.py migrate
+python manage.py collectstatic --noinput
+python manage.py createsuperuser
+```
+
+8. Gunicorn (systemd)
+```bash
+sudo cp deploy/gunicorn.service.example /etc/systemd/system/sistema_orcamentos.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now sistema_orcamentos.service
+sudo systemctl status sistema_orcamentos.service
+```
+
+9. Limpeza automática de visitantes expirados
+```bash
+sudo cp deploy/visitantes-cleanup.service.example /etc/systemd/system/visitantes-cleanup.service
+sudo cp deploy/visitantes-cleanup.timer.example /etc/systemd/system/visitantes-cleanup.timer
+sudo systemctl daemon-reload
+sudo systemctl enable --now visitantes-cleanup.timer
+sudo systemctl status visitantes-cleanup.timer
+```
+
+10. Nginx para subdomínio
+```bash
+sudo cp deploy/nginx.sistema_orcamentos.conf.example /etc/nginx/sites-available/sistema_orcamentos
+sudo ln -s /etc/nginx/sites-available/sistema_orcamentos /etc/nginx/sites-enabled/sistema_orcamentos
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+11. SSL/TLS (Let's Encrypt)
+```bash
+sudo certbot --nginx -d app.seudominio.com
+```
+
+12. Validação final
+```bash
+curl -I https://app.seudominio.com/healthz/
+```
+Resposta esperada: HTTP `200`.
+
+## Atualização de versão (deploy contínuo simples)
+
+```bash
+cd /var/www/sistema_orcamentos/current
+git pull origin main
+source /var/www/sistema_orcamentos/venv/bin/activate
+pip install -r requirements.txt
+export $(grep -v '^#' /var/www/sistema_orcamentos/shared/.env | xargs)
+python manage.py migrate
+python manage.py collectstatic --noinput
+sudo systemctl restart sistema_orcamentos.service
+```
+
+## O que não deve ir para o Git / não deve subir para repositório remoto
+
+- `.env` e qualquer `.env.*` de ambiente real (segredos)
+- `db.sqlite3`
+- `media/` de produção (arquivos de clientes)
+- `staticfiles/` gerado por `collectstatic`
+- logs e backups
+
+## Segredos
+
+Tratar como segredo:
+
+- `DJANGO_SECRET_KEY`
+- credenciais do PostgreSQL (`DATABASE_URL`)
+- credenciais Redis (se houver senha)
+- qualquer token/API key futuro
 
 ## Funcionalidades principais
 
-- autenticação com perfis `admin`, `orcamentista` e `visualizador`
+- autenticação com perfis `admin`, `orcamentista`, `visualizador` e `visitante`
+- suporte a múltiplas empresas por usuário
 - cadastro de clientes
 - cadastro de categorias e itens de catálogo
 - criação e edição de orçamentos
-- edição dinâmica dos itens do orçamento
-- persistência local de rascunho no navegador
 - relatórios por orçamento em PDF e Excel
-- formatação brasileira de moeda, telefone, CEP e CPF/CNPJ
 
 ## CI
 
-O repositório possui workflow em [`.github/workflows/django.yml`](/home/rodrigo/Projetos/sistema_orcamentos/.github/workflows/django.yml) para rodar `check` e `test` no GitHub Actions.
+Workflow em [`.github/workflows/django.yml`](/home/rodrigo/Projetos/sistema_orcamentos/.github/workflows/django.yml) executa validações de qualidade e segurança de deploy.

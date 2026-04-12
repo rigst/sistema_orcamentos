@@ -103,15 +103,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {
-            'timeout': int(os.getenv("SQLITE_TIMEOUT", "20")),
-        },
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+DB_CONN_MAX_AGE = int(os.getenv("DJANGO_DB_CONN_MAX_AGE", "60"))
+DB_SSL_REQUIRE = env_bool("DJANGO_DB_SSL_REQUIRE", default=IS_PRODUCTION)
+
+if DATABASE_URL:
+    try:
+        import dj_database_url
+    except ImportError as exc:
+        raise RuntimeError(
+            "DATABASE_URL foi definido, mas a dependência 'dj-database-url' não está instalada."
+        ) from exc
+
+    DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=DB_CONN_MAX_AGE,
+            ssl_require=DB_SSL_REQUIRE,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'OPTIONS': {
+                'timeout': int(os.getenv("SQLITE_TIMEOUT", "20")),
+            },
+        }
+    }
 
 CACHE_BACKEND = os.getenv("DJANGO_CACHE_BACKEND", "").strip().lower()
 REDIS_CACHE_URL = os.getenv("DJANGO_REDIS_CACHE_URL", "").strip()

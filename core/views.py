@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, DecimalField, Sum, Value
 from django.db.models.functions import Coalesce
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -11,6 +12,10 @@ from django.views.decorators.http import require_POST
 
 from core.tenancy import definir_empresa_ativa, queryset_da_empresa
 from orcamentos.models import Orcamento
+
+
+def healthz(request):
+    return JsonResponse({"status": "ok"})
 
 
 @login_required
