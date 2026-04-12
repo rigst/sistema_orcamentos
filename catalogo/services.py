@@ -1,6 +1,8 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from io import BytesIO
+import logging
 import os
+from time import monotonic
 import unicodedata
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
@@ -19,6 +21,10 @@ MAX_XLSX_ENTRADAS = 200
 MAX_XLSX_RAZAO_COMPRESSAO = 100
 MAX_XLSX_DESCOMPACTADO_BYTES = 20 * 1024 * 1024
 MAX_XLSX_IMPORT_ROWS = 5000
+MAX_XLSX_NON_EMPTY_CELLS = 30000
+MAX_XLSX_PARSE_SECONDS = 15
+
+logger = logging.getLogger(__name__)
 
 
 def _texto_planilha(shared_strings, cell):
@@ -83,7 +89,13 @@ def _linhas_xlsx(arquivo):
 
             sheet = ET.fromstring(zip_file.read(sheet_path))
             total_linhas = 0
+            total_celulas_nao_vazias = 0
+            inicio_parse = monotonic()
+            limite_segundos = max(int(os.getenv("DJANGO_MAX_XLSX_PARSE_SECONDS", str(MAX_XLSX_PARSE_SECONDS))), 1)
+            limite_celulas = max(int(os.getenv("DJANGO_MAX_XLSX_NON_EMPTY_CELLS", str(MAX_XLSX_NON_EMPTY_CELLS))), 10)
             for row in sheet.findall("main:sheetData/main:row", XLSX_NS):
+                if monotonic() - inicio_parse > limite_segundos:
+                    raise ValueError("A planilha demorou além do permitido para processar.")
                 total_linhas += 1
                 if total_linhas > MAX_XLSX_IMPORT_ROWS:
                     raise ValueError(f"A planilha excede o limite de {MAX_XLSX_IMPORT_ROWS} linhas.")
@@ -93,6 +105,9 @@ def _linhas_xlsx(arquivo):
                     if indice >= COLUNAS_IMPORTACAO:
                         continue
                     cells[indice] = _texto_planilha(shared_strings, cell)
+                total_celulas_nao_vazias += sum(1 for valor in cells if valor)
+                if total_celulas_nao_vazias > limite_celulas:
+                    raise ValueError("A planilha excede o limite de células preenchidas.")
                 yield cells
     except ValueError:
         raise
@@ -314,8 +329,10 @@ def importar_catalogo_excel(arquivo, empresa):
                     raise ValueError(f"Linha {indice}: {_formatar_erro_validacao(exc)}") from exc
                 itens_criados += 1
     except ValueError:
+        logger.warning("Falha de validação ao importar catálogo", extra={"empresa_id": getattr(empresa, "pk", None)})
         raise
     except Exception as exc:
+        logger.exception("Erro inesperado na importação de catálogo")
         raise ValueError(
             "Não foi possível concluir a importação. Revise o arquivo e tente novamente."
         ) from exc

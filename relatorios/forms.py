@@ -1,7 +1,11 @@
 import os
+from io import BytesIO
+from pathlib import Path
 
 from django import forms
+from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
+from PIL import ImageOps
 
 from core.form_fields import configurar_campo_mascarado
 from core.formatting import formatar_cep_br, formatar_cpf_cnpj_br, formatar_telefone_br
@@ -91,16 +95,49 @@ class ConfiguracaoEmpresaForm(forms.ModelForm):
         if logo.size > max_bytes:
             raise forms.ValidationError("Logo excede o tamanho máximo permitido (2 MB).")
 
+        max_width = max(int(os.getenv("DJANGO_MAX_LOGO_WIDTH", "2000")), 64)
+        max_height = max(int(os.getenv("DJANGO_MAX_LOGO_HEIGHT", "2000")), 64)
+
         try:
             with Image.open(logo) as imagem:
                 formato = (imagem.format or "").upper()
-                imagem.verify()
+                imagem = ImageOps.exif_transpose(imagem)
+                imagem.load()
+
+                if formato not in {"PNG", "JPEG", "WEBP"}:
+                    raise forms.ValidationError("Formato de logo inválido. Use PNG, JPEG ou WEBP.")
+
+                imagem.thumbnail((max_width, max_height))
+                if formato == "JPEG":
+                    imagem = imagem.convert("RGB")
+
+                buffer = BytesIO()
+                save_kwargs = {"optimize": True}
+                extensao = ".png"
+                content_type = "image/png"
+
+                if formato == "JPEG":
+                    save_kwargs["quality"] = 88
+                    extensao = ".jpg"
+                    content_type = "image/jpeg"
+                elif formato == "WEBP":
+                    save_kwargs["quality"] = 88
+                    extensao = ".webp"
+                    content_type = "image/webp"
+
+                imagem.save(buffer, format=formato, **save_kwargs)
+                conteudo = buffer.getvalue()
+        except forms.ValidationError:
+            raise
         except Exception as exc:
             raise forms.ValidationError("Envie uma imagem válida para o logo.") from exc
-        finally:
-            logo.seek(0)
 
-        if formato not in {"PNG", "JPEG", "WEBP"}:
-            raise forms.ValidationError("Formato de logo inválido. Use PNG, JPEG ou WEBP.")
+        if len(conteudo) > max_bytes:
+            raise forms.ValidationError("Logo excede o tamanho máximo permitido após processamento.")
 
-        return logo
+        nome_base = Path(getattr(logo, "name", "logo")).stem or "logo"
+        return SimpleUploadedFile(
+            name=f"{nome_base}{extensao}",
+            content=conteudo,
+            content_type=content_type,
+        )

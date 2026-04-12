@@ -1,4 +1,5 @@
 import os
+import logging
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -10,6 +11,8 @@ from clientes.models import Cliente
 from core.tenancy import VISITOR_GROUP_PREFIX, obter_grupo_empresa_usuario
 from orcamentos.models import Orcamento
 from relatorios.models import ConfiguracaoEmpresa
+
+logger = logging.getLogger(__name__)
 
 
 def _visitante_rate_limit() -> int:
@@ -71,5 +74,9 @@ def limpar_visitantes_expirados():
         .order_by("criado_em")
         .iterator()
     )
+    total = 0
     for visitante in usuarios_expirados:
         limpar_dados_visitante(visitante)
+        total += 1
+    if total:
+        logger.info("Visitantes expirados removidos", extra={"total": total})

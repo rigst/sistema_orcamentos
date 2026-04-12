@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StölbenOrçamentos{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=empresa-min-3">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=flash-min-3">
 </head>
 <body>
     <header class="site-header">
@@ -78,10 +78,10 @@
 
     <main class="container">
         {% if messages %}
-            <div class="panel" style="margin-bottom: 1rem;">
-                <ul class="simple-list">
+            <div class="flash-stack" role="status" aria-live="polite">
+                <ul class="flash-list">
                     {% for message in messages %}
-                        <li>{{ message }}</li>
+                        <li class="flash-message {% if message.tags %}flash-{{ message.tags }}{% endif %}">{{ message }}</li>
                     {% endfor %}
                 </ul>
             </div>

@@ -1,4 +1,5 @@
 import secrets
+import logging
 
 from django.contrib import messages
 from django.contrib.auth import login
@@ -15,6 +16,8 @@ from .visitantes import (
     registrar_tentativa_visitante,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class UsuarioLoginView(LoginView):
     template_name = "registration/login.html"
@@ -29,6 +32,7 @@ class UsuarioLoginView(LoginView):
         if "entrar_visitante" in request.POST:
             ip = self._client_ip()
             if excedeu_rate_limit_visitante(ip):
+                logger.warning("Rate limit de visitante excedido", extra={"ip": ip})
                 messages.error(
                     request,
                     "Muitas tentativas de acesso visitante em pouco tempo. Aguarde alguns minutos e tente novamente.",

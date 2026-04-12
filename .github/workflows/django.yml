@@ -30,6 +30,20 @@ jobs:
           DJANGO_DEBUG: "False"
         run: python manage.py check
 
+      - name: Run deploy checks
+        env:
+          DJANGO_ENV: production
+          DJANGO_SECRET_KEY: ci-secret-key-with-more-than-fifty-characters-1234567890
+          DJANGO_DEBUG: "False"
+          DJANGO_ALLOWED_HOSTS: ci.example.com
+          DJANGO_CSRF_TRUSTED_ORIGINS: https://ci.example.com
+          DJANGO_SESSION_COOKIE_SECURE: "True"
+          DJANGO_CSRF_COOKIE_SECURE: "True"
+          DJANGO_SECURE_SSL_REDIRECT: "True"
+          DJANGO_USE_X_FORWARDED_PROTO: "True"
+          DJANGO_ENABLE_CSP: "True"
+        run: python manage.py check --deploy
+
       - name: Run tests
         env:
           DJANGO_ENV: test

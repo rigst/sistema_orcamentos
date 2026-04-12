@@ -204,6 +204,44 @@ main {
   padding-bottom: 3rem;
 }
 
+.flash-stack {
+  margin-bottom: 1rem;
+}
+
+.flash-list {
+  list-style: none;
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+}
+
+.flash-message {
+  margin: 0;
+  padding: 0.3rem 0 0.32rem 0.62rem;
+  border-left: 2px solid rgba(47, 120, 219, 0.4);
+  color: #2b5d93;
+  font-size: 0.9rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.flash-message.flash-success {
+  border-left-color: rgba(79, 165, 106, 0.5);
+  color: #2f7e4b;
+}
+
+.flash-message.flash-warning {
+  border-left-color: rgba(182, 120, 28, 0.5);
+  color: #966015;
+}
+
+.flash-message.flash-error,
+.flash-message.flash-danger {
+  border-left-color: rgba(209, 69, 69, 0.55);
+  color: #a33333;
+}
+
 section {
   padding: 1rem 0;
 }
@@ -1673,7 +1711,7 @@ tr:hover td {
   border-bottom: 1px solid rgba(71, 101, 138, 0.2) !important;
   background: transparent !important;
   color: var(--text-soft) !important;
-  font-size: inherit !important;
+  font-size: 0.92em !important;
   font-weight: 400 !important;
   line-height: inherit !important;
   letter-spacing: 0.01em !important;
@@ -1682,6 +1720,12 @@ tr:hover td {
   -webkit-appearance: menulist !important;
   flex: 0 0 auto !important;
   transition: border-color var(--transition), color var(--transition), box-shadow var(--transition);
+  text-align: center !important;
+  text-align-last: center !important;
+}
+
+.header-user-meta .header-company-select option {
+  text-align: center;
 }
 
 .header-user-meta .header-company-select:hover {

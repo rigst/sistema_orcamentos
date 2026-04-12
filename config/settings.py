@@ -73,6 +73,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "core.security_headers.ContentSecurityPolicyMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -152,11 +153,22 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 SESSION_COOKIE_SECURE = env_bool("DJANGO_SESSION_COOKIE_SECURE", default=IS_PRODUCTION)
 CSRF_COOKIE_SECURE = env_bool("DJANGO_CSRF_COOKIE_SECURE", default=IS_PRODUCTION)
-SECURE_BROWSER_XSS_FILTER = True
+SESSION_COOKIE_HTTPONLY = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
+SECURE_REFERRER_POLICY = os.getenv("DJANGO_SECURE_REFERRER_POLICY", "same-origin")
+SECURE_CROSS_ORIGIN_OPENER_POLICY = os.getenv("DJANGO_SECURE_CROSS_ORIGIN_OPENER_POLICY", "same-origin")
+SECURE_CROSS_ORIGIN_RESOURCE_POLICY = os.getenv("DJANGO_SECURE_CROSS_ORIGIN_RESOURCE_POLICY", "same-origin")
 if env_bool("DJANGO_USE_X_FORWARDED_PROTO", default=False):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+ENABLE_CSP = env_bool("DJANGO_ENABLE_CSP", default=IS_PRODUCTION)
+CONTENT_SECURITY_POLICY = os.getenv(
+    "DJANGO_CONTENT_SECURITY_POLICY",
+    "default-src 'self'; img-src 'self' data: blob:; script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; "
+    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+)
 
 if IS_PRODUCTION:
     SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000"))
