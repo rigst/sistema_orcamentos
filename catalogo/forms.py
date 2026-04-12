@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+
 from django import forms
 
 from core.form_fields import substituir_por_decimal_br
@@ -74,3 +77,15 @@ class ItemCatalogoForm(forms.ModelForm):
 
 class ImportarCatalogoExcelForm(forms.Form):
     arquivo = forms.FileField(help_text="Envie um arquivo .xlsx com cabeçalho na primeira linha.")
+
+    def clean_arquivo(self):
+        arquivo = self.cleaned_data["arquivo"]
+        extensao = Path(arquivo.name or "").suffix.lower()
+        if extensao and extensao != ".xlsx":
+            raise forms.ValidationError("Envie um arquivo com extensão .xlsx.")
+
+        max_bytes = max(int(os.getenv("DJANGO_MAX_CATALOGO_UPLOAD_BYTES", str(5 * 1024 * 1024))), 1)
+        if arquivo.size > max_bytes:
+            raise forms.ValidationError("Arquivo excede o tamanho máximo permitido (5 MB).")
+
+        return arquivo

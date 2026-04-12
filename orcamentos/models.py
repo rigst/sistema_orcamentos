@@ -5,7 +5,7 @@ from itertools import groupby
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import models
+from django.db import IntegrityError, models
 from django.db.models import Max
 
 from core.tenancy import obter_grupo_empresa_padrao
@@ -322,13 +322,21 @@ class Orcamento(models.Model):
                 .order_by("-atualizado_em", "nome_empresa")
                 .first()
             )
-        type(self)._empresa_numero_context = self.empresa
-        self.definir_numero_automatico()
-        self.full_clean()
-        try:
-            super().save(*args, **kwargs)
-        finally:
-            type(self)._empresa_numero_context = None
+        max_tentativas = 5 if not self.pk else 1
+        for tentativa in range(max_tentativas):
+            type(self)._empresa_numero_context = self.empresa
+            try:
+                self.definir_numero_automatico()
+                self.full_clean()
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as exc:
+                if self.pk or tentativa == max_tentativas - 1:
+                    raise
+                if "orcamento_empresa_numero_uniq" not in str(exc) and "UNIQUE constraint failed" not in str(exc):
+                    raise
+            finally:
+                type(self)._empresa_numero_context = None
 
 
 class ItemOrcamento(models.Model):

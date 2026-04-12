@@ -1,4 +1,7 @@
+import os
+
 from django import forms
+from PIL import Image
 
 from core.form_fields import configurar_campo_mascarado
 from core.formatting import formatar_cep_br, formatar_cpf_cnpj_br, formatar_telefone_br
@@ -78,3 +81,26 @@ class ConfiguracaoEmpresaForm(forms.ModelForm):
         valor = (self.cleaned_data.get("estado") or "").strip().upper()
         validar_uf(valor)
         return valor
+
+    def clean_logo(self):
+        logo = self.cleaned_data.get("logo")
+        if not logo:
+            return logo
+
+        max_bytes = max(int(os.getenv("DJANGO_MAX_LOGO_UPLOAD_BYTES", str(2 * 1024 * 1024))), 1)
+        if logo.size > max_bytes:
+            raise forms.ValidationError("Logo excede o tamanho máximo permitido (2 MB).")
+
+        try:
+            with Image.open(logo) as imagem:
+                formato = (imagem.format or "").upper()
+                imagem.verify()
+        except Exception as exc:
+            raise forms.ValidationError("Envie uma imagem válida para o logo.") from exc
+        finally:
+            logo.seek(0)
+
+        if formato not in {"PNG", "JPEG", "WEBP"}:
+            raise forms.ValidationError("Formato de logo inválido. Use PNG, JPEG ou WEBP.")
+
+        return logo

@@ -1,5 +1,6 @@
 import secrets
 
+from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView, LogoutView
@@ -8,17 +9,37 @@ from django.urls import reverse
 
 from core.tenancy import nome_grupo_visitante
 from .models import Usuario
+from .visitantes import (
+    excedeu_rate_limit_visitante,
+    limpar_visitantes_expirados,
+    registrar_tentativa_visitante,
+)
 
 
 class UsuarioLoginView(LoginView):
     template_name = "registration/login.html"
 
+    def _client_ip(self):
+        forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR")
+        if forwarded_for:
+            return forwarded_for.split(",")[0].strip()
+        return self.request.META.get("REMOTE_ADDR", "")
+
     def post(self, request, *args, **kwargs):
         if "entrar_visitante" in request.POST:
+            ip = self._client_ip()
+            if excedeu_rate_limit_visitante(ip):
+                messages.error(
+                    request,
+                    "Muitas tentativas de acesso visitante em pouco tempo. Aguarde alguns minutos e tente novamente.",
+                )
+                return redirect(reverse("login"))
+            registrar_tentativa_visitante(ip)
             return self.criar_e_logar_visitante()
         return super().post(request, *args, **kwargs)
 
     def criar_e_logar_visitante(self):
+        limpar_visitantes_expirados()
         token = secrets.token_hex(4)
         username = f"visitante_{token}"
         grupo = Group.objects.create(name=nome_grupo_visitante(username))

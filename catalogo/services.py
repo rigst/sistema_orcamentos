@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from io import BytesIO
+import os
 import unicodedata
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
@@ -14,6 +15,10 @@ from .models import CategoriaItem, ItemCatalogo
 XLSX_NS = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 DUAS_CASAS = Decimal("0.01")
 COLUNAS_IMPORTACAO = 6
+MAX_XLSX_ENTRADAS = 200
+MAX_XLSX_RAZAO_COMPRESSAO = 100
+MAX_XLSX_DESCOMPACTADO_BYTES = 20 * 1024 * 1024
+MAX_XLSX_IMPORT_ROWS = 5000
 
 
 def _texto_planilha(shared_strings, cell):
@@ -46,7 +51,13 @@ def _indice_coluna(ref):
 
 def _linhas_xlsx(arquivo):
     try:
-        with ZipFile(BytesIO(arquivo.read())) as zip_file:
+        conteudo = arquivo.read()
+        max_upload_bytes = max(int(os.getenv("DJANGO_MAX_CATALOGO_UPLOAD_BYTES", str(5 * 1024 * 1024))), 1)
+        if len(conteudo) > max_upload_bytes:
+            raise ValueError("Arquivo .xlsx excede o tamanho máximo permitido.")
+
+        with ZipFile(BytesIO(conteudo)) as zip_file:
+            _validar_zip_xlsx_seguro(zip_file)
             shared_strings = _carregar_shared_strings(zip_file)
             workbook = ET.fromstring(zip_file.read("xl/workbook.xml"))
             rels = ET.fromstring(zip_file.read("xl/_rels/workbook.xml.rels"))
@@ -61,9 +72,21 @@ def _linhas_xlsx(arquivo):
                     break
             if not target:
                 raise ValueError("Não foi possível localizar a primeira aba da planilha.")
+            if ".." in target:
+                raise ValueError("A aba principal da planilha é inválida.")
 
-            sheet = ET.fromstring(zip_file.read(f"xl/{target}"))
+            sheet_path = target.lstrip("/")
+            if not sheet_path.startswith("xl/"):
+                sheet_path = f"xl/{sheet_path}"
+            if sheet_path not in zip_file.namelist():
+                raise ValueError("A primeira aba da planilha não foi encontrada no arquivo.")
+
+            sheet = ET.fromstring(zip_file.read(sheet_path))
+            total_linhas = 0
             for row in sheet.findall("main:sheetData/main:row", XLSX_NS):
+                total_linhas += 1
+                if total_linhas > MAX_XLSX_IMPORT_ROWS:
+                    raise ValueError(f"A planilha excede o limite de {MAX_XLSX_IMPORT_ROWS} linhas.")
                 cells = [""] * COLUNAS_IMPORTACAO
                 for cell in row.findall("main:c", XLSX_NS):
                     indice = _indice_coluna(cell.attrib.get("r"))
@@ -71,8 +94,30 @@ def _linhas_xlsx(arquivo):
                         continue
                     cells[indice] = _texto_planilha(shared_strings, cell)
                 yield cells
+    except ValueError:
+        raise
     except Exception as exc:
         raise ValueError("Envie um arquivo .xlsx válido.") from exc
+
+
+def _validar_zip_xlsx_seguro(zip_file):
+    informacoes = zip_file.infolist()
+    if len(informacoes) > MAX_XLSX_ENTRADAS:
+        raise ValueError("Arquivo .xlsx inválido: número de entradas acima do permitido.")
+
+    total_descompactado = 0
+    for info in informacoes:
+        total_descompactado += info.file_size
+        if total_descompactado > MAX_XLSX_DESCOMPACTADO_BYTES:
+            raise ValueError("Arquivo .xlsx inválido: conteúdo descompactado muito grande.")
+
+        if info.compress_size <= 0 and info.file_size > 0:
+            raise ValueError("Arquivo .xlsx inválido: entrada compactada inconsistente.")
+
+        if info.compress_size > 0:
+            razao = info.file_size / info.compress_size
+            if razao > MAX_XLSX_RAZAO_COMPRESSAO:
+                raise ValueError("Arquivo .xlsx inválido: taxa de compressão suspeita.")
 
 
 def _decimal(valor):
@@ -207,9 +252,11 @@ def _formatar_erro_validacao(exc):
 
 
 def importar_catalogo_excel(arquivo, empresa):
-    linhas = list(_linhas_xlsx(arquivo))
-    if len(linhas) < 2:
-        raise ValueError("A planilha precisa ter cabeçalho e ao menos uma linha de dados.")
+    iter_linhas = _linhas_xlsx(arquivo)
+    try:
+        next(iter_linhas)
+    except StopIteration as exc:
+        raise ValueError("A planilha precisa ter cabeçalho e ao menos uma linha de dados.") from exc
 
     categorias_cache = {
         categoria.nome.strip().casefold(): categoria
@@ -217,10 +264,12 @@ def importar_catalogo_excel(arquivo, empresa):
     }
     categorias_criadas = 0
     itens_criados = 0
+    teve_linha_de_dados = False
 
     try:
         with transaction.atomic():
-            for indice, linha in enumerate(linhas[1:], start=2):
+            for indice, linha in enumerate(iter_linhas, start=2):
+                teve_linha_de_dados = True
                 valores = list(linha[:6]) + [""] * max(0, 6 - len(linha))
                 categoria_nome, item_nome, valor, unidade, descricao, observacao = [str(v or "").strip() for v in valores[:6]]
                 campos_preenchidos = [campo for campo in (categoria_nome, item_nome, valor, unidade, descricao, observacao) if campo]
@@ -270,5 +319,8 @@ def importar_catalogo_excel(arquivo, empresa):
         raise ValueError(
             "Não foi possível concluir a importação. Revise o arquivo e tente novamente."
         ) from exc
+
+    if not teve_linha_de_dados:
+        raise ValueError("A planilha precisa ter cabeçalho e ao menos uma linha de dados.")
 
     return categorias_criadas, itens_criados
