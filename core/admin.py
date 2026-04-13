@@ -18,6 +18,8 @@ class EmpresaGroupAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
     def has_module_permission(self, request):
+        if request.user.is_superuser:
+            return True
         return bool(request.user.is_active and request.user.is_staff and getattr(request.user, "eh_admin_perfil", False))
 
     def has_view_permission(self, request, obj=None):
@@ -57,16 +59,23 @@ class EmpresaAdmin(admin.ModelAdmin):
     readonly_fields = ("criada_em", "atualizada_em")
 
     def has_module_permission(self, request):
+        if request.user.is_superuser:
+            return True
         return bool(request.user.is_active and request.user.is_staff and getattr(request.user, "eh_admin_perfil", False))
 
     def has_view_permission(self, request, obj=None):
         return self.has_module_permission(request)
 
     def has_add_permission(self, request):
-        return False
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        return self.has_module_permission(request)
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return request.user.is_superuser
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request).exclude(grupo__name__startswith=VISITOR_GROUP_PREFIX)
