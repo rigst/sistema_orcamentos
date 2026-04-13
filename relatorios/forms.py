@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from PIL import ImageOps
 
+from core.concurrency import OptimisticLockModelFormMixin
 from core.form_fields import configurar_campo_mascarado
 from core.formatting import formatar_cep_br, formatar_cpf_cnpj_br, formatar_telefone_br
 from core.validators import (
@@ -18,7 +19,7 @@ from core.validators import (
 from .models import ConfiguracaoEmpresa
 
 
-class ConfiguracaoEmpresaForm(forms.ModelForm):
+class ConfiguracaoEmpresaForm(OptimisticLockModelFormMixin, forms.ModelForm):
     class Meta:
         model = ConfiguracaoEmpresa
         fields = [

@@ -6,6 +6,7 @@ from django.core.exceptions import ValidationError
 from django.utils.timezone import localdate
 
 from catalogo.models import ItemCatalogo
+from core.concurrency import OptimisticLockModelFormMixin
 from core.form_fields import configurar_campo_mascarado, substituir_por_decimal_br
 from core.formatting import formatar_cep_br, formatar_cpf_cnpj_br, formatar_telefone_br
 from core.validators import validar_cep_basico, validar_cpf_cnpj_basico, validar_telefone_basico
@@ -24,7 +25,7 @@ def calcular_validade_inicial_configuracao(configuracao, data_emissao):
     return data_emissao + timedelta(days=dias)
 
 
-class OrcamentoForm(forms.ModelForm):
+class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
     class Meta:
         model = Orcamento
         fields = [
@@ -212,7 +213,7 @@ class OrcamentoForm(forms.ModelForm):
         return formatar_cep_br(valor)
 
 
-class ItemOrcamentoForm(forms.ModelForm):
+class ItemOrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
     class Meta:
         model = ItemOrcamento
         fields = [

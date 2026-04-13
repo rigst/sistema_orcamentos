@@ -18,6 +18,7 @@
         <input type="hidden" name="item_q" value="{{ item_q }}">
         <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
         <input type="hidden" name="item_sort" value="{{ item_sort }}">
+        {{ item_form.concorrencia_atualizado_em }}
         {% if item_form.non_field_errors %}
             <div class="form-errors">
                 {% for error in item_form.non_field_errors %}

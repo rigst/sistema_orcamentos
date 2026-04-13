@@ -2,6 +2,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from orcamentos.models import Orcamento
 from .models import Cliente
@@ -240,6 +241,47 @@ class ClienteAtualizacaoTests(TestCase):
             response,
             "Os orçamentos ainda não enviados passam a usar os dados mais recentes deste cliente.",
         )
+
+    def test_edicao_concorrente_de_cliente_e_bloqueada(self):
+        cliente = Cliente.objects.create(nome_razao_social="Cliente Base")
+        versao_original = cliente.atualizado_em.isoformat(timespec="microseconds")
+
+        Cliente.objects.filter(pk=cliente.pk).update(
+            nome_razao_social="Cliente atualizado em outra sessão",
+            atualizado_em=timezone.now(),
+        )
+
+        response = self.client.post(
+            reverse("clientes:editar", args=[cliente.pk]),
+            {
+                "tipo_pessoa": cliente.tipo_pessoa,
+                "nome_razao_social": "Cliente sobrescrito",
+                "nome_fantasia": cliente.nome_fantasia,
+                "cpf_cnpj": cliente.cpf_cnpj,
+                "email": cliente.email,
+                "contato_responsavel": cliente.contato_responsavel,
+                "telefone": cliente.telefone,
+                "celular": cliente.celular,
+                "cep": cliente.cep,
+                "logradouro": cliente.logradouro,
+                "numero": cliente.numero,
+                "complemento": cliente.complemento,
+                "bairro": cliente.bairro,
+                "cidade": cliente.cidade,
+                "estado": cliente.estado,
+                "observacoes": cliente.observacoes,
+                "ativo": "on",
+                "concorrencia_atualizado_em": versao_original,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Este registro foi alterado em outra sessão. Recarregue a página para revisar os dados mais recentes.",
+        )
+        cliente.refresh_from_db()
+        self.assertEqual(cliente.nome_razao_social, "Cliente atualizado em outra sessão")
 
 
 class ClienteEmpresaIsolationTests(TestCase):

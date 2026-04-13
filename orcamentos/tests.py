@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
@@ -141,6 +142,63 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(item.descricao, "Descricao padrao")
         self.assertEqual(item.unidade_medida, "sv")
         self.assertEqual(item.valor_unitario, Decimal("125.50"))
+
+    def test_edicao_concorrente_de_item_orcamento_e_bloqueada(self):
+        item_catalogo = ItemCatalogo.objects.create(
+            codigo="SERV-CONC",
+            nome="Servico concorrente",
+            descricao_padrao="Descricao original",
+            unidade_medida="sv",
+            valor_unitario_padrao=Decimal("100.00"),
+        )
+        item = ItemOrcamento.objects.create(
+            orcamento=self.orcamento,
+            item_catalogo=item_catalogo,
+            ordem=1,
+            nome="Servico concorrente",
+            descricao="Descricao original",
+            unidade_medida="sv",
+            quantidade=Decimal("1.00"),
+            valor_unitario=Decimal("100.00"),
+        )
+        versao_original = item.atualizado_em.isoformat(timespec="microseconds")
+
+        ItemOrcamento.objects.filter(pk=item.pk).update(
+            nome="Atualizado por outra sessão",
+            atualizado_em=timezone.now(),
+        )
+
+        response = self.client.post(
+            reverse("orcamentos:item_editar", args=[self.orcamento.pk, item.pk]),
+            {
+                "item_catalogo": item_catalogo.pk,
+                "ordem": "1",
+                "codigo_item": item.codigo_item,
+                "nome": "Tentativa de sobrescrever",
+                "descricao": "Descricao tentativa",
+                "unidade_medida": "sv",
+                "quantidade": "1",
+                "valor_unitario": "100.00",
+                "desconto_valor": "0",
+                "desconto_percentual": "0",
+                "acrescimo_valor": "0",
+                "acrescimo_percentual": "0",
+                "observacoes": "",
+                "item_q": "",
+                "item_categoria": "",
+                "item_sort": "ordem",
+                "concorrencia_atualizado_em": versao_original,
+            },
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(
+            "Este registro foi alterado em outra sessão. Recarregue a página para revisar os dados mais recentes.",
+            response.json()["modal_html"],
+        )
+        item.refresh_from_db()
+        self.assertEqual(item.nome, "Atualizado por outra sessão")
 
     def test_item_vinculado_ao_catalogo_marca_divergencia_quando_nome_ou_valor_mudam(self):
         item_catalogo = ItemCatalogo.objects.create(

@@ -26,6 +26,7 @@
         <form method="post" enctype="multipart/form-data" data-unsaved-warning="{% if not somente_leitura %}1{% else %}0{% endif %}">
             {% csrf_token %}
             {{ form.ativo }}
+            {{ form.concorrencia_atualizado_em }}
             {% if form.non_field_errors %}
                 <div class="form-errors">
                     {% for error in form.non_field_errors %}

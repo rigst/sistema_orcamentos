@@ -3,12 +3,13 @@ from pathlib import Path
 
 from django import forms
 
+from core.concurrency import OptimisticLockModelFormMixin
 from core.form_fields import substituir_por_decimal_br
 from core.tenancy import queryset_da_empresa
 from .models import CategoriaItem, ItemCatalogo
 
 
-class CategoriaItemForm(forms.ModelForm):
+class CategoriaItemForm(OptimisticLockModelFormMixin, forms.ModelForm):
     class Meta:
         model = CategoriaItem
         fields = ["nome", "descricao", "cor", "ativo"]
@@ -26,7 +27,7 @@ class CategoriaItemForm(forms.ModelForm):
         return valor
 
 
-class ItemCatalogoForm(forms.ModelForm):
+class ItemCatalogoForm(OptimisticLockModelFormMixin, forms.ModelForm):
     class Meta:
         model = ItemCatalogo
         fields = [

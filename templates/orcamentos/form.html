@@ -52,6 +52,7 @@
             </div>
             <form method="post" id="orcamento-main-form" novalidate data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
                 {% csrf_token %}
+                {{ form.concorrencia_atualizado_em }}
                 {% if not orcamento %}
                     {{ form.status.as_hidden }}
                 {% endif %}
