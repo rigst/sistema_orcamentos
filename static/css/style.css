@@ -729,6 +729,7 @@ input[type="radio"] {
 .table-wrap {
   overflow-x: auto;
   border-radius: 18px;
+  -webkit-overflow-scrolling: touch;
 }
 
 table {
@@ -1645,37 +1646,116 @@ tr:hover td {
 }
 
 @media (max-width: 700px) {
+  .container {
+    width: min(calc(100% - 1.25rem), var(--max-width));
+  }
+
+  main {
+    padding-top: 1.45rem;
+    padding-bottom: 2rem;
+  }
+
+  .panel,
+  .form-panel,
+  .item-entry-panel {
+    padding: 1rem;
+    border-radius: 18px;
+  }
+
   .nav {
-    padding: 0.9rem 0;
+    gap: 0.6rem;
+    padding: 0.65rem 0;
   }
 
   .nav-top {
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 0.65rem;
+  }
+
+  .brand {
+    width: 100%;
+    text-align: center;
   }
 
   .header-user-meta {
     justify-content: center;
     width: 100%;
     text-align: center;
+    flex-wrap: wrap;
+    row-gap: 0.28rem;
+    column-gap: 0.45rem;
   }
 
+  .header-separator {
+    display: none;
+  }
+
+  .header-company-switch {
+    max-width: 100%;
+  }
+
+  .header-user-meta .header-company-select,
   .header-company-select {
-    max-width: min(52vw, 220px);
+    max-width: min(86vw, 280px);
+    min-height: 30px !important;
+    line-height: 1.35 !important;
+  }
+
+  .user-role,
+  .header-logout {
+    width: auto;
   }
 
   .nav-bottom {
     justify-content: center;
+    width: 100%;
   }
 
   .nav-links {
-    justify-content: center;
-    gap: 0.8rem;
+    justify-content: flex-start;
+    gap: 0.45rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    width: 100%;
+    padding: 0 0.1rem 0.18rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav-links li {
+    flex: 0 0 auto;
+  }
+
+  .nav-links a {
+    white-space: nowrap;
+  }
+
+  .section-heading h2 {
+    font-size: clamp(1.45rem, 6vw, 1.75rem);
   }
 
   .stats-grid,
   .form-grid,
   .totals-strip {
     grid-template-columns: 1fr;
+  }
+
+  .filters-form {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+
+  .filters-form input,
+  .filters-form select,
+  .filters-form button {
+    width: 100%;
+    min-width: 0;
+    flex: initial;
+  }
+
+  .filters-form .btn-icon-action {
+    min-width: 44px;
+    justify-content: center;
   }
 
   .manual-layout,
@@ -1689,8 +1769,60 @@ tr:hover td {
     align-items: start;
   }
 
+  .inline-actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .inline-actions .btn,
+  .inline-actions form {
+    width: 100%;
+  }
+
+  .inline-actions form .btn {
+    width: 100%;
+  }
+
+  .catalog-search-row {
+    grid-template-columns: 1fr 44px;
+    width: 100%;
+  }
+
+  .catalog-search-row .btn {
+    width: 44px;
+    min-width: 44px;
+  }
+
+  .table-wrap table {
+    min-width: 680px;
+  }
+
+  .actions-stack .btn,
+  .actions-stack form .btn {
+    min-width: 44px;
+  }
+
   .actions-col {
-    min-width: 150px;
+    min-width: 130px;
+  }
+
+  .status-col {
+    min-width: 160px;
+  }
+
+  .pagination {
+    justify-content: center;
+  }
+
+  .auth-shell {
+    min-height: auto;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  .auth-card {
+    padding: 1.3rem;
+    border-radius: 20px;
   }
 }
 
