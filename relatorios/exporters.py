@@ -82,6 +82,33 @@ def formatar_data(valor: date | None) -> str:
     return valor.strftime("%d/%m/%Y")
 
 
+def formatar_data_extenso(valor: date | None) -> str:
+    if not valor:
+        return "-"
+    meses = [
+        "janeiro",
+        "fevereiro",
+        "marco",
+        "abril",
+        "maio",
+        "junho",
+        "julho",
+        "agosto",
+        "setembro",
+        "outubro",
+        "novembro",
+        "dezembro",
+    ]
+    return f"{valor.day:02d} de {meses[valor.month - 1]} de {valor.year}"
+
+
+def texto_ou_linha(valor: str | None, *, tamanho: int = 30) -> str:
+    texto = str(valor or "").strip()
+    if texto:
+        return texto
+    return "_" * tamanho
+
+
 def formatar_unidade_relatorio(item) -> str:
     unidade = (item.unidade_medida or "").strip()
     quantidade = item.quantidade
@@ -360,6 +387,15 @@ def desenhar_fundo(canvas, doc):
     canvas.setFont(FONT_REGULAR, 12)
     canvas.setFillColor(colors.HexColor("#617A95"))
     canvas.drawRightString(width - doc.rightMargin, 10.5 * mm, f"Página {doc.page}")
+    canvas.restoreState()
+
+
+def desenhar_fundo_memorial(canvas, doc):
+    canvas.saveState()
+    width, _ = A4
+    canvas.setFont(FONT_REGULAR, 10)
+    canvas.setFillColor(colors.black)
+    canvas.drawRightString(width - doc.rightMargin, 12 * mm, f"Página {doc.page}")
     canvas.restoreState()
 
 
@@ -647,7 +683,6 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
 
 def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
     registrar_fontes_pdf()
-    styles = obter_estilos_pdf()
     buffer = BytesIO()
     doc = SimpleDocTemplate(
         buffer,
@@ -655,202 +690,200 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
         leftMargin=18 * mm,
         rightMargin=18 * mm,
         topMargin=18 * mm,
-        bottomMargin=22 * mm,
+        bottomMargin=20 * mm,
         title=f"Memorial Descritivo {orcamento.numero}",
         author=configuracao.nome_empresa if configuracao and configuracao.nome_empresa else "",
         pageCompression=0,
     )
-
-    topo = montar_topo_pdf(
-        orcamento,
-        configuracao,
-        styles,
-        f"Memorial Descritivo {orcamento.numero}",
-        orcamento.titulo,
+    base = getSampleStyleSheet()
+    style_body = ParagraphStyle(
+        "MemorialBody",
+        parent=base["BodyText"],
+        fontName=FONT_REGULAR,
+        fontSize=11,
+        leading=14,
+        textColor=colors.black,
+    )
+    style_title = ParagraphStyle(
+        "MemorialTitle",
+        parent=base["Heading2"],
+        fontName=FONT_BOLD,
+        fontSize=12,
+        leading=15,
+        textColor=colors.black,
+        spaceBefore=6,
+        spaceAfter=4,
+    )
+    style_bullet = ParagraphStyle(
+        "MemorialBullet",
+        parent=base["BodyText"],
+        fontName=FONT_REGULAR,
+        fontSize=11,
+        leading=14,
+        leftIndent=12,
+        bulletIndent=0,
+        textColor=colors.black,
+        spaceAfter=3,
     )
 
-    bloco_cliente = str(orcamento.cliente)
-    bloco_evento = orcamento.evento_nome or orcamento.titulo
-    bloco_local = orcamento.evento_local or formatar_data(orcamento.data_emissao)
-    resumo = Table(
-        [
-            [
-                bloco_info(styles, "CLIENTE", escape(bloco_cliente)),
-                bloco_info(styles, "EVENTO/PROJETO", escape(bloco_evento)),
-                bloco_info(styles, "TOTAL FINAL", formatar_moeda(orcamento.total_final)),
-            ],
-            [
-                bloco_info(styles, "EMISSÃO", formatar_data(orcamento.data_emissao)),
-                bloco_info(styles, "LOCAL", escape(bloco_local)),
-                bloco_info(styles, "VALIDADE", formatar_data(orcamento.validade_em)),
-            ],
-        ],
-        colWidths=[55 * mm, 55 * mm, 56 * mm],
-    )
-    resumo.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#FCFDFF")),
-                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#DCE7F3")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#E7EFF8")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING", (0, 0), (-1, -1), 11),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 11),
-            ]
-        )
-    )
+    cidade_base = (configuracao.cidade if configuracao and configuracao.cidade else "Porto Alegre")
+    linha_data_local = ""
+    if orcamento.evento_periodo and orcamento.evento_local:
+        linha_data_local = f"{orcamento.evento_periodo} em {orcamento.evento_local}"
+    elif orcamento.evento_periodo:
+        linha_data_local = orcamento.evento_periodo
+    elif orcamento.evento_local:
+        linha_data_local = orcamento.evento_local
 
-    story = [topo, Spacer(1, 10), resumo, Spacer(1, 12), Paragraph("Memorial Descritivo", styles["title"])]
+    story = [
+        Paragraph(
+            f"<para alignment='right'>{escape(cidade_base)}, {formatar_data_extenso(orcamento.data_emissao)}.</para>",
+            style_body,
+        ),
+        Spacer(1, 8),
+        Paragraph(f"<b>Expositor:</b> {escape(str(orcamento.cliente))}", style_body),
+        Paragraph(f"<b>Evento:</b> {escape(orcamento.evento_nome or orcamento.titulo)}", style_body),
+    ]
 
-    if configuracao and any([configuracao.cidade, configuracao.estado]):
-        local_empresa = configuracao.cidade or ""
-        if configuracao.estado:
-            local_empresa = f"{local_empresa}/{configuracao.estado}" if local_empresa else configuracao.estado
-        story.append(Paragraph(f"{local_empresa}, {formatar_data(orcamento.data_emissao)}.", styles["body"]))
-        story.append(Spacer(1, 8))
+    if linha_data_local:
+        story.append(Paragraph(f"<b>Data e Local:</b> {escape(linha_data_local)}", style_body))
 
-    referencia_evento = escape(orcamento.evento_nome or orcamento.titulo)
-    detalhe_evento = []
-    if orcamento.evento_local:
-        detalhe_evento.append(f"no local <b>{escape(orcamento.evento_local)}</b>")
-    if orcamento.evento_periodo:
-        detalhe_evento.append(f"no período <b>{escape(orcamento.evento_periodo)}</b>")
+    estande_area_linha = []
     if orcamento.evento_estande:
-        detalhe_evento.append(f"estande <b>{escape(orcamento.evento_estande)}</b>")
+        estande_area_linha.append(f"Nº do estande: {escape(orcamento.evento_estande)}")
     if orcamento.evento_area:
-        detalhe_evento.append(f"área de <b>{escape(orcamento.evento_area)}</b>")
+        estande_area_linha.append(f"Área: {escape(orcamento.evento_area)}")
+    if estande_area_linha:
+        story.append(Paragraph("   ".join(estande_area_linha), style_body))
 
-    introducao = (
-        f"Conforme solicitado, apresento o memorial descritivo referente ao orçamento "
-        f"<b>{orcamento.numero}</b>, para <b>{referencia_evento}</b>, "
-        f"destinado ao cliente <b>{escape(str(orcamento.cliente))}</b>"
+    if orcamento.mostrar_contatos_evento_no_memorial:
+        if orcamento.evento_contato:
+            story.append(Paragraph(f"<b>A/C:</b> {escape(orcamento.evento_contato)}", style_body))
+        if orcamento.evento_telefone:
+            story.append(Paragraph(f"<b>Fone:</b> {escape(orcamento.evento_telefone)}", style_body))
+        if orcamento.evento_email:
+            story.append(Paragraph(f"<b>E-mail:</b> {escape(orcamento.evento_email)}", style_body))
+
+    story.extend(
+        [
+            Spacer(1, 8),
+            Paragraph("Prezados,", style_body),
+            Spacer(1, 6),
+            Paragraph(
+                "Conforme solicitado, apresento proposta para prestação de serviços, locação, montagem e desmontagem de estande, conforme descritivo abaixo:",
+                style_body,
+            ),
+            Spacer(1, 10),
+        ]
     )
-    if detalhe_evento:
-        introducao = f"{introducao}, {'; '.join(detalhe_evento)}"
-    introducao = f"{introducao}, conforme especificações abaixo."
-    story.append(Paragraph(introducao, styles["body"]))
-    story.append(Spacer(1, 10))
-
-    contatos_evento = []
-    if orcamento.evento_contato:
-        contatos_evento.append(f"<b>A/C:</b> {escape(orcamento.evento_contato)}")
-    if orcamento.evento_telefone:
-        contatos_evento.append(f"<b>Telefone:</b> {escape(orcamento.evento_telefone)}")
-    if orcamento.evento_email:
-        contatos_evento.append(f"<b>E-mail:</b> {escape(orcamento.evento_email)}")
-    if orcamento.mostrar_contatos_evento_no_memorial and contatos_evento:
-        story.append(Paragraph("<br/>".join(contatos_evento), styles["body"]))
-        story.append(Spacer(1, 10))
 
     for grupo in orcamento.subtotais_por_categoria():
-        story.append(Paragraph(grupo["categoria_nome"].upper(), styles["memorial_section"]))
-        story.append(Paragraph("ESPECIFICAÇÕES:", styles["label"]))
-        story.append(Spacer(1, 4))
-
+        story.append(Paragraph(f"{grupo['categoria_nome'].upper()}:", style_title))
+        story.append(Paragraph("ESPECIFICAÇÕES TÉCNICAS:", style_body))
+        story.append(Spacer(1, 3))
         for item in grupo["itens"]:
             descricao = (item.descricao or "").strip() or item.nome
             quantidade = formatar_decimal_br(item.quantidade)
             story.append(
                 Paragraph(
                     f"{quantidade} {escape(formatar_unidade_relatorio(item))} de {descricao.replace(chr(10), '<br/>')}",
-                    styles["memorial_bullet"],
+                    style_bullet,
                     bulletText="▪",
                 )
             )
-        story.append(
-            Paragraph(
-                f"<b>Subtotal da categoria:</b> {formatar_moeda(grupo['subtotal'])}",
-                styles["body"],
-            )
-        )
-        story.append(Spacer(1, 10))
+        story.append(Paragraph(f"Subtotal da categoria: <b>{formatar_moeda(grupo['subtotal'])}</b>", style_body))
+        story.append(Spacer(1, 8))
 
     if orcamento.mostrar_financeiro_no_memorial:
-        story.append(Paragraph("ESPECIFICAÇÕES FINANCEIRAS", styles["memorial_section"]))
-        story.append(Paragraph(f"Valor total final: <b>{formatar_moeda(orcamento.total_final)}</b>.", styles["body"]))
+        story.append(Paragraph("ESPECIFICAÇÕES FINANCEIRAS", style_title))
+        story.append(Paragraph(f"Valor total: <b>{formatar_moeda(orcamento.total_final)}</b>.", style_body))
         if orcamento.valor_locacao is not None:
-            story.append(Paragraph(f"Valor de locação: <b>{formatar_moeda(orcamento.valor_locacao)}</b>.", styles["body"]))
+            story.append(Paragraph(f"Locação: <b>{formatar_moeda(orcamento.valor_locacao)}</b>.", style_body))
         if orcamento.valor_servico is not None:
-            story.append(Paragraph(f"Valor de serviço: <b>{formatar_moeda(orcamento.valor_servico)}</b>.", styles["body"]))
-
+            story.append(Paragraph(f"Serviço: <b>{formatar_moeda(orcamento.valor_servico)}</b>.", style_body))
+        if orcamento.condicoes_pagamento:
+            story.append(Paragraph(f"Condições de pagamento: {quebrar_linhas_texto(orcamento.condicoes_pagamento)}.", style_body))
+        if configuracao and configuracao.dados_bancarios:
+            story.append(Paragraph(f"Dados bancários: {quebrar_linhas_texto(configuracao.dados_bancarios)}.", style_body))
+        if configuracao and configuracao.chave_pix:
+            story.append(Paragraph(f"Chave PIX: {escape(configuracao.chave_pix)}.", style_body))
         validade_texto = formatar_data(orcamento.validade_em)
         if configuracao and configuracao.validade_padrao_proposta and not orcamento.validade_em:
             validade_texto = f"{configuracao.validade_padrao_proposta} dias"
         if validade_texto and validade_texto != "-":
-            story.append(Paragraph(f"Validade da proposta: {escape(validade_texto)}.", styles["body"]))
-        if orcamento.condicoes_pagamento:
-            story.append(Paragraph(f"Condições de pagamento: {quebrar_linhas_texto(orcamento.condicoes_pagamento)}.", styles["body"]))
-        if configuracao and configuracao.dados_bancarios:
-            story.append(Paragraph(f"Dados bancários: {quebrar_linhas_texto(configuracao.dados_bancarios)}.", styles["body"]))
-        if configuracao and configuracao.chave_pix:
-            story.append(Paragraph(f"Chave PIX: {escape(configuracao.chave_pix)}.", styles["body"]))
+            story.append(Paragraph(f"Validade da proposta: {escape(validade_texto)}.", style_body))
 
-    adicionar_secao_texto(story, styles, "SERVIÇOS E TAXAS INCLUSOS", orcamento.servicos_taxas_inclusos)
-    if orcamento.mostrar_observacoes_gerais_no_relatorio:
-        adicionar_secao_texto(story, styles, "OBSERVAÇÕES", orcamento.observacoes_gerais)
+    if orcamento.servicos_taxas_inclusos:
+        story.append(Paragraph("SERVIÇOS E TAXAS", style_title))
+        story.append(Paragraph(quebrar_linhas_texto(orcamento.servicos_taxas_inclusos), style_body))
 
-    dados_contratuais = []
-    if orcamento.contrato_razao_social:
-        dados_contratuais.append(f"<b>Razão social:</b> {escape(orcamento.contrato_razao_social)}")
-    if orcamento.contrato_cnpj:
-        dados_contratuais.append(f"<b>CNPJ:</b> {escape(orcamento.contrato_cnpj)}")
-    if orcamento.contrato_inscricao_estadual:
-        dados_contratuais.append(f"<b>Inscrição estadual:</b> {escape(orcamento.contrato_inscricao_estadual)}")
-    if orcamento.contrato_endereco:
-        dados_contratuais.append(f"<b>Endereço:</b> {escape(orcamento.contrato_endereco)}")
-    if orcamento.contrato_cidade:
-        cidade_contrato = escape(orcamento.contrato_cidade)
+    if orcamento.mostrar_observacoes_gerais_no_relatorio and orcamento.observacoes_gerais:
+        story.append(Paragraph("OBSERVAÇÕES", style_title))
+        story.append(Paragraph(quebrar_linhas_texto(orcamento.observacoes_gerais), style_body))
+
+    if orcamento.mostrar_dados_contratuais_no_memorial:
+        linhas_contrato = []
+        if orcamento.contrato_razao_social:
+            linhas_contrato.append(f"Razão Social: {escape(orcamento.contrato_razao_social)}")
+        if orcamento.contrato_cnpj:
+            linhas_contrato.append(f"CNPJ: {escape(orcamento.contrato_cnpj)}")
+        if orcamento.contrato_endereco:
+            linhas_contrato.append(f"Endereço: {escape(orcamento.contrato_endereco)}")
+        cidade_linha = []
+        if orcamento.contrato_cidade:
+            cidade_linha.append(f"Cidade: {escape(orcamento.contrato_cidade)}")
         if orcamento.contrato_cep:
-            cidade_contrato = f"{cidade_contrato} | CEP {escape(orcamento.contrato_cep)}"
-        dados_contratuais.append(f"<b>Cidade:</b> {cidade_contrato}")
-    elif orcamento.contrato_cep:
-        dados_contratuais.append(f"<b>CEP:</b> {escape(orcamento.contrato_cep)}")
-    if orcamento.contrato_responsavel_nome:
-        responsavel = escape(orcamento.contrato_responsavel_nome)
+            cidade_linha.append(f"CEP: {escape(orcamento.contrato_cep)}")
+        if orcamento.contrato_inscricao_estadual:
+            cidade_linha.append(f"Inscrição Estadual: {escape(orcamento.contrato_inscricao_estadual)}")
+        if cidade_linha:
+            linhas_contrato.append("   ".join(cidade_linha))
+        if orcamento.contrato_responsavel_nome:
+            linhas_contrato.append(
+                "Nome da pessoa responsável pela assinatura do contrato: "
+                f"{escape(orcamento.contrato_responsavel_nome)}"
+            )
+        if orcamento.contrato_responsavel_documento:
+            linhas_contrato.append(
+                "RG e CPF da pessoa responsável pela assinatura do contrato: "
+                f"{escape(orcamento.contrato_responsavel_documento)}"
+            )
+        contato_linha = []
         if orcamento.contrato_cargo_funcao:
-            responsavel = f"{responsavel} ({escape(orcamento.contrato_cargo_funcao)})"
-        dados_contratuais.append(f"<b>Responsável:</b> {responsavel}")
-    if orcamento.contrato_responsavel_documento:
-        dados_contratuais.append(f"<b>Documento:</b> {escape(orcamento.contrato_responsavel_documento)}")
-    if orcamento.contrato_telefone:
-        dados_contratuais.append(f"<b>Telefone:</b> {escape(orcamento.contrato_telefone)}")
-    if orcamento.contrato_email:
-        dados_contratuais.append(f"<b>E-mail:</b> {escape(orcamento.contrato_email)}")
-    if orcamento.mostrar_dados_contratuais_no_memorial and dados_contratuais:
-        story.append(Spacer(1, 8))
-        story.append(Paragraph("DADOS CONTRATUAIS", styles["memorial_section"]))
-        story.append(Paragraph("<br/>".join(dados_contratuais), styles["body"]))
+            contato_linha.append(f"Cargo ou Função: {escape(orcamento.contrato_cargo_funcao)}")
+        if orcamento.contrato_telefone:
+            contato_linha.append(f"Telefone de contato: {escape(orcamento.contrato_telefone)}")
+        if contato_linha:
+            linhas_contrato.append("   ".join(contato_linha))
+        if orcamento.contrato_email:
+            linhas_contrato.append(f"E-mail para envio do contrato: {escape(orcamento.contrato_email)}")
+
+        if linhas_contrato:
+            story.append(Paragraph("DADOS PARA CONTRATO", style_title))
+            story.append(Paragraph("<br/>".join(linhas_contrato), style_body))
 
     if orcamento.mostrar_informacoes_complementares_no_memorial:
-        adicionar_secao_texto(
-            story,
-            styles,
-            "INFORMAÇÕES COMPLEMENTARES",
-            (
-                "\n\n".join(
-                    parte
-                    for parte in [
-                        getattr(configuracao, "texto_institucional_memorial", "") if configuracao else "",
-                        getattr(configuracao, "rodape_relatorio", "") if configuracao else "",
-                    ]
-                    if parte
-                )
-            ),
+        informacoes_complementares = "\n\n".join(
+            parte
+            for parte in [
+                getattr(configuracao, "texto_institucional_memorial", "") if configuracao else "",
+                getattr(configuracao, "rodape_relatorio", "") if configuracao else "",
+            ]
+            if parte
         )
+        if informacoes_complementares:
+            story.append(Paragraph("INFORMAÇÕES COMPLEMENTARES", style_title))
+            story.append(Paragraph(quebrar_linhas_texto(informacoes_complementares), style_body))
 
-    assinatura_linhas = []
+    story.append(Spacer(1, 16))
     if configuracao and configuracao.assinatura_nome:
-        assinatura_linhas.append(f"<b>{escape(configuracao.assinatura_nome)}</b>")
+        story.append(Paragraph(escape(configuracao.assinatura_nome), style_body))
     if configuracao and configuracao.assinatura_cargo:
-        assinatura_linhas.append(escape(configuracao.assinatura_cargo))
+        story.append(Paragraph(escape(configuracao.assinatura_cargo), style_body))
     if configuracao and configuracao.assinatura_contato:
-        assinatura_linhas.append(escape(configuracao.assinatura_contato))
-    if assinatura_linhas:
-        story.append(Spacer(1, 16))
-        story.append(Paragraph("<br/>".join(assinatura_linhas), styles["body"]))
+        story.append(Paragraph(escape(configuracao.assinatura_contato), style_body))
 
-    doc.build(story, onFirstPage=desenhar_fundo, onLaterPages=desenhar_fundo)
+    doc.build(story, onFirstPage=desenhar_fundo_memorial, onLaterPages=desenhar_fundo_memorial)
     return buffer.getvalue()
 
 
@@ -884,39 +917,52 @@ def _rtf_paragrafo(texto: str | None, *, negrito: bool = False, espacamento: int
 
 
 def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
+    cidade_base = (configuracao.cidade if configuracao and configuracao.cidade else "Porto Alegre")
+    linha_data_local = ""
+    if orcamento.evento_periodo and orcamento.evento_local:
+        linha_data_local = f"{orcamento.evento_periodo} em {orcamento.evento_local}"
+    elif orcamento.evento_periodo:
+        linha_data_local = orcamento.evento_periodo
+    elif orcamento.evento_local:
+        linha_data_local = orcamento.evento_local
+
     partes = [
         r"{\rtf1\ansi\deff0",
         r"{\fonttbl{\f0 Arial;}}",
         r"\viewkind4\uc1",
-        _rtf_paragrafo(f"Memorial Descritivo {orcamento.numero}", negrito=True, espacamento=220),
-        _rtf_paragrafo(f"Título: {orcamento.titulo}"),
-        _rtf_paragrafo(f"Cliente: {orcamento.cliente}"),
-        _rtf_paragrafo(f"Emissão: {formatar_data(orcamento.data_emissao)}"),
-        _rtf_paragrafo(f"Validade: {formatar_data(orcamento.validade_em)}"),
+        _rtf_paragrafo(f"{cidade_base}, {formatar_data_extenso(orcamento.data_emissao)}"),
+        _rtf_paragrafo(f"Expositor: {texto_ou_linha(str(orcamento.cliente), tamanho=38)}"),
+        _rtf_paragrafo(f"Evento: {texto_ou_linha(orcamento.evento_nome or orcamento.titulo, tamanho=38)}"),
+        _rtf_paragrafo(f"Data e Local: {texto_ou_linha(linha_data_local, tamanho=44)}"),
+        _rtf_paragrafo(
+            f"Nº do estande: {texto_ou_linha(orcamento.evento_estande, tamanho=14)}   "
+            f"Área: {texto_ou_linha(orcamento.evento_area, tamanho=12)}"
+        ),
     ]
 
-    if orcamento.evento_nome:
-        partes.append(_rtf_paragrafo(f"Evento/Projeto: {orcamento.evento_nome}"))
-    if orcamento.evento_local:
-        partes.append(_rtf_paragrafo(f"Local: {orcamento.evento_local}"))
-    if orcamento.evento_periodo:
-        partes.append(_rtf_paragrafo(f"Período: {orcamento.evento_periodo}"))
-    if orcamento.evento_estande:
-        partes.append(_rtf_paragrafo(f"Estande: {orcamento.evento_estande}"))
-    if orcamento.evento_area:
-        partes.append(_rtf_paragrafo(f"Área: {orcamento.evento_area}"))
-
     if orcamento.mostrar_contatos_evento_no_memorial:
-        if orcamento.evento_contato:
-            partes.append(_rtf_paragrafo(f"A/C: {orcamento.evento_contato}"))
-        if orcamento.evento_telefone:
-            partes.append(_rtf_paragrafo(f"Telefone: {orcamento.evento_telefone}"))
-        if orcamento.evento_email:
-            partes.append(_rtf_paragrafo(f"E-mail: {orcamento.evento_email}"))
+        partes.extend(
+            [
+                _rtf_paragrafo(f"A/C: {texto_ou_linha(orcamento.evento_contato, tamanho=40)}"),
+                _rtf_paragrafo(f"Fone: {texto_ou_linha(orcamento.evento_telefone, tamanho=32)}"),
+                _rtf_paragrafo(f"E-mail: {texto_ou_linha(orcamento.evento_email, tamanho=45)}"),
+            ]
+        )
 
-    partes.append(_rtf_paragrafo("Itens e especificações", negrito=True, espacamento=220))
+    partes.extend(
+        [
+            _rtf_paragrafo("Prezados,"),
+            _rtf_paragrafo(
+                "Conforme solicitado, apresento proposta para prestação de serviços, locação, montagem e desmontagem de estande, conforme descritivo abaixo:"
+            ),
+            _rtf_paragrafo("MEMORIAL DESCRITIVO", negrito=True, espacamento=220),
+            _rtf_paragrafo(f"Título: {orcamento.titulo}"),
+        ]
+    )
+
     for grupo in orcamento.subtotais_por_categoria():
-        partes.append(_rtf_paragrafo(grupo["categoria_nome"].upper(), negrito=True, espacamento=200))
+        partes.append(_rtf_paragrafo(f"{grupo['categoria_nome'].upper()}:", negrito=True, espacamento=200))
+        partes.append(_rtf_paragrafo("ESPECIFICAÇÕES TÉCNICAS:", negrito=True, espacamento=180))
         for item in grupo["itens"]:
             descricao = (item.descricao or "").strip() or item.nome
             quantidade = formatar_decimal_br(item.quantidade)
@@ -924,63 +970,59 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
         partes.append(_rtf_paragrafo(f"Subtotal da categoria: {formatar_moeda(grupo['subtotal'])}"))
 
     if orcamento.mostrar_financeiro_no_memorial:
-        partes.append(_rtf_paragrafo("Especificações financeiras", negrito=True, espacamento=220))
-        partes.append(_rtf_paragrafo(f"Valor total final: {formatar_moeda(orcamento.total_final)}"))
+        partes.append(_rtf_paragrafo("ESPECIFICAÇÕES FINANCEIRAS", negrito=True, espacamento=220))
+        partes.append(_rtf_paragrafo(f"Valor total: {formatar_moeda(orcamento.total_final)}"))
         if orcamento.valor_locacao is not None:
-            partes.append(_rtf_paragrafo(f"Valor de locação: {formatar_moeda(orcamento.valor_locacao)}"))
+            partes.append(_rtf_paragrafo(f"Locação: {formatar_moeda(orcamento.valor_locacao)}"))
         if orcamento.valor_servico is not None:
-            partes.append(_rtf_paragrafo(f"Valor de serviço: {formatar_moeda(orcamento.valor_servico)}"))
-        validade_texto = formatar_data(orcamento.validade_em)
-        if configuracao and configuracao.validade_padrao_proposta and not orcamento.validade_em:
-            validade_texto = f"{configuracao.validade_padrao_proposta} dias"
-        if validade_texto and validade_texto != "-":
-            partes.append(_rtf_paragrafo(f"Validade da proposta: {validade_texto}"))
+            partes.append(_rtf_paragrafo(f"Serviço: {formatar_moeda(orcamento.valor_servico)}"))
         if orcamento.condicoes_pagamento:
             partes.append(_rtf_paragrafo(f"Condições de pagamento: {orcamento.condicoes_pagamento}"))
         if configuracao and configuracao.dados_bancarios:
             partes.append(_rtf_paragrafo(f"Dados bancários: {configuracao.dados_bancarios}"))
         if configuracao and configuracao.chave_pix:
             partes.append(_rtf_paragrafo(f"Chave PIX: {configuracao.chave_pix}"))
+        validade_texto = formatar_data(orcamento.validade_em)
+        if configuracao and configuracao.validade_padrao_proposta and not orcamento.validade_em:
+            validade_texto = f"{configuracao.validade_padrao_proposta} dias"
+        if validade_texto and validade_texto != "-":
+            partes.append(_rtf_paragrafo(f"Validade da proposta: {validade_texto}"))
 
     if orcamento.servicos_taxas_inclusos:
-        partes.append(_rtf_paragrafo("Serviços e taxas inclusos", negrito=True, espacamento=220))
+        partes.append(_rtf_paragrafo("SERVIÇOS E TAXAS", negrito=True, espacamento=220))
         partes.append(_rtf_paragrafo(orcamento.servicos_taxas_inclusos))
+
     if orcamento.mostrar_observacoes_gerais_no_relatorio and orcamento.observacoes_gerais:
-        partes.append(_rtf_paragrafo("Observações", negrito=True, espacamento=220))
+        partes.append(_rtf_paragrafo("OBSERVAÇÕES", negrito=True, espacamento=220))
         partes.append(_rtf_paragrafo(orcamento.observacoes_gerais))
 
     if orcamento.mostrar_dados_contratuais_no_memorial:
-        dados_contratuais = []
-        if orcamento.contrato_razao_social:
-            dados_contratuais.append(f"Razão social: {orcamento.contrato_razao_social}")
-        if orcamento.contrato_cnpj:
-            dados_contratuais.append(f"CNPJ: {orcamento.contrato_cnpj}")
-        if orcamento.contrato_inscricao_estadual:
-            dados_contratuais.append(f"Inscrição estadual: {orcamento.contrato_inscricao_estadual}")
-        if orcamento.contrato_endereco:
-            dados_contratuais.append(f"Endereço: {orcamento.contrato_endereco}")
-        if orcamento.contrato_cidade:
-            cidade_contrato = orcamento.contrato_cidade
-            if orcamento.contrato_cep:
-                cidade_contrato = f"{cidade_contrato} | CEP {orcamento.contrato_cep}"
-            dados_contratuais.append(f"Cidade: {cidade_contrato}")
-        elif orcamento.contrato_cep:
-            dados_contratuais.append(f"CEP: {orcamento.contrato_cep}")
-        if orcamento.contrato_responsavel_nome:
-            responsavel = orcamento.contrato_responsavel_nome
-            if orcamento.contrato_cargo_funcao:
-                responsavel = f"{responsavel} ({orcamento.contrato_cargo_funcao})"
-            dados_contratuais.append(f"Responsável: {responsavel}")
-        if orcamento.contrato_responsavel_documento:
-            dados_contratuais.append(f"Documento: {orcamento.contrato_responsavel_documento}")
-        if orcamento.contrato_telefone:
-            dados_contratuais.append(f"Telefone: {orcamento.contrato_telefone}")
-        if orcamento.contrato_email:
-            dados_contratuais.append(f"E-mail: {orcamento.contrato_email}")
-        if dados_contratuais:
-            partes.append(_rtf_paragrafo("Dados contratuais", negrito=True, espacamento=220))
-            for linha in dados_contratuais:
-                partes.append(_rtf_paragrafo(linha, espacamento=140))
+        partes.append(_rtf_paragrafo("DADOS PARA CONTRATO", negrito=True, espacamento=220))
+        partes.extend(
+            [
+                _rtf_paragrafo(f"Razão Social: {texto_ou_linha(orcamento.contrato_razao_social, tamanho=32)}"),
+                _rtf_paragrafo(f"CNPJ: {texto_ou_linha(orcamento.contrato_cnpj, tamanho=24)}"),
+                _rtf_paragrafo(f"Endereço: {texto_ou_linha(orcamento.contrato_endereco, tamanho=36)}"),
+                _rtf_paragrafo(
+                    f"Cidade: {texto_ou_linha(orcamento.contrato_cidade, tamanho=18)}   "
+                    f"CEP: {texto_ou_linha(orcamento.contrato_cep, tamanho=12)}   "
+                    f"Inscrição Estadual: {texto_ou_linha(orcamento.contrato_inscricao_estadual, tamanho=16)}"
+                ),
+                _rtf_paragrafo(
+                    "Nome da pessoa responsável pela assinatura do contrato: "
+                    f"{texto_ou_linha(orcamento.contrato_responsavel_nome, tamanho=28)}"
+                ),
+                _rtf_paragrafo(
+                    "RG e CPF da pessoa responsável pela assinatura do contrato: "
+                    f"{texto_ou_linha(orcamento.contrato_responsavel_documento, tamanho=24)}"
+                ),
+                _rtf_paragrafo(
+                    f"Cargo ou Função: {texto_ou_linha(orcamento.contrato_cargo_funcao, tamanho=24)}   "
+                    f"Telefone de contato: {texto_ou_linha(orcamento.contrato_telefone, tamanho=18)}"
+                ),
+                _rtf_paragrafo(f"E-mail para envio do contrato: {texto_ou_linha(orcamento.contrato_email, tamanho=32)}"),
+            ]
+        )
 
     if orcamento.mostrar_informacoes_complementares_no_memorial:
         informacoes_complementares = "\n\n".join(
@@ -992,20 +1034,14 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
             if parte
         )
         if informacoes_complementares:
-            partes.append(_rtf_paragrafo("Informações complementares", negrito=True, espacamento=220))
+            partes.append(_rtf_paragrafo("INFORMAÇÕES COMPLEMENTARES", negrito=True, espacamento=220))
             partes.append(_rtf_paragrafo(informacoes_complementares))
 
-    assinatura_linhas = []
-    if configuracao and configuracao.assinatura_nome:
-        assinatura_linhas.append(configuracao.assinatura_nome)
+    partes.append(_rtf_paragrafo(texto_ou_linha(getattr(configuracao, "assinatura_nome", ""), tamanho=36), negrito=True, espacamento=220))
     if configuracao and configuracao.assinatura_cargo:
-        assinatura_linhas.append(configuracao.assinatura_cargo)
+        partes.append(_rtf_paragrafo(configuracao.assinatura_cargo, espacamento=140))
     if configuracao and configuracao.assinatura_contato:
-        assinatura_linhas.append(configuracao.assinatura_contato)
-    if assinatura_linhas:
-        partes.append(_rtf_paragrafo("Assinatura", negrito=True, espacamento=220))
-        for linha in assinatura_linhas:
-            partes.append(_rtf_paragrafo(linha, espacamento=140))
+        partes.append(_rtf_paragrafo(configuracao.assinatura_contato, espacamento=140))
 
     partes.append("}")
     return "".join(partes).encode("utf-8")
