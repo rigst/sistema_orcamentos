@@ -82,6 +82,36 @@ def formatar_data(valor: date | None) -> str:
     return valor.strftime("%d/%m/%Y")
 
 
+def formatar_unidade_relatorio(item) -> str:
+    unidade = (item.unidade_medida or "").strip()
+    quantidade = item.quantidade
+    singular = quantidade == 1
+
+    if unidade == "un":
+        return "Unidade" if singular else "Unidades"
+    if unidade == "hr":
+        return "Hora" if singular else "Horas"
+    if unidade == "dia":
+        return "Dia" if singular else "Dias"
+    if unidade == "m":
+        return "Metro" if singular else "Metros"
+    if unidade == "m2":
+        return "Metro quadrado" if singular else "Metros quadrados"
+    if unidade == "m3":
+        return "Metro cúbico" if singular else "Metros cúbicos"
+    if unidade == "kg":
+        return "Quilo" if singular else "Quilos"
+    if unidade == "cx":
+        return "Caixa" if singular else "Caixas"
+    if unidade == "pct":
+        return "Pacote" if singular else "Pacotes"
+    if unidade == "sv":
+        return "Serviço" if singular else "Serviços"
+    if unidade == "-":
+        return "-"
+    return item.get_unidade_medida_display()
+
+
 def registrar_fontes_pdf():
     try:
         pdfmetrics.getFont(FONT_REGULAR)
@@ -115,7 +145,7 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
                 <Cell><Data ss:Type="String">{escape(item.nome)}</Data></Cell>
                 <Cell><Data ss:Type="String">{texto_planilha(item.descricao or "")}</Data></Cell>
                 <Cell><Data ss:Type="Number">{item.quantidade}</Data></Cell>
-                <Cell><Data ss:Type="String">{escape(item.get_unidade_medida_display())}</Data></Cell>
+                <Cell><Data ss:Type="String">{escape(formatar_unidade_relatorio(item))}</Data></Cell>
                 <Cell><Data ss:Type="Number">{item.valor_unitario}</Data></Cell>
                 <Cell><Data ss:Type="Number">{item.desconto_valor}</Data></Cell>
                 <Cell><Data ss:Type="Number">{item.desconto_percentual}</Data></Cell>
@@ -505,7 +535,7 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
             [
                 Paragraph(str(item.ordem), styles["body"]),
                 Paragraph("<br/>".join(detalhes), styles["body"]),
-                Paragraph(f"{formatar_decimal_br(item.quantidade)}<br/>{item.get_unidade_medida_display()}", styles["body"]),
+                Paragraph(f"{formatar_decimal_br(item.quantidade)}<br/>{formatar_unidade_relatorio(item)}", styles["body"]),
                 Paragraph(formatar_moeda(item.valor_unitario), styles["body"]),
                 Paragraph(f"<b>{formatar_moeda(item.subtotal)}</b>", styles["body"]),
             ]
@@ -723,7 +753,7 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
             quantidade = formatar_decimal_br(item.quantidade)
             story.append(
                 Paragraph(
-                    f"{quantidade} {escape(item.get_unidade_medida_display())} de {descricao.replace(chr(10), '<br/>')}",
+                    f"{quantidade} {escape(formatar_unidade_relatorio(item))} de {descricao.replace(chr(10), '<br/>')}",
                     styles["memorial_bullet"],
                     bulletText="▪",
                 )
@@ -890,7 +920,7 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
         for item in grupo["itens"]:
             descricao = (item.descricao or "").strip() or item.nome
             quantidade = formatar_decimal_br(item.quantidade)
-            partes.append(_rtf_paragrafo(f"- {quantidade} {item.get_unidade_medida_display()} de {descricao}", espacamento=140))
+            partes.append(_rtf_paragrafo(f"- {quantidade} {formatar_unidade_relatorio(item)} de {descricao}", espacamento=140))
         partes.append(_rtf_paragrafo(f"Subtotal da categoria: {formatar_moeda(grupo['subtotal'])}"))
 
     if orcamento.mostrar_financeiro_no_memorial:
