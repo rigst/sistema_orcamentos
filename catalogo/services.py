@@ -210,7 +210,8 @@ def _normalizar_unidade(unidade):
 
 def exportar_catalogo_excel(itens) -> bytes:
     linhas_itens = []
-    for item in itens.select_related("categoria"):
+    itens_iteraveis = itens.select_related("categoria") if hasattr(itens, "select_related") else itens
+    for item in itens_iteraveis:
         linhas_itens.append(
             f"""
             <Row>

@@ -1,9 +1,9 @@
 from django.contrib import messages
-from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
+from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from .forms import ClienteForm
 from .models import Cliente
@@ -17,14 +17,6 @@ def cliente_lista(request):
 
     clientes = queryset_da_empresa(Cliente.objects.all(), request.user)
 
-    if busca:
-        clientes = clientes.filter(
-            Q(nome_razao_social__icontains=busca)
-            | Q(nome_fantasia__icontains=busca)
-            | Q(cpf_cnpj__icontains=busca)
-            | Q(email__icontains=busca)
-        )
-
     if ativo != "inativos":
         clientes = clientes.filter(ativo=True)
     else:
@@ -37,6 +29,12 @@ def cliente_lista(request):
         "recentes": "-atualizado_em",
     }
     clientes = clientes.order_by(ordenacoes.get(ordenar, "nome_razao_social"))
+    if busca:
+        clientes = filter_ranked_search(
+            clientes,
+            busca,
+            ("nome_razao_social", "nome_fantasia", "cpf_cnpj", "email"),
+        )
     page_obj = paginate_queryset(request, clientes, per_page=12)
 
     context = {

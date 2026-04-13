@@ -1,10 +1,10 @@
 from django.contrib import messages
 from django.http import HttpResponse
-from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
+from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from .forms import CategoriaItemForm, ImportarCatalogoExcelForm, ItemCatalogoForm
 from .models import CategoriaItem, ItemCatalogo
@@ -17,14 +17,6 @@ def obter_queryset_itens_catalogo(request):
     ordenar = request.GET.get("sort", "nome")
 
     itens = queryset_da_empresa(ItemCatalogo.objects.select_related("categoria").all(), request.user)
-
-    if busca:
-        itens = itens.filter(
-            Q(codigo__icontains=busca)
-            | Q(nome__icontains=busca)
-            | Q(descricao_padrao__icontains=busca)
-            | Q(categoria__nome__icontains=busca)
-        )
 
     if categoria_id:
         itens = itens.filter(categoria_id=categoria_id)
@@ -43,6 +35,12 @@ def obter_queryset_itens_catalogo(request):
         "recentes": "-atualizado_em",
     }
     itens = itens.order_by(ordenacoes.get(ordenar, "nome"))
+    if busca:
+        itens = filter_ranked_search(
+            itens,
+            busca,
+            ("codigo", "nome", "descricao_padrao", "categoria__nome"),
+        )
     return itens, busca, categoria_id, ativo, ordenar
 
 
@@ -54,9 +52,6 @@ def categoria_lista(request):
 
     categorias = queryset_da_empresa(CategoriaItem.objects.all(), request.user)
 
-    if busca:
-        categorias = categorias.filter(nome__icontains=busca)
-
     if ativo != "inativas":
         categorias = categorias.filter(ativo=True)
     else:
@@ -67,6 +62,8 @@ def categoria_lista(request):
         "recentes": "-atualizado_em",
     }
     categorias = categorias.order_by(ordenacoes.get(ordenar, "nome"))
+    if busca:
+        categorias = filter_ranked_search(categorias, busca, ("nome",))
     page_obj = paginate_queryset(request, categorias, per_page=12)
 
     context = {

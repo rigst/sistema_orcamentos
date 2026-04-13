@@ -1,7 +1,6 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
-from django.db.models import Q
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -11,6 +10,7 @@ from urllib.parse import urlencode
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
+from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from catalogo.models import CategoriaItem
 from .forms import ItemOrcamentoForm, OrcamentoForm
@@ -73,16 +73,12 @@ def obter_estado_itens(request, orcamento):
     ordenacao = (origem.get("item_sort") or "ordem").strip()
 
     itens = orcamento.itens.select_related("item_catalogo__categoria")
-    if busca:
-        itens = itens.filter(
-            Q(nome__icontains=busca)
-            | Q(codigo_item__icontains=busca)
-            | Q(descricao__icontains=busca)
-        )
     if categoria:
         itens = itens.filter(item_catalogo__categoria_id=categoria)
 
     itens = itens.order_by(*ITEM_SORT_MAP.get(ordenacao, ITEM_SORT_MAP["ordem"]))
+    if busca:
+        itens = filter_ranked_search(itens, busca, ("nome", "codigo_item", "descricao"))
     categorias = (
         queryset_da_empresa(CategoriaItem.objects.filter(itens__itens_em_orcamentos__orcamento=orcamento), request.user)
         .distinct()
@@ -195,13 +191,6 @@ def orcamento_lista(request):
 
     orcamentos = queryset_da_empresa(Orcamento.objects.select_related("cliente").all(), request.user)
 
-    if busca:
-        orcamentos = orcamentos.filter(
-            Q(numero__icontains=busca)
-            | Q(cliente__nome_razao_social__icontains=busca)
-            | Q(titulo__icontains=busca)
-        )
-
     if status:
         orcamentos = orcamentos.filter(status=status)
 
@@ -219,6 +208,12 @@ def orcamento_lista(request):
         "valor_menor": "total_final",
     }
     orcamentos = orcamentos.order_by(ordenacoes.get(ordenar, "-criado_em"))
+    if busca:
+        orcamentos = filter_ranked_search(
+            orcamentos,
+            busca,
+            ("numero", "cliente__nome_razao_social", "titulo"),
+        )
     page_obj = paginate_queryset(request, orcamentos, per_page=12)
 
     context = {
