@@ -13,7 +13,7 @@
             </button>
         </div>
     </div>
-    <form method="post" action="{% if item %}{% url 'orcamentos:item_editar' orcamento.pk item.pk %}{% else %}{% url 'orcamentos:item_criar' orcamento.pk %}{% endif %}" class="item-builder-form" data-item-form data-unsaved-warning="1" data-draft-key="orcamento:{{ orcamento.pk }}:item:{% if item %}{{ item.pk }}{% else %}novo{% endif %}" data-draft-status-target="#item-draft-status-{{ item.pk|default:'novo' }}" data-clear-draft-on-submit="1">
+    <form method="post" action="{% if item %}{% url 'orcamentos:item_editar' orcamento.pk item.pk %}{% else %}{% url 'orcamentos:item_criar' orcamento.pk %}{% endif %}" class="item-builder-form" novalidate data-item-form data-unsaved-warning="1" data-draft-key="orcamento:{{ orcamento.pk }}:item:{% if item %}{{ item.pk }}{% else %}novo{% endif %}" data-draft-status-target="#item-draft-status-{{ item.pk|default:'novo' }}" data-clear-draft-on-submit="1">
         {% csrf_token %}
         <input type="hidden" name="item_q" value="{{ item_q }}">
         <input type="hidden" name="item_categoria" value="{{ item_categoria }}">

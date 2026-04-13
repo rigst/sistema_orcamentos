@@ -112,6 +112,7 @@ class OrcamentoForm(forms.ModelForm):
                 widget.attrs.setdefault("placeholder", placeholders.get(nome, ""))
 
         self.fields["numero"].required = False
+        self.fields["data_emissao"].required = False
         self.fields["numero"].widget.attrs.update(
             {
                 "readonly": "readonly",
@@ -181,7 +182,8 @@ class OrcamentoForm(forms.ModelForm):
         cleaned_data = super().clean()
         configuracao = cleaned_data.get("configuracao_empresa")
         validade_em = cleaned_data.get("validade_em")
-        data_emissao = cleaned_data.get("data_emissao")
+        data_emissao = cleaned_data.get("data_emissao") or localdate()
+        cleaned_data["data_emissao"] = data_emissao
         if configuracao and not validade_em:
             validade_calculada = calcular_validade_inicial_configuracao(configuracao, data_emissao)
             if validade_calculada:

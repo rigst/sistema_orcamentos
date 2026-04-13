@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StölbenOrçamentos{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260412-mobilefix1">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260412-mobilefix5">
 </head>
 <body>
     <header class="site-header">
@@ -15,44 +15,52 @@
                     <a href="{% url 'dashboard' %}" class="brand">Stölben<span>Orçamentos</span></a>
 
                     {% if user.is_authenticated %}
-                        <div class="header-user-meta">
-                            <span>Olá, {{ user }}</span>
-                            <span class="header-separator">|</span>
-                            {% if empresas_usuario|length > 1 %}
-                                <form action="{% url 'alternar_empresa' %}" method="post" class="header-company-switch">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                    <label for="empresa-ativa-select" style="display:none;">Empresa ativa</label>
-                                    <select id="empresa-ativa-select" name="empresa_id" class="header-company-select js-auto-submit">
-                                        {% for empresa_item in empresas_usuario %}
-                                            <option value="{{ empresa_item.pk }}" {% if empresa_ativa and empresa_item.pk == empresa_ativa.pk %}selected{% endif %}>
-                                                {{ empresa_item.nome }}
-                                            </option>
-                                        {% endfor %}
-                                    </select>
-                                </form>
-                            {% elif user.eh_visitante %}
-                                <span>Empresa Visitante</span>
-                            {% elif empresa_ativa %}
-                                <span>{{ empresa_ativa.nome }}</span>
-                            {% else %}
-                                <span>{{ user.nome_empresa }}</span>
-                            {% endif %}
-                            <span class="header-separator">|</span>
-                            <span class="user-role">{{ user.get_perfil_display }}</span>
-                            <span class="header-separator">|</span>
-                            <span class="header-logout">
-                                <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                        <button class="nav-toggle js-nav-toggle" type="button" aria-expanded="false" aria-controls="header-user-meta header-main-links">
+                            <span class="visually-hidden">Abrir menu</span>
+                            <span class="nav-toggle-bar" aria-hidden="true"></span>
+                            <span class="nav-toggle-bar" aria-hidden="true"></span>
+                            <span class="nav-toggle-bar" aria-hidden="true"></span>
+                        </button>
+
+                        <div id="header-user-meta" class="header-user-meta">
+                            <div class="header-user-info">
+                                <span class="header-user-greeting">Olá, {{ user }}</span>
+                                <div class="header-user-company">
+                                    {% if empresas_usuario|length > 1 %}
+                                        <form action="{% url 'alternar_empresa' %}" method="post" class="header-company-switch">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <label for="empresa-ativa-select" style="display:none;">Empresa ativa</label>
+                                            <select id="empresa-ativa-select" name="empresa_id" class="header-company-select js-auto-submit">
+                                                {% for empresa_item in empresas_usuario %}
+                                                    <option value="{{ empresa_item.pk }}" {% if empresa_ativa and empresa_item.pk == empresa_ativa.pk %}selected{% endif %}>
+                                                        {{ empresa_item.nome }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                    {% elif user.eh_visitante %}
+                                        <span>Empresa Visitante</span>
+                                    {% elif empresa_ativa %}
+                                        <span>{{ empresa_ativa.nome }}</span>
+                                    {% else %}
+                                        <span>{{ user.nome_empresa }}</span>
+                                    {% endif %}
+                                </div>
+                                <span class="user-role">{{ user.get_perfil_display }}</span>
+                            </div>
+                            <div class="header-user-actions">
+                                <form action="{% url 'logout' %}" method="post">
                                     {% csrf_token %}
                                     <button class="nav-logout" type="submit">Sair</button>
                                 </form>
-                            </span>
+                            </div>
                         </div>
                     {% endif %}
                 </div>
 
                 {% if user.is_authenticated %}
-                    <div class="nav-bottom">
+                    <div id="header-main-links" class="nav-bottom">
                         <ul class="nav-links">
                             <li><a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
                             {% if user.pode_visualizar_orcamentos %}
@@ -92,6 +100,36 @@
 
     <script nonce="{{ request.csp_nonce }}">
     (() => {
+      const DRAFT_STORAGE_PREFIX = "codex-draft:";
+      const DRAFT_CONTEXT_KEY = "codex-draft-context-v1";
+      const CURRENT_DRAFT_CONTEXT = {
+        authenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+        userId: "{% if user.is_authenticated %}{{ user.pk }}{% endif %}",
+        companyId: "{% if user.is_authenticated and empresa_ativa %}{{ empresa_ativa.pk }}{% endif %}",
+      };
+
+      const clearDraftStorage = () => {
+        for (let idx = localStorage.length - 1; idx >= 0; idx -= 1) {
+          const key = localStorage.key(idx);
+          if (key && key.startsWith(DRAFT_STORAGE_PREFIX)) {
+            localStorage.removeItem(key);
+          }
+        }
+      };
+
+      const syncDraftContext = () => {
+        try {
+          const serializedCurrent = JSON.stringify(CURRENT_DRAFT_CONTEXT);
+          const serializedPrevious = localStorage.getItem(DRAFT_CONTEXT_KEY);
+          if (serializedPrevious && serializedPrevious !== serializedCurrent) {
+            clearDraftStorage();
+          }
+          localStorage.setItem(DRAFT_CONTEXT_KEY, serializedCurrent);
+        } catch (error) {
+          // Ignore storage access errors and keep app usable.
+        }
+      };
+
       const normalizeDecimal = (value) => {
         const raw = String(value || "").replace(/[^\d,.-]/g, "").trim();
         if (!raw) return "";
@@ -404,6 +442,95 @@
         });
       };
 
+      const showGlobalSaveErrorNotice = () => {
+        const hasFormErrors = document.querySelector(".errorlist, .form-errors");
+        if (!hasFormErrors) return;
+
+        const hasPostForm = Array.from(document.querySelectorAll("form")).some(
+          (form) => (form.getAttribute("method") || "get").toLowerCase() === "post"
+        );
+        if (!hasPostForm) return;
+
+        let flashStack = document.querySelector("main.container > .flash-stack");
+        if (!flashStack) {
+          const main = document.querySelector("main.container");
+          if (!main) return;
+          flashStack = document.createElement("div");
+          flashStack.className = "flash-stack";
+          flashStack.setAttribute("role", "status");
+          flashStack.setAttribute("aria-live", "polite");
+          flashStack.innerHTML = '<ul class="flash-list"></ul>';
+          main.insertBefore(flashStack, main.firstChild);
+        }
+
+        const flashList = flashStack.querySelector(".flash-list");
+        if (!flashList) return;
+        if (flashList.querySelector("[data-global-save-error='1']")) return;
+
+        const item = document.createElement("li");
+        item.className = "flash-message flash-error";
+        item.dataset.globalSaveError = "1";
+        item.textContent = "Não foi possível salvar. Revise os campos obrigatórios e os dados destacados.";
+        flashList.prepend(item);
+      };
+
+      const bindMobileHeaderToggle = () => {
+        const nav = document.querySelector(".nav");
+        const toggle = document.querySelector(".js-nav-toggle");
+        const userMeta = document.getElementById("header-user-meta");
+        const navBottom = document.getElementById("header-main-links");
+        if (!nav || !toggle || !userMeta || !navBottom) return;
+
+        const media = window.matchMedia("(max-width: 900px)");
+
+        const sync = () => {
+          if (!media.matches) {
+            nav.classList.remove("nav-open");
+            toggle.setAttribute("aria-expanded", "false");
+            userMeta.hidden = false;
+            navBottom.hidden = false;
+            return;
+          }
+
+          const expanded = nav.classList.contains("nav-open");
+          toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+          userMeta.hidden = !expanded;
+          navBottom.hidden = !expanded;
+        };
+
+        if (toggle.dataset.toggleBound !== "1") {
+          toggle.dataset.toggleBound = "1";
+          toggle.addEventListener("click", () => {
+            nav.classList.toggle("nav-open");
+            sync();
+          });
+        }
+
+        if (media.addEventListener) {
+          media.addEventListener("change", sync);
+        } else if (media.addListener) {
+          media.addListener(sync);
+        }
+
+        sync();
+      };
+
+      const setTableCardLabels = (scope = document) => {
+        scope.querySelectorAll(".table-wrap > table").forEach((table) => {
+          if (table.dataset.cardReady === "1") return;
+          table.dataset.cardReady = "1";
+
+          const headers = Array.from(table.querySelectorAll("thead th")).map((th) => th.textContent.trim());
+          table.querySelectorAll("tbody tr").forEach((row) => {
+            const cells = Array.from(row.children).filter((el) => el.tagName === "TD");
+            cells.forEach((cell, index) => {
+              if (cell.hasAttribute("data-label")) return;
+              cell.setAttribute("data-label", headers[index] || "");
+            });
+          });
+        });
+      };
+
       document.addEventListener("submit", (event) => {
         const form = event.target;
         if (!(form instanceof HTMLFormElement)) return;
@@ -421,17 +548,23 @@
         event.returnValue = "";
       });
 
+      syncDraftContext();
+      showGlobalSaveErrorNotice();
       initDecimalInputs();
       initUnsavedWarnings();
       initDraftPersistence();
       bindAutoSubmitControls();
       bindConfirmForms();
+      bindMobileHeaderToggle();
+      setTableCardLabels();
       document.addEventListener("codex:refresh-decimals", (event) => {
         initDecimalInputs(event.detail?.scope || document);
         initUnsavedWarnings(event.detail?.scope || document);
         initDraftPersistence(event.detail?.scope || document);
         bindAutoSubmitControls(event.detail?.scope || document);
         bindConfirmForms(event.detail?.scope || document);
+        bindMobileHeaderToggle();
+        setTableCardLabels(event.detail?.scope || document);
       });
     })();
     </script>

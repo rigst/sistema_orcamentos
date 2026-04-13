@@ -50,7 +50,7 @@
                     {% endif %}
                 </div>
             </div>
-            <form method="post" id="orcamento-main-form" data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
+            <form method="post" id="orcamento-main-form" novalidate data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
                 {% csrf_token %}
                 {% if not orcamento %}
                     {{ form.status.as_hidden }}
@@ -161,13 +161,13 @@
                         <div class="form-submenu-body form-grid">
                         {% if orcamento %}
                             <div>
-                                <label for="{{ form.status.id_for_label }}">Status{% if form.status.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                                <label for="{{ form.status.id_for_label }}">Status</label>
                                 {{ form.status }}
                                 {{ form.status.errors }}
                             </div>
                         {% endif %}
                         <div>
-                            <label for="{{ form.data_emissao.id_for_label }}">Data de emissão{% if form.data_emissao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
                             {{ form.data_emissao }}
                             {{ form.data_emissao.errors }}
                         </div>
@@ -381,6 +381,18 @@
 
 <script nonce="{{ request.csp_nonce }}">
 (() => {
+  const openSectionsWithErrors = () => {
+    const hasErrors = document.querySelector(".form-errors, .errorlist");
+    if (!hasErrors) return;
+    document.querySelectorAll(".form-submenu").forEach((details) => {
+      if (details.querySelector(".errorlist")) {
+        details.open = true;
+      }
+    });
+  };
+
+  openSectionsWithErrors();
+
   const initItemBuilders = (scope = document) => {
     scope.querySelectorAll("[data-item-builder]").forEach((root) => {
       if (root.dataset.bound === "1") return;
