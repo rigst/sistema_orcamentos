@@ -82,6 +82,24 @@ class AdminPermissaoPerfilTests(TestCase):
         self.assertContains(response, 'for="id_name"', html=False)
         self.assertNotContains(response, 'id_permissions')
 
+    def test_superusuario_com_perfil_padrao_acessa_telas_restritas_do_admin(self):
+        user = get_user_model().objects.create_superuser(
+            username="root_admin",
+            email="root_admin@example.com",
+            password="senha-forte-123",
+        )
+        self.client.force_login(user)
+
+        response_usuarios = self.client.get(reverse("admin:usuarios_usuario_add"))
+        response_categoria = self.client.get(reverse("admin:catalogo_categoriaitem_add"))
+        response_item = self.client.get(reverse("admin:catalogo_itemcatalogo_add"))
+        response_empresa = self.client.get(reverse("admin:relatorios_configuracaoempresa_add"))
+
+        self.assertEqual(response_usuarios.status_code, 200)
+        self.assertEqual(response_categoria.status_code, 200)
+        self.assertEqual(response_item.status_code, 200)
+        self.assertEqual(response_empresa.status_code, 200)
+
 
 class UsuarioPermissaoPropriedadesTests(TestCase):
     def test_admin_tem_capacidades_de_gestao(self):
@@ -111,6 +129,19 @@ class UsuarioPermissaoPropriedadesTests(TestCase):
         self.assertFalse(user.pode_gerenciar_catalogo)
         self.assertFalse(user.pode_gerenciar_relatorios)
         self.assertFalse(user.pode_gerenciar_orcamentos)
+
+    def test_superusuario_com_perfil_padrao_tem_capacidades_de_admin(self):
+        user = get_user_model().objects.create_superuser(
+            username="super_props",
+            email="super_props@example.com",
+            password="senha-forte-123",
+        )
+
+        self.assertTrue(user.eh_admin_perfil)
+        self.assertTrue(user.pode_gerenciar_clientes)
+        self.assertTrue(user.pode_gerenciar_catalogo)
+        self.assertTrue(user.pode_gerenciar_relatorios)
+        self.assertTrue(user.pode_gerenciar_orcamentos)
 
 
 class UsuarioVisitanteTests(TestCase):

@@ -24,7 +24,7 @@ class Usuario(AbstractUser):
 
     @property
     def eh_admin_perfil(self):
-        return self.perfil == "admin"
+        return self.is_superuser or self.perfil == "admin"
 
     @property
     def eh_orcamentista(self):
