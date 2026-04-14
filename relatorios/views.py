@@ -1,8 +1,9 @@
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
-from django.http import HttpResponse
+from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from mimetypes import guess_type
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
@@ -98,6 +99,25 @@ def configuracao_visualizar(request, pk):
             "somente_leitura": True,
         },
     )
+
+
+@require_capability("pode_visualizar_relatorios")
+def configuracao_logo(request, pk):
+    configuracao = get_object_or_404(
+        queryset_da_empresa(ConfiguracaoEmpresa.objects.filter(ativo=True), request.user),
+        pk=pk,
+    )
+    if not configuracao.logo:
+        raise Http404
+    try:
+        arquivo = configuracao.logo.open("rb")
+    except FileNotFoundError as exc:
+        raise Http404 from exc
+
+    tipo_conteudo, _ = guess_type(configuracao.logo.name or "")
+    response = FileResponse(arquivo, content_type=tipo_conteudo or "application/octet-stream")
+    response["Cache-Control"] = "private, max-age=300"
+    return response
 
 
 @require_capability("pode_gerenciar_relatorios")

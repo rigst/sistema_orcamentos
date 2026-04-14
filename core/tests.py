@@ -4,7 +4,7 @@ from pathlib import Path
 
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -124,6 +124,23 @@ class InfraestruturaTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertJSONEqual(response.content, {"status": "ok"})
+
+    @override_settings(HEALTHZ_TOKEN="segredo-monitoramento")
+    def test_healthz_com_token_requer_cabecalho_correto(self):
+        response_sem_token = self.client.get(reverse("healthz"))
+        response_token_invalido = self.client.get(
+            reverse("healthz"),
+            HTTP_X_HEALTHZ_TOKEN="token-incorreto",
+        )
+        response_token_valido = self.client.get(
+            reverse("healthz"),
+            HTTP_X_HEALTHZ_TOKEN="segredo-monitoramento",
+        )
+
+        self.assertEqual(response_sem_token.status_code, 404)
+        self.assertEqual(response_token_invalido.status_code, 404)
+        self.assertEqual(response_token_valido.status_code, 200)
+        self.assertJSONEqual(response_token_valido.content, {"status": "ok"})
 
 
 class MultiEmpresaAtivaTests(TestCase):

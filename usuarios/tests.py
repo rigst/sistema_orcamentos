@@ -1,11 +1,13 @@
 from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.test import RequestFactory
 from django.test import TestCase
 from django.urls import reverse
 
 from clientes.models import Cliente
 from orcamentos.models import Orcamento
 from relatorios.models import ConfiguracaoEmpresa
+from .views import UsuarioLoginView
 
 
 class AdminPermissaoPerfilTests(TestCase):
@@ -209,3 +211,25 @@ class UsuarioVisitanteTests(TestCase):
         self.assertEqual(response_relatorios.status_code, 200)
         self.assertNotContains(response_relatorios, "Empresa Sigilosa")
         self.assertEqual(response_cliente_direto.status_code, 404)
+
+
+class UsuarioVisitanteIpTests(TestCase):
+    def test_login_visitante_usa_ultimo_ip_de_x_forwarded_for(self):
+        request = RequestFactory().post(
+            reverse("login"),
+            HTTP_X_FORWARDED_FOR="198.51.100.10, 203.0.113.77",
+        )
+        view = UsuarioLoginView()
+        view.request = request
+
+        self.assertEqual(view._client_ip(), "203.0.113.77")
+
+    def test_login_visitante_cai_para_remote_addr_sem_x_forwarded_for(self):
+        request = RequestFactory().post(
+            reverse("login"),
+            REMOTE_ADDR="10.0.0.5",
+        )
+        view = UsuarioLoginView()
+        view.request = request
+
+        self.assertEqual(view._client_ip(), "10.0.0.5")

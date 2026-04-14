@@ -10,10 +10,9 @@ server {
         expires 30d;
     }
 
+    # Keep media private. Logos are served by Django with authz per company/group.
     location /media/ {
-        alias /var/www/sistema_orcamentos/shared/media/;
-        access_log off;
-        expires 7d;
+        return 403;
     }
 
     location / {

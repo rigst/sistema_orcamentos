@@ -39,6 +39,8 @@ Variáveis de produção mais importantes:
 
 - `DJANGO_ENV=production`
 - `DJANGO_SECRET_KEY` (segredo)
+- `DJANGO_HEALTHZ_TOKEN` (segredo para monitoramento do endpoint `/healthz/`)
+- `DJANGO_DEBUG_EXPOSE_MEDIA=False` (evita exposição direta de arquivos em ambiente web)
 - `DJANGO_DEBUG=False`
 - `DJANGO_ALLOWED_HOSTS`
 - `DJANGO_CSRF_TRUSTED_ORIGINS`
@@ -91,6 +93,7 @@ cp .env.production.example /var/www/sistema_orcamentos/shared/.env
 ```
 Edite `/var/www/sistema_orcamentos/shared/.env` e ajuste:
 - `DJANGO_SECRET_KEY` (obrigatório e secreto)
+- `DJANGO_HEALTHZ_TOKEN` (obrigatório em produção para proteger `/healthz/`)
 - `DJANGO_ALLOWED_HOSTS=app.seudominio.com`
 - `DJANGO_CSRF_TRUSTED_ORIGINS=https://app.seudominio.com`
 - `DATABASE_URL=postgresql://sistema_orcamentos_user:SENHA_FORTE_AQUI@127.0.0.1:5432/sistema_orcamentos`
@@ -138,7 +141,7 @@ sudo certbot --nginx -d app.seudominio.com
 
 12. Validação final
 ```bash
-curl -I https://app.seudominio.com/healthz/
+curl -I -H "X-Healthz-Token: SEU_TOKEN_HEALTHZ" https://app.seudominio.com/healthz/
 ```
 Resposta esperada: HTTP `200`.
 
@@ -168,6 +171,7 @@ sudo systemctl restart sistema_orcamentos.service
 Tratar como segredo:
 
 - `DJANGO_SECRET_KEY`
+- `DJANGO_HEALTHZ_TOKEN`
 - credenciais do PostgreSQL (`DATABASE_URL`)
 - credenciais Redis (se houver senha)
 - qualquer token/API key futuro

@@ -1,10 +1,12 @@
 from datetime import timedelta
+import secrets
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, DecimalField, Sum, Value
 from django.db.models.functions import Coalesce
-from django.http import JsonResponse
+from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
@@ -15,6 +17,11 @@ from orcamentos.models import Orcamento
 
 
 def healthz(request):
+    healthz_token = getattr(settings, "HEALTHZ_TOKEN", "")
+    if healthz_token:
+        token_recebido = request.headers.get("X-Healthz-Token", "").strip()
+        if not token_recebido or not secrets.compare_digest(token_recebido, healthz_token):
+            return HttpResponseNotFound()
     return JsonResponse({"status": "ok"})
 
 

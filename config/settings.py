@@ -47,6 +47,7 @@ if IS_PRODUCTION and SECRET_KEY == DEFAULT_SECRET_KEY:
     raise RuntimeError("Defina DJANGO_SECRET_KEY em produção.")
 
 DEBUG = env_bool("DJANGO_DEBUG", default=not IS_PRODUCTION)
+DEBUG_EXPOSE_MEDIA = env_bool("DJANGO_DEBUG_EXPOSE_MEDIA", default=False)
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
@@ -176,6 +177,7 @@ AUTH_USER_MODEL = "usuarios.Usuario"
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
+HEALTHZ_TOKEN = os.getenv("DJANGO_HEALTHZ_TOKEN", "").strip()
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]

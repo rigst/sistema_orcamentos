@@ -1,5 +1,6 @@
 from io import BytesIO
 
+from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -15,6 +16,11 @@ from .models import ConfiguracaoEmpresa
 
 
 class RelatoriosPermissaoTests(TestCase):
+    def gerar_logo_teste(self):
+        buffer = BytesIO()
+        Image.new("RGB", (180, 60), color=(80, 140, 220)).save(buffer, format="PNG")
+        return SimpleUploadedFile("logo.png", buffer.getvalue(), content_type="image/png")
+
     def test_orcamentista_nao_pode_criar_configuracao_empresa(self):
         user = get_user_model().objects.create_user(
             username="orcamentista",
@@ -63,6 +69,52 @@ class RelatoriosPermissaoTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_logo_configuracao_exige_login(self):
+        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Visivel", logo=self.gerar_logo_teste())
+
+        response = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao.pk]))
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse("login"), response.url)
+
+    def test_logo_configuracao_so_e_acessivel_na_mesma_empresa(self):
+        empresa_a = Group.objects.create(name="Empresa A")
+        empresa_b = Group.objects.create(name="Empresa B")
+        usuario_a = get_user_model().objects.create_user(
+            username="usuario_logo_a",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        usuario_a.groups.set([empresa_a])
+        usuario_b = get_user_model().objects.create_user(
+            username="usuario_logo_b",
+            password="senha-forte-123",
+            perfil="visualizador",
+        )
+        usuario_b.groups.set([empresa_b])
+
+        configuracao_a = ConfiguracaoEmpresa.objects.create(
+            nome_empresa="Empresa A",
+            empresa=empresa_a,
+            logo=self.gerar_logo_teste(),
+        )
+        configuracao_b = ConfiguracaoEmpresa.objects.create(
+            nome_empresa="Empresa B",
+            empresa=empresa_b,
+            logo=self.gerar_logo_teste(),
+        )
+
+        self.client.force_login(usuario_a)
+        response_propria = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao_a.pk]))
+        response_outra = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao_b.pk]))
+        self.client.force_login(usuario_b)
+        response_b = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao_b.pk]))
+
+        self.assertEqual(response_propria.status_code, 200)
+        self.assertEqual(response_propria["Content-Type"], "image/png")
+        self.assertEqual(response_outra.status_code, 404)
+        self.assertEqual(response_b.status_code, 200)
+
 
 class RelatoriosExportacaoTests(TestCase):
     def gerar_logo_teste(self):
@@ -109,6 +161,10 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Orçamento em rascunho")
         self.assertContains(response, "Logo da empresa")
+        self.assertContains(
+            response,
+            reverse("relatorios:configuracao_logo", args=[ConfiguracaoEmpresa.objects.get().pk]),
+        )
         self.assertContains(response, "R$ 15.000,00")
 
     def test_central_de_relatorio_atualiza_opcao_de_mostrar_ajustes(self):

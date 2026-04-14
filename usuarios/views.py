@@ -25,7 +25,9 @@ class UsuarioLoginView(LoginView):
     def _client_ip(self):
         forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR")
         if forwarded_for:
-            return forwarded_for.split(",")[0].strip()
+            # Behind nginx with `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for`,
+            # the right-most entry is the direct client IP observed by nginx.
+            return forwarded_for.split(",")[-1].strip()
         return self.request.META.get("REMOTE_ADDR", "")
 
     def post(self, request, *args, **kwargs):

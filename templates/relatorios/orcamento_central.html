@@ -28,7 +28,7 @@
             <h3>Resumo do documento</h3>
             {% if configuracao and configuracao.logo %}
                 <div class="report-logo-card">
-                    <img src="{{ configuracao.logo.url }}" alt="Logo da empresa" class="report-logo">
+                    <img src="{% url 'relatorios:configuracao_logo' configuracao.pk %}" alt="Logo da empresa" class="report-logo">
                 </div>
             {% endif %}
             <div class="report-summary-grid">
