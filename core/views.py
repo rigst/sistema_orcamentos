@@ -85,31 +85,6 @@ def dashboard(request):
 
 
 @login_required
-def manual(request):
-    perfis = [
-        {
-            "nome": "Administrador",
-            "descricao": "Acompanha o sistema inteiro e gerencia clientes, catálogo, empresa, orçamentos e usuários.",
-        },
-        {
-            "nome": "Orçamentista",
-            "descricao": "Trabalha com clientes e orçamentos, consulta catálogo e empresa, e acompanha relatórios.",
-        },
-        {
-            "nome": "Visualizador",
-            "descricao": "Consulta informações do sistema sem editar cadastros nem movimentar orçamentos.",
-        },
-    ]
-    return render(
-        request,
-        "core/manual.html",
-        {
-            "perfis_manual": perfis,
-        },
-    )
-
-
-@login_required
 @require_POST
 def alternar_empresa(request):
     empresa_id = request.POST.get("empresa_id")

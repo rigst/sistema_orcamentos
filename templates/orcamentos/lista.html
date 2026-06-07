@@ -5,14 +5,14 @@
 
 {% block content %}
 <section>
-    <div class="section-heading">
+    <div class="section-heading page-head">
         <div>
             <h2>Orçamentos</h2>
             <p>Gerencie, filtre e altere rapidamente os orçamentos do sistema.</p>
         </div>
         <div class="inline-actions">
             {% if user.pode_gerenciar_orcamentos %}
-                <a class="btn btn-primary-lite" href="{% url 'orcamentos:criar' %}" title="Novo orçamento" aria-label="Novo orçamento">
+                <a class="btn btn-primary" href="{% url 'orcamentos:criar' %}" title="Novo orçamento" aria-label="Novo orçamento">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                     <span>Novo orçamento</span>
                 </a>
@@ -48,7 +48,7 @@
 
     {% if orcamentos %}
         <div class="table-wrap">
-            <table>
+            <table class="orc-list-table">
                 <thead>
                     <tr>
                         <th>Orçamento</th>
@@ -160,7 +160,7 @@
                                     {% if user.pode_gerenciar_orcamentos %}
                                         <form method="post" action="{% url 'orcamentos:duplicar' orcamento.pk %}">
                                             {% csrf_token %}
-                                            <button class="btn btn-primary btn-icon-action" type="submit" title="Duplicar orçamento" aria-label="Duplicar orçamento">
+                                            <button class="btn btn-secondary btn-icon-action" type="submit" title="Duplicar orçamento" aria-label="Duplicar orçamento">
                                                 <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="2"/><path d="M6 14H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v1"/></svg>
                                                 <span class="visually-hidden">Duplicar orçamento</span>
                                             </button>

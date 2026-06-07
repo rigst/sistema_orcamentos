@@ -5,14 +5,14 @@
 
 {% block content %}
 <section>
-    <div class="section-heading">
+    <div class="section-heading page-head">
         <div>
             <h2>Clientes</h2>
             <p>Cadastre, consulte e mantenha a base de clientes do sistema.</p>
         </div>
         <div class="inline-actions">
             {% if user.pode_gerenciar_clientes %}
-                <a class="btn btn-primary-lite" href="{% url 'clientes:criar' %}" title="Novo cliente" aria-label="Novo cliente">
+                <a class="btn btn-primary" href="{% url 'clientes:criar' %}" title="Novo cliente" aria-label="Novo cliente">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                     <span>Novo cliente</span>
                 </a>
@@ -53,9 +53,9 @@
                         <tr>
                             <td>{{ cliente.nome_razao_social }}</td>
                             <td>{{ cliente.get_tipo_pessoa_display }}</td>
-                            <td>{{ cliente.cpf_cnpj|default:"-" }}</td>
+                            <td class="nowrap">{{ cliente.cpf_cnpj|default:"-" }}</td>
                             <td>{{ cliente.email|default:"-" }}</td>
-                            <td>{{ cliente.telefone|default:"-" }}</td>
+                            <td class="nowrap">{{ cliente.telefone|default:"-" }}</td>
                             <td>{% if cliente.ativo %}Sim{% else %}Não{% endif %}</td>
                             <td class="actions-col">
                                 <div class="actions-stack actions-stack-inline">

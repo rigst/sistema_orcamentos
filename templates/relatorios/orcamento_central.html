@@ -5,16 +5,14 @@
 
 {% block content %}
 <section>
-    <div class="section-heading">
+    <div class="section-heading page-head">
         <div>
+            <a class="page-back" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                Voltar ao orçamento
+            </a>
             <h2>Relatório do orçamento {{ orcamento.numero }}</h2>
             <p>Exporte documentos profissionais em PDF, Excel ou Word com base no estado atual do orçamento.</p>
-        </div>
-        <div class="inline-actions">
-            <a class="btn btn-secondary" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}" title="Voltar ao orçamento" aria-label="Voltar ao orçamento">
-                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
-                <span>Voltar ao orçamento</span>
-            </a>
         </div>
     </div>
 
@@ -147,11 +145,11 @@
             {% endif %}
             <div class="panel">
                 <h3>Exportar</h3>
-                <div class="report-export-list report-export-list-compact">
-                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
-                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>
-                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_memorial_pdf' orcamento.pk %}">Baixar Memorial em PDF</a>
-                    <a class="btn btn-soft" href="{% url 'relatorios:orcamento_memorial_word' orcamento.pk %}">Baixar Memorial em Word</a>
+                <div class="report-export-list">
+                    <a class="btn btn-primary" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
+                    <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>
+                    <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_memorial_pdf' orcamento.pk %}">Baixar Memorial em PDF</a>
+                    <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_memorial_word' orcamento.pk %}">Baixar Memorial em Word</a>
                 </div>
             </div>
         </aside>

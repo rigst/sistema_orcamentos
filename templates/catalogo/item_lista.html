@@ -5,7 +5,7 @@
 
 {% block content %}
 <section>
-    <div class="section-heading">
+    <div class="section-heading page-head">
         <div>
             <h2>Itens do catálogo</h2>
             <p>Defina serviços e materiais com código, unidade e valor padrão.</p>
@@ -22,7 +22,7 @@
                 <span>Exportar Excel</span>
             </a>
             {% if user.pode_gerenciar_catalogo %}
-                <a class="btn btn-primary-lite" href="{% url 'catalogo:item_criar' %}" title="Novo item" aria-label="Novo item">
+                <a class="btn btn-primary" href="{% url 'catalogo:item_criar' %}" data-open-panel-modal="1" data-panel-url="{% url 'catalogo:item_criar' %}" title="Novo item" aria-label="Novo item">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                     <span>Novo item</span>
                 </a>
@@ -54,13 +54,12 @@
 
     {% if itens %}
         <div class="table-wrap">
-            <table>
+            <table class="catalog-items-table">
                 <thead>
                     <tr>
                         <th>Código</th>
                         <th>Nome</th>
                         <th>Categoria</th>
-                        <th>Unidade</th>
                         <th>Valor padrão</th>
                         <th>Ativo</th>
                         <th class="actions-col">Ações</th>
@@ -81,8 +80,7 @@
                                     -
                                 {% endif %}
                             </td>
-                            <td>{{ item.get_unidade_medida_display }}</td>
-                                <td class="money">{{ item.valor_unitario_padrao|brl }}</td>
+                                <td class="money">{{ item.valor_unitario_padrao|brl }} <span class="value-unit">/ {{ item.get_unidade_medida_display }}</span></td>
                                 <td>{% if item.ativo %}Sim{% else %}Não{% endif %}</td>
                                 <td class="actions-col">
                                     <div class="actions-stack actions-stack-inline">
@@ -91,7 +89,7 @@
                                             <span class="visually-hidden">Ver</span>
                                         </a>
                                         {% if user.pode_gerenciar_catalogo %}
-                                            <a class="btn btn-secondary btn-icon-action" href="{% url 'catalogo:item_editar' item.pk %}" title="Editar">
+                                            <a class="btn btn-secondary btn-icon-action" href="{% url 'catalogo:item_editar' item.pk %}" data-open-panel-modal="1" data-panel-url="{% url 'catalogo:item_editar' item.pk %}" title="Editar">
                                                 <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M4 20l4.5-1 9.2-9.2a1.8 1.8 0 0 0 0-2.6l-.9-.9a1.8 1.8 0 0 0-2.6 0L5 15.5 4 20Z"/><path d="M13.5 7.5l3 3"/></svg>
                                                 <span class="visually-hidden">Editar</span>
                                             </a>

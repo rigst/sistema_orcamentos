@@ -4,15 +4,13 @@
 
 {% block content %}
 <section>
-    <div class="section-heading">
+    <div class="section-heading page-head">
         <div>
-            <h2>{{ titulo }}</h2>
-        </div>
-        <div class="inline-actions">
-            <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}" title="Voltar" aria-label="Voltar">
-                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
-                <span>Voltar</span>
+            <a class="page-back" href="{% url 'catalogo:item_lista' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                Voltar para itens
             </a>
+            <h2>{{ titulo }}</h2>
         </div>
     </div>
 

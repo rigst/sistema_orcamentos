@@ -4,8 +4,12 @@
 
 {% block content %}
 <section>
-    <div class="section-heading">
+    <div class="section-heading page-head">
         <div>
+            <a class="page-back" href="{% url 'orcamentos:lista' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                Voltar para orçamentos
+            </a>
             <h2>{{ titulo }}</h2>
             {% if somente_visualizacao %}
                 <p>Consulte os dados gerais e os itens do orçamento em modo estritamente visual.</p>
@@ -14,10 +18,6 @@
             {% endif %}
         </div>
         <div class="inline-actions">
-            <a class="btn btn-secondary" href="{% url 'orcamentos:lista' %}" title="Voltar para orçamentos" aria-label="Voltar para orçamentos">
-                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
-                <span>Voltar</span>
-            </a>
             {% if orcamento %}
                 <a class="btn btn-secondary" href="{% url 'relatorios:orcamento_central' orcamento.pk %}" title="Relatórios" aria-label="Relatórios">
                     <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6M9 16h6"/></svg>

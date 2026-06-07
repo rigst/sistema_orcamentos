@@ -4,8 +4,12 @@
 
 {% block content %}
 <section>
-    <div class="section-heading">
+    <div class="section-heading page-head">
         <div>
+            <a class="page-back" href="{% url 'catalogo:item_lista' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                Voltar para itens
+            </a>
             <h2>{{ titulo }}</h2>
             <p>Importe categorias e itens em um arquivo Excel `.xlsx` com cabeçalho na primeira linha.</p>
         </div>

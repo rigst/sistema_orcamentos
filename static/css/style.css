@@ -1706,7 +1706,7 @@ tr:hover td {
   }
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
   .nav {
     gap: 0.5rem;
     padding: 0.65rem 0;
@@ -2531,3 +2531,1114 @@ th.money { text-align: right; }
 @media (prefers-reduced-motion: reduce) {
   .btn.is-loading::after { animation: none; }
 }
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 3 (achados da auditoria com walkthrough real)
+   ================================================================= */
+
+/* #4 Inputs de arquivo com aparência do DS (antes nativo "Choose File") */
+input[type="file"] {
+  padding: 0.5rem 0.6rem;
+  cursor: pointer;
+  color: var(--ds-text-500);
+}
+input[type="file"]::file-selector-button {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 0.85rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--ds-radius-pill);
+  border: 1px solid var(--ds-blue-100);
+  background: var(--ds-blue-50);
+  color: var(--ds-blue-dark);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+input[type="file"]::file-selector-button:hover {
+  background: var(--ds-blue-100);
+  border-color: var(--ds-blue-light);
+}
+
+/* #6 Exportar (relatório central): botões em linha, não empilhados/centralizados */
+.report-export-list { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.report-export-list .btn { min-width: 0; }
+
+/* #8 Campos curtos não ocupam a largura toda (afordância de tamanho) */
+#id_estado, #id_uf { max-width: 8rem; }
+#id_numero, #id_cep { max-width: 13rem; }
+
+/* #8 Subcabeçalhos de seção dentro de um .form-grid (agrupa campos) */
+.form-subhead {
+  grid-column: 1 / -1;
+  font-family: var(--ds-font-display);
+  font-weight: 600;
+  color: var(--ds-text-900);
+  margin-top: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--ds-line);
+}
+.form-subhead:first-child { margin-top: 0; }
+
+/* #12 Não quebrar documento/telefone/valores em colunas estreitas */
+.nowrap { white-space: nowrap; }
+th.money { white-space: nowrap; }
+
+/* #9 Separador sutil entre saudação, empresa e perfil no cabeçalho */
+.header-sep { color: var(--ds-text-400); margin: 0 0.15rem; }
+
+/* #3 Divisor entre o grupo de ações de status e as ações de CRUD na linha */
+.actions-divider { width: 1px; align-self: stretch; min-height: 1.4rem; background: var(--ds-line); margin: 0 0.1rem; }
+
+/* #7 Cabeçalho em grid-areas: no mobile o bloco do usuário (com "Sair")
+   vai para o fim, depois dos links de navegação. */
+.nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "brand links user";
+  align-items: center;
+  column-gap: 1rem;
+}
+.nav .nav-top { grid-area: brand; }
+.nav .header-user-meta { grid-area: user; }
+.nav .nav-bottom { grid-area: links; }
+@media (max-width: 1024px) {
+  .nav { grid-template-columns: 1fr; grid-template-areas: "brand" "links" "user"; column-gap: 1rem; }
+  .header-sep { display: none; }
+}
+
+/* #5 Páginas de erro (404/403/500) com a identidade do sistema */
+.error-page { display: flex; justify-content: center; align-items: center; min-height: 50vh; padding: 2.5rem 0; }
+.error-card { width: min(100%, 520px); text-align: center; display: grid; gap: 0.75rem; justify-items: center; }
+.error-card h2 { font-family: var(--ds-font-display); font-size: clamp(1.6rem, 3vw, 2.3rem); letter-spacing: -0.03em; }
+.error-card p { color: var(--ds-text-500); max-width: 42ch; }
+.error-card .inline-actions { margin-top: 0.5rem; }
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 4
+   Cabeçalho escuro (barra única), faixa de título por página, blocos
+   escuros (total final / cards / seções), back-link e declutter.
+   ================================================================= */
+
+/* ---- CABEÇALHO: barra escura única (tema Infra Premium) ---- */
+.site-header {
+  background: var(--ds-ink);
+  border-bottom: 1px solid var(--ds-border-dark);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.28);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.nav { padding: 0.7rem 0; }
+.brand { color: #fff; }
+.brand span { color: var(--ds-blue-light); }
+.nav-bottom { justify-content: center; }
+.nav-links { color: var(--ds-on-dark-mute); flex-wrap: nowrap; gap: 0.3rem; font-size: 0.9rem; }
+.nav-links a { color: var(--ds-on-dark-mute); padding: 0.4rem 0.65rem; white-space: nowrap; }
+.nav-links a:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+.nav-links a.active { color: #fff; background: rgba(37, 99, 235, 0.35); }
+/* saudação fica só no menu mobile; na barra desktop economiza espaço */
+.header-user-greeting, .header-sep { color: var(--ds-on-dark-soft); display: none; }
+.header-user-company span { color: var(--ds-on-dark-mute); }
+.user-role {
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(59, 130, 246, 0.34);
+}
+.header-company-select {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(255, 255, 255, 0.65) 50%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.65) 50%, transparent 50%);
+}
+.header-company-select:hover { color: #fff; border-color: rgba(255, 255, 255, 0.34); }
+.header-company-select option { color: var(--ds-text-900); }
+.nav-logout {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--ds-on-dark-mute);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.nav-logout:hover { background: rgba(255, 255, 255, 0.14); color: #fff; border-color: rgba(255, 255, 255, 0.34); }
+.nav-toggle { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); }
+.nav-toggle-bar { background: #fff; }
+@media (max-width: 1024px) {
+  .nav.nav-open .header-user-info {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .nav.nav-open .header-user-greeting { display: inline; }
+}
+
+/* ---- FAIXA DE TÍTULO POR PÁGINA (bloco escuro) ---- */
+.page-head {
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--ds-ink);
+  color: var(--ds-on-dark);
+  border-radius: var(--ds-radius-lg);
+  padding: clamp(1.1rem, 2.6vw, 1.65rem) clamp(1.25rem, 3vw, 2rem);
+  margin-bottom: 1.6rem;
+}
+.page-head::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  right: -10%;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.22);
+  filter: blur(90px);
+  pointer-events: none;
+}
+.page-head > div { position: relative; z-index: 1; }
+.page-head h2 { color: #fff; }
+.page-head p { color: var(--ds-on-dark-soft); max-width: 70ch; }
+.page-head .ds-kicker { color: var(--ds-on-dark-soft); }
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ds-on-dark-mute);
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-bottom: 0.55rem;
+  transition: color 160ms ease;
+}
+.page-back:hover { color: #fff; }
+.page-back svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+/* botões secundários ficam legíveis sobre o bloco escuro */
+.page-head .btn-secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+.page-head .btn-secondary:hover { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.34); }
+
+/* ---- TOTAL FINAL em bloco escuro (ponto focal financeiro) ---- */
+.totals-card-emphasis {
+  background: var(--ds-ink);
+  border-color: transparent;
+  color: var(--ds-on-dark);
+  box-shadow: var(--ds-shadow-soft);
+}
+.totals-card-emphasis .preview-label { color: var(--ds-on-dark-soft); }
+.totals-card-emphasis strong { color: #fff; }
+
+/* ---- TÍTULOS DE SEÇÃO de formulário: barra escura slim com acento azul ---- */
+.form-subhead {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--ds-font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.01em;
+  color: #fff;
+  background: var(--ds-ink-soft);
+  border: 0;
+  border-left: 3px solid var(--ds-blue);
+  border-radius: var(--ds-radius-md);
+  padding: 0.6rem 0.9rem;
+  margin-top: 1.25rem;
+}
+.form-subhead:first-child { margin-top: 0; }
+
+/* ---- CARDS DE INDICADORES em destaque escuro ---- */
+.stat-card--dark { background: var(--ds-ink); border-color: transparent; }
+.stat-card--dark:hover { border-color: transparent; transform: translateY(-2px); }
+.stat-card--dark .label { color: var(--ds-on-dark-soft); }
+.stat-card--dark .value { color: #fff; }
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 5
+   Darks mais claros/azulados (menos preto puro), cabeçalho "glass" com
+   efeito de rolagem (como o site_stolben), imagem na hero da dashboard,
+   rodapé (estilo divisor_pdf), nome do usuário no cabeçalho de volta,
+   sem barras laterais tracejadas (ds-lines/ds-shell).
+   ================================================================= */
+
+:root {
+  --app-dark: #1b2236;        /* dark azulado p/ blocos (não preto puro) */
+  --app-dark-soft: #252e44;   /* um tom acima p/ subheads/áreas interativas */
+}
+
+/* ---- DARKS MAIS CLAROS (substituem o quase-preto --ds-ink) ---- */
+.page-head,
+.totals-card-emphasis,
+.stat-card--dark { background: var(--app-dark); }
+.ds-root.is-vitrine .page-hero.ds-panel-dark { background: var(--app-dark); }
+.form-subhead { background: var(--app-dark-soft); }
+.page-head::after { background: rgba(59, 130, 246, 0.28); }
+
+/* hero da dashboard: gradiente sobre a imagem usa o dark azulado */
+.page-hero .ds-media { background: var(--app-dark); }
+.page-hero .ds-media img { opacity: 0.42; }
+.page-hero .ds-media-grad {
+  background: linear-gradient(to top, var(--app-dark) 4%, rgba(27, 34, 54, 0.55) 50%, rgba(27, 34, 54, 0.78));
+}
+
+/* ---- CABEÇALHO "GLASS" + EFEITO DE ROLAGEM (estilo site_stolben) ---- */
+.site-header {
+  background: rgba(27, 34, 54, 0.74);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: none;
+  transition: background 280ms ease, box-shadow 280ms ease, border-color 280ms ease;
+}
+.site-header.is-scrolled {
+  background: rgba(20, 26, 42, 0.92);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+}
+
+/* ---- NOME DO USUÁRIO de volta na barra (desktop) ---- */
+.header-user-greeting { display: inline; color: var(--ds-on-dark-mute); font-weight: 500; }
+.header-sep { display: inline; color: var(--ds-on-dark-soft); }
+
+/* ---- SEM BARRAS LATERAIS (tracejado / ds-lines) em todo o app ---- */
+.ds-shell {
+  border-left: 0;
+  border-right: 0;
+  background: var(--ds-bg);
+  overflow: visible;
+}
+.ds-lines { display: none; }
+
+/* ---- RODAPÉ (estilo divisor_pdf, adaptado ao tema claro) ---- */
+.site-footer {
+  margin-top: 3rem;
+  padding: 2.25rem 0;
+  border-top: 1px solid var(--ds-line);
+}
+.site-footer-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+.site-footer-brand {
+  font-family: var(--ds-font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--ds-text-900);
+  letter-spacing: -0.02em;
+}
+.site-footer-copy { color: var(--ds-text-500); font-size: 0.85rem; margin-top: 0.15rem; }
+.site-footer-copy a { color: var(--ds-blue-dark); text-decoration: none; }
+.site-footer-copy a:hover { text-decoration: underline; }
+.site-footer-points { list-style: none; display: flex; flex-wrap: wrap; gap: 1.25rem; padding: 0; margin: 0; }
+.site-footer-points li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ds-text-500);
+  font-size: 0.8rem;
+}
+.site-footer-dot { width: 0.4rem; height: 0.4rem; border-radius: 50%; background: var(--ds-blue); flex-shrink: 0; }
+
+/* ---- MODAL DE PAINEL (edição de categoria/item em sobreposição) ---- */
+.panel-modal[hidden] { display: none; }
+.panel-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  animation: panel-modal-fade 160ms ease;
+}
+@keyframes panel-modal-fade { from { opacity: 0; } to { opacity: 1; } }
+.panel-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 26, 42, 0.5);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.panel-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(760px, calc(100vw - 2rem));
+  max-height: calc(100vh - 3rem);
+  margin: 1.5rem auto;
+  overflow: auto;
+}
+.panel-modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(20, 26, 42, 0.85);
+  color: #fff;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 160ms ease;
+}
+.panel-modal-close:hover { background: rgba(20, 26, 42, 1); }
+.panel-modal-close svg { width: 1.1rem; height: 1.1rem; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+/* a faixa de título escura vira o cabeçalho do modal; o "Voltar" é redundante */
+.panel-modal .page-back { display: none; }
+.panel-modal section { margin: 0; }
+.panel-modal .form-panel { box-shadow: 0 24px 48px rgba(20, 26, 42, 0.28); }
+.panel-modal-loader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+  background: var(--ds-surface);
+  border-radius: var(--ds-radius-lg);
+}
+.panel-modal-loader[hidden] { display: none; }
+.panel-modal-spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 3px solid var(--ds-blue-100);
+  border-top-color: var(--ds-blue);
+  animation: spin 0.7s linear infinite;
+}
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 7
+   Modais padronizados e centralizados (sombra limpa, X bem formatado),
+   cabeçalho flutuante alinhado ao conteúdo, cards da dashboard
+   compactos, listas mais densas e menu do usuário no mobile.
+   ================================================================= */
+
+/* ---- CABEÇALHO: pílula alinhada ao conteúdo (sem inset lateral extra) ---- */
+.site-header { padding: 0.9rem 0 0; }
+
+/* ---- MODAIS: um padrão só — card centralizado, sombra arredondada ---- */
+.panel-modal,
+.item-modal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+.panel-modal[hidden],
+.item-modal[hidden] { display: none; }
+
+.panel-modal-dialog,
+.item-modal-dialog {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 2.5rem);
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+  box-shadow: 0 30px 70px rgba(15, 20, 35, 0.45);
+  animation: panel-modal-rise 200ms ease;
+}
+.item-modal-dialog { width: min(840px, 100%); }
+@keyframes panel-modal-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* o conteúdo injetado vira o corpo rolável do card */
+#panel-modal-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+.panel-modal section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0;
+}
+.panel-modal .page-head {
+  margin: 0;
+  border-radius: 0;
+  flex: 0 0 auto;
+  padding: 1.15rem 3.25rem 1.15rem 1.5rem;
+}
+.panel-modal .form-panel {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.panel-modal-loader { border-radius: 0; min-height: 240px; }
+
+/* item-modal (orçamento) no mesmo padrão de card */
+.item-modal-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.item-modal-content .item-entry-panel {
+  border-radius: 0;
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* X de fechar — círculo translúcido bem formatado sobre a faixa escura */
+.panel-modal-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  cursor: pointer;
+  z-index: 5;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.panel-modal-close:hover { background: rgba(255, 255, 255, 0.26); border-color: rgba(255, 255, 255, 0.5); }
+.panel-modal-close svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 2.2; stroke-linecap: round; }
+
+/* ---- CARDS DA DASHBOARD: menores e melhor distribuídos ---- */
+.stat-card { padding: 0.8rem 0.95rem; border-radius: var(--ds-radius-md); }
+.stat-card .label { font-size: 0.74rem; letter-spacing: 0.04em; }
+.stat-card .value { font-size: 1.3rem; margin-top: 0.15rem; }
+
+/* ---- LISTAS: mais densas (menos espaçamento) ---- */
+.table-wrap th,
+.table-wrap td { padding: 0.55rem 0.8rem; }
+.table-subline { margin-top: 0.05rem; font-size: 0.8rem; line-height: 1.3; }
+.page-head { margin-bottom: 1.15rem; }
+
+@media (max-width: 1024px) {
+  .site-header { padding: 0.7rem 0 0; }
+
+  /* menu colapsável: informações do usuário organizadas e sem o "·" solto */
+  .nav.nav-open .header-sep { display: none; }
+  .nav.nav-open .header-user-info {
+    gap: 0.5rem;
+    padding: 0.85rem 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .nav.nav-open .header-user-greeting { color: #fff; font-weight: 600; font-size: 0.98rem; }
+  .nav.nav-open .header-user-company span { color: var(--ds-on-dark-mute); font-size: 0.88rem; }
+  .nav.nav-open .user-role { margin-top: 0.1rem; }
+}
+
+@media (max-width: 700px) {
+  /* dois cards lado a lado no mobile (em vez de empilhados e enormes) */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.6rem; }
+  .stat-card { padding: 0.7rem 0.8rem; }
+  .stat-card .value { font-size: 1.2rem; }
+}
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 6
+   Cabeçalho FLUTUANTE (pílula escura) — legível sobre o fundo claro,
+   no mesmo espírito do site_stolben/divisor_pdf, porém adaptado a um
+   app de fundo claro (a pílula é escura para garantir contraste).
+   ================================================================= */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  padding: 0.9rem 0 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  pointer-events: none;
+}
+.site-header.is-scrolled { background: transparent; box-shadow: none; }
+.site-header > .container { pointer-events: none; }
+.nav {
+  pointer-events: auto;
+  background: rgba(24, 31, 50, 0.86);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1.4rem;
+  box-shadow: 0 16px 40px rgba(20, 26, 42, 0.22);
+  padding: 0.5rem 1.1rem;
+  transition: background 280ms ease, box-shadow 280ms ease, border-color 280ms ease;
+}
+.site-header.is-scrolled .nav {
+  background: rgba(16, 21, 35, 0.94);
+  border-color: rgba(255, 255, 255, 0.13);
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.32);
+}
+/* espaço para o conteúdo não ficar sob a pílula fixa */
+.ds-shell { padding-top: 5.5rem; }
+
+@media (max-width: 1024px) {
+  .site-header { padding: 0.7rem 0 0; }
+  .nav { border-radius: 1.2rem; padding: 0.55rem 0.9rem; }
+  .ds-shell { padding-top: 4.75rem; }
+}
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 8
+   Unifica o modal de item do orçamento com os demais (faixa escura +
+   X), remove a linha branca acima da faixa do título e refaz a
+   experiência mobile (modais em tela cheia, faixas/listas enxutas,
+   alvos de toque maiores).
+   ================================================================= */
+
+/* ---- LINHA BRANCA acima da faixa escura: a <section> injetada tinha
+   padding-top herdado; zera dentro do modal. ---- */
+.panel-modal section { padding: 0; margin: 0; }
+
+/* ---- MODAL DE ITEM DO ORÇAMENTO: mesmo padrão (faixa escura + X) ---- */
+.item-modal-content { overflow: hidden; display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+.item-modal-content .item-entry-panel,
+.item-modal .item-entry-panel-compact {
+  width: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.item-modal .item-builder { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; gap: 0; padding: 0; }
+.item-modal .item-modal-heading {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--app-dark);
+  color: #fff;
+  padding: 1.15rem 3.25rem 1.15rem 1.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+}
+.item-modal .item-modal-heading h3 { color: #fff; margin: 0; }
+.item-modal .item-modal-title-row { align-items: center; }
+.item-modal .item-builder-form {
+  background: var(--ds-surface);
+  padding: 1.35rem 1.5rem 1.6rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* ---- MOBILE: experiência totalmente revista ---- */
+@media (max-width: 700px) {
+  /* MODAIS em tela cheia: muito mais fáceis de usar */
+  .panel-modal,
+  .item-modal { padding: 0; align-items: stretch; justify-content: stretch; }
+  .panel-modal-dialog,
+  .item-modal-dialog {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .panel-modal .page-head,
+  .item-modal .item-modal-heading { padding: 1rem 3.25rem 1rem 1.1rem; }
+  .panel-modal .form-panel,
+  .item-modal .item-builder-form { padding: 1.1rem 1.1rem 2.5rem; }
+  .panel-modal-close { top: 0.85rem; right: 0.85rem; width: 2.3rem; height: 2.3rem; }
+
+  /* FAIXA DE TÍTULO (page-head) mais enxuta no mobile */
+  .page-head { padding: 1rem 1.1rem; margin-bottom: 1rem; border-radius: 16px; }
+  .page-head .ds-h1,
+  .page-head h2 { font-size: 1.4rem; }
+  .page-head p { font-size: 0.86rem; }
+  .page-head .inline-actions { width: 100%; }
+  .page-head .inline-actions .btn,
+  .page-head .inline-actions form,
+  .page-head .inline-actions form .btn { width: 100%; justify-content: center; }
+
+  /* HERO da dashboard mais compacto */
+  .page-hero { padding: 1.25rem 1.1rem; }
+  .page-hero .ds-h1 { font-size: 1.6rem; }
+
+  /* LISTAS em cards: mais enxutas e legíveis */
+  .table-wrap > table:not(.items-compact-table) tr {
+    border-radius: 14px;
+    padding: 0.35rem 0.2rem;
+    margin-bottom: 0.7rem;
+  }
+  .table-wrap > table:not(.items-compact-table) td {
+    padding: 0.3rem 0.85rem;
+  }
+  .table-wrap > table:not(.items-compact-table) td::before {
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    opacity: 0.7;
+    margin-bottom: 0.05rem;
+  }
+
+  /* INPUTS: 16px evita zoom automático do iOS e melhora leitura/toque */
+  input, select, textarea { font-size: 16px; min-height: 44px; }
+  textarea { min-height: 88px; }
+
+  /* BOTÕES de ação com alvo de toque confortável */
+  .actions-stack .btn,
+  .actions-stack form .btn,
+  .btn-icon-action { min-width: 44px; min-height: 44px; }
+
+  /* filtros e busca ocupam a largura toda já tratados; remove respiro extra */
+  main { padding-bottom: 1.5rem; }
+}
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 9
+   Cards compactos para TODAS as listas no mobile (rótulo à esquerda,
+   valor à direita; 1ª célula vira título) e bloco de usuário enxuto
+   no menu colapsável.
+   ================================================================= */
+
+/* ---- USER INFO no menu mobile: uma linha, sutil, sem moldura, Sair à direita ---- */
+@media (max-width: 1024px) {
+  .nav.nav-open .header-user-meta {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    width: 100%;
+    margin-top: 0.35rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .nav.nav-open .header-user-info {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-items: initial;
+    text-align: left;
+    gap: 0.1rem 0.4rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .nav.nav-open .header-user-greeting { width: auto; font-size: 0.88rem; font-weight: 600; color: #fff; }
+  .nav.nav-open .header-sep { display: inline; color: var(--ds-on-dark-soft); }
+  .nav.nav-open .header-user-company span { color: var(--ds-on-dark-mute); font-weight: 400; font-size: 0.84rem; }
+  .nav.nav-open .user-role { display: none; }
+  .nav.nav-open .header-user-actions {
+    width: auto;
+    flex: 0 0 auto;
+    margin: 0;
+    justify-content: flex-end;
+  }
+  .nav.nav-open .header-user-actions form { width: auto; }
+  .nav.nav-open .header-user-actions .nav-logout {
+    width: auto;
+    max-width: none;
+    padding: 0.32rem 0.8rem;
+    font-size: 0.82rem;
+  }
+}
+
+/* ---- LISTAS COMO CARDS COMPACTOS (mobile) ---- */
+@media (max-width: 760px) {
+  .ds-root .table-wrap { overflow: visible; }
+
+  .ds-root .table-wrap > table tr {
+    display: block;
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 0.6rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 6px 16px rgba(20, 26, 42, 0.06);
+  }
+
+  /* campo padrão: rótulo à esquerda, valor à direita, em uma linha só */
+  .ds-root .table-wrap > table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.22rem 0;
+    border: 0;
+    text-align: right;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .ds-root .table-wrap > table td::before {
+    content: attr(data-label);
+    display: inline;
+    flex: 0 0 auto;
+    margin: 0 0.5rem 0 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-soft);
+    text-align: left;
+    letter-spacing: 0;
+  }
+  .ds-root .table-wrap > table td[data-label=""]::before { display: none; }
+
+  /* 1ª célula = título do card (linha cheia, em destaque) */
+  .ds-root .table-wrap > table td:first-child {
+    display: block;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    padding: 0 0 0.4rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  .ds-root .table-wrap > table td:first-child::before { display: none; }
+  .ds-root .table-wrap > table td:first-child .table-subline {
+    font-size: 0.8rem;
+    font-weight: 400;
+    margin-top: 0.1rem;
+  }
+
+  /* status e ações: blocos no rodapé do card */
+  .ds-root .table-wrap > table td.status-col,
+  .ds-root .table-wrap > table td.actions-col {
+    display: block;
+    text-align: left;
+    padding: 0.55rem 0 0;
+    margin-top: 0.45rem;
+    border-top: 1px solid var(--ds-line);
+  }
+  .ds-root .table-wrap > table td.actions-col::before { display: none; }
+  .ds-root .table-wrap > table td.status-col::before { display: block; margin: 0 0 0.4rem; }
+  .ds-root .table-wrap > table td .actions-stack,
+  .ds-root .table-wrap > table td .status-cell {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  /* tabela de ITENS DO ORÇAMENTO: "Ordem" é número -> some no card;
+     o título passa a ser a 2ª coluna ("Item"). */
+  .ds-root .table-wrap > table.items-compact-table td:first-child { display: none; }
+  .ds-root .table-wrap > table.items-compact-table td:nth-child(2) {
+    display: block;
+    text-align: left;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    padding: 0 0 0.4rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--ds-line);
+  }
+  .ds-root .table-wrap > table.items-compact-table td:nth-child(2)::before { display: none; }
+}
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 10
+   Visualização em CARDS controlada por classe (.cards-mode no <html>):
+   mobile usa sempre; no desktop é opcional via alternador (tabela/cards).
+   Cards mostram só a informação (sem rótulos), com a principal em
+   destaque, ocultando campos vazios e "Ativo/Ativa".
+   ================================================================= */
+
+/* ---- ALTERNADOR tabela/cards (visível só no desktop) ---- */
+.list-view-toggle { display: none; justify-content: flex-end; gap: 0.3rem; margin: 0 0 0.85rem; }
+@media (min-width: 761px) { .list-view-toggle { display: flex; } }
+.list-view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--ds-line);
+  background: #fff;
+  color: var(--text-soft);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 500;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+.list-view-toggle button svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.list-view-toggle button:hover { border-color: var(--ds-blue-100); color: var(--text); }
+.list-view-toggle button.is-active { background: var(--app-dark, #1b2236); color: #fff; border-color: transparent; }
+
+/* ---- ESTRUTURA do card ---- */
+.cards-mode .table-wrap { overflow: visible; border: 0; background: transparent; box-shadow: none; }
+.cards-mode .table-wrap > table { border: 0; background: transparent; border-radius: 0; }
+.cards-mode .table-wrap > table thead { display: none; }
+.cards-mode .table-wrap > table tbody,
+.cards-mode .table-wrap > table tr,
+.cards-mode .table-wrap > table td { display: block; width: 100%; }
+
+.cards-mode .table-wrap > table tr {
+  position: relative;
+  margin: 0 0 0.7rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--ds-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(20, 26, 42, 0.06);
+  overflow: hidden;
+}
+.cards-mode .table-wrap > table tr:hover td { background: transparent; }
+
+/* no desktop, cards em grade aproveitando a largura */
+@media (min-width: 761px) {
+  .cards-mode .table-wrap > table tbody {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.9rem;
+  }
+  .cards-mode .table-wrap > table tr { margin: 0; }
+}
+
+/* células: só a informação, sem rótulo */
+.cards-mode .table-wrap > table td {
+  padding: 0.1rem 0;
+  border: 0;
+  text-align: left;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+.cards-mode .table-wrap > table td::before { content: none !important; display: none !important; }
+
+/* informação principal (1ª célula) em destaque */
+.cards-mode .table-wrap > table td:first-child {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text);
+  padding: 0;
+  border: 0;
+  margin-bottom: 0.3rem;
+}
+.cards-mode .table-wrap > table td:first-child .table-subline {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-soft);
+  margin-top: 0.05rem;
+}
+
+/* valores monetários com leve destaque */
+.cards-mode .table-wrap > table td.money,
+.cards-mode .table-wrap > table td.budget-total-cell {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.94rem;
+  margin-top: 0.12rem;
+}
+
+/* ocultas no card: vazias / "-" (marcadas via JS) e "Ativo/Ativa" */
+.cards-mode .table-wrap > table td.card-hide,
+.cards-mode .table-wrap > table td[data-label="Ativo"],
+.cards-mode .table-wrap > table td[data-label="Ativa"] { display: none; }
+
+/* status + ações no rodapé do card */
+.cards-mode .table-wrap > table td.status-col,
+.cards-mode .table-wrap > table td.actions-col {
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--ds-line);
+}
+.cards-mode .table-wrap > table td .actions-stack,
+.cards-mode .table-wrap > table td .status-cell {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* itens do orçamento: "Ordem" some, 2ª coluna ("Item") vira o título */
+.cards-mode .table-wrap > table.items-compact-table td:first-child { display: none; }
+.cards-mode .table-wrap > table.items-compact-table td:nth-child(2) {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.3rem;
+}
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 11
+   - Bloco de usuário no mobile: nome em cima (com Sair à direita),
+     empresa e perfil formatados embaixo.
+   - Alternador tabela/cards vira um SLIDER deslizante.
+   - Cards do Orçamento (Título principal, ações arrumadas) e do Item
+     (Nome principal, preço + unidade) com layout dedicado.
+   ================================================================= */
+
+/* ---- USER INFO mobile: nome (linha 1) + empresa · perfil (linha 2) ---- */
+@media (max-width: 1024px) {
+  .nav.nav-open .header-user-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.05rem 0.4rem;
+  }
+  .nav.nav-open .header-user-greeting {
+    width: 100%;
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.92rem;
+    margin-bottom: 0.12rem;
+  }
+  .nav.nav-open .header-sep { display: none; }
+  .nav.nav-open .header-user-company { width: auto; }
+  .nav.nav-open .header-user-company span { color: var(--ds-on-dark-mute); font-size: 0.82rem; font-weight: 400; }
+  .nav.nav-open .user-role {
+    display: inline-flex;
+    align-items: center;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    color: var(--ds-on-dark-soft);
+    font-size: 0.82rem;
+    letter-spacing: 0;
+  }
+  .nav.nav-open .user-role::before { content: "·"; margin: 0 0.35rem; color: var(--ds-on-dark-soft); }
+}
+
+/* ---- SLIDER tabela/cards (desktop) ---- */
+.list-view-bar { display: none; justify-content: flex-end; margin: 0 0 0.85rem; }
+@media (min-width: 761px) { .list-view-bar { display: flex; } }
+.view-switch {
+  position: relative;
+  display: inline-flex;
+  background: var(--ds-line);
+  border-radius: 999px;
+  padding: 3px;
+}
+.view-switch button {
+  position: relative;
+  z-index: 1;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  min-width: 86px;
+  padding: 0.42rem 1rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  text-align: center;
+  transition: color 0.25s ease;
+}
+.view-switch button.is-active { color: #fff; }
+.view-switch-thumb {
+  position: absolute;
+  z-index: 0;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  background: var(--app-dark, #1b2236);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(20, 26, 42, 0.25);
+  transition: transform 0.25s ease;
+}
+.view-switch.is-cards .view-switch-thumb { transform: translateX(100%); }
+
+/* ---- CARD do ORÇAMENTO: Título é a informação principal ---- */
+.cards-mode .table-wrap > table.orc-list-table tbody tr { display: flex; flex-direction: column; }
+.cards-mode .table-wrap > table.orc-list-table td.budget-title-cell {
+  order: -3;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.12rem;
+}
+.cards-mode .table-wrap > table.orc-list-table td.budget-meta-cell {
+  order: -2;
+  font-size: 0.86rem;
+  color: var(--text-soft);
+}
+.cards-mode .table-wrap > table.orc-list-table td.budget-meta-cell strong { font-weight: 600; color: var(--text); }
+.cards-mode .table-wrap > table.orc-list-table td.budget-main-cell {
+  order: -1;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-soft);
+  padding: 0;
+  border: 0;
+  margin-top: 0.15rem;
+}
+.cards-mode .table-wrap > table.orc-list-table td.budget-main-cell strong { font-weight: 600; color: var(--text-soft); }
+.cards-mode .table-wrap > table.orc-list-table td.budget-main-cell .table-subline {
+  display: inline;
+  font-size: 0.78rem;
+  margin: 0 0 0 0.5rem;
+}
+.cards-mode .table-wrap > table.orc-list-table td.budget-total-cell {
+  order: 1;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 0.45rem;
+}
+.cards-mode .table-wrap > table.orc-list-table td.status-col {
+  order: 2;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--ds-line);
+}
+.cards-mode .table-wrap > table.orc-list-table td.actions-col {
+  order: 3;
+  margin-top: 0.55rem;
+  padding-top: 0;
+  border-top: 0;
+}
+/* status: selo + botões de status na mesma linha, sem divisória dupla */
+.cards-mode .table-wrap > table.orc-list-table td.status-col .status-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+/* ---- CARD do ITEM: Nome principal + preço/unidade juntos ---- */
+.cards-mode .table-wrap > table.catalog-items-table tbody tr { display: flex; flex-direction: column; }
+.cards-mode .table-wrap > table.catalog-items-table td:nth-child(2) {
+  order: -2;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.12rem;
+}
+.cards-mode .table-wrap > table.catalog-items-table td:first-child {
+  order: -1;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--text-soft);
+  padding: 0;
+  border: 0;
+}
+.cards-mode .table-wrap > table.catalog-items-table td:nth-child(3) { order: 1; font-size: 0.85rem; }
+.cards-mode .table-wrap > table.catalog-items-table td.money {
+  order: 2;
+  font-size: 0.96rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 0.3rem;
+}
+.cards-mode .table-wrap > table.catalog-items-table td.actions-col {
+  order: 3;
+  margin-top: 0.55rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--ds-line);
+}
+.value-unit { font-weight: 400; color: var(--text-soft); font-size: 0.86rem; }

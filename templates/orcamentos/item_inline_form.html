@@ -6,12 +6,9 @@
                 <div id="item-draft-status-{{ item.pk|default:'novo' }}" class="inline-feedback inline-feedback-inline"></div>
             </div>
         </div>
-        <div>
-            <button class="btn btn-secondary" type="button" data-close-item-modal="1" title="Cancelar" aria-label="Cancelar">
-                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                <span>Cancelar</span>
-            </button>
-        </div>
+        <button class="panel-modal-close" type="button" data-close-item-modal="1" aria-label="Fechar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
     </div>
     <form method="post" action="{% if item %}{% url 'orcamentos:item_editar' orcamento.pk item.pk %}{% else %}{% url 'orcamentos:item_criar' orcamento.pk %}{% endif %}" class="item-builder-form" novalidate data-item-form data-unsaved-warning="1" data-draft-key="orcamento:{{ orcamento.pk }}:item:{% if item %}{{ item.pk }}{% else %}novo{% endif %}" data-draft-status-target="#item-draft-status-{{ item.pk|default:'novo' }}" data-clear-draft-on-submit="1">
         {% csrf_token %}

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Acesso negado{% endblock %}
+
+{% block content %}
+<section class="error-page">
+    <div class="panel error-card">
+        <span class="ds-kicker">Erro 403</span>
+        <h2>Acesso negado</h2>
+        <p>Você não tem permissão para acessar esta página com o seu perfil atual.</p>
+        <div class="inline-actions">
+            <a class="btn btn-primary" href="{% url 'dashboard' %}">Voltar ao início</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
