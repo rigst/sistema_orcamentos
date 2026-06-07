@@ -1,9 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Login{% endblock %}
+{% block body_class %}is-vitrine{% endblock %}
 
 {% block content %}
 <section class="auth-shell">
+    <div class="auth-stack">
+    <div class="page-hero ds-panel-dark auth-hero">
+        <div class="ds-glow" aria-hidden="true"></div>
+        <div class="page-hero-inner">
+            <span class="ds-kicker">Stölben Orçamentos</span>
+            <h1 class="ds-h1 ds-display">Orçamentos <span class="ds-muted">com clareza.</span></h1>
+        </div>
+    </div>
     <div class="panel auth-card">
         <div class="auth-header">
             <h2>Entrar</h2>
@@ -38,6 +47,7 @@
         <div class="auth-disclaimer">
             <p>Este sistema é um projeto com foco em aprendizado e portfólio. Não se trata de um produto comercial ou versão final, e pode passar por ajustes durante o desenvolvimento.</p>
         </div>
+    </div>
     </div>
 </section>
 {% endblock %}

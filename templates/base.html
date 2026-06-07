@@ -7,9 +7,18 @@
     <title>{% block title %}StölbenOrçamentos{% endblock %}</title>
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
     <link rel="apple-touch-icon" href="{% static 'favicon.png' %}">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260412-mobilefix5">
+
+    <!-- Google Fonts (design system Stölben: Inter + Manrope) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Design system Stölben (tokens + componentes .ds-*) -->
+    <link rel="stylesheet" href="{% static 'css/stolben-ui.css' %}">
+    <!-- Camada específica do app (sobre os tokens do DS) -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260607-ds2">
 </head>
-<body>
+<body class="ds-root {% block body_class %}{% endblock %}">
     <header class="site-header">
         <div class="container">
             <nav class="nav">
@@ -86,7 +95,9 @@
         </div>
     </header>
 
-    <main class="container">
+    <div class="ds-shell">
+        <div class="ds-lines" aria-hidden="true"><span></span><span></span><span></span></div>
+        <main class="container">
         {% if messages %}
             <div class="flash-stack" role="status" aria-live="polite">
                 <ul class="flash-list">
@@ -98,8 +109,10 @@
         {% endif %}
 
         {% block content %}{% endblock %}
-    </main>
+        </main>
+    </div>
 
+    <script src="{% static 'js/stolben-ui.js' %}"></script>
     <script nonce="{{ request.csp_nonce }}">
     (() => {
       const DRAFT_STORAGE_PREFIX = "codex-draft:";

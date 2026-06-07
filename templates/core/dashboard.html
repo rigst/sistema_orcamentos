@@ -2,13 +2,23 @@
 {% load br_format %}
 
 {% block title %}Dashboard{% endblock %}
+{% block body_class %}is-vitrine{% endblock %}
 
 {% block content %}
 <section>
+    <div class="page-hero ds-panel-dark ds-reveal">
+        <div class="ds-glow" aria-hidden="true"></div>
+        <div class="page-hero-inner">
+            <span class="ds-kicker">Painel</span>
+            <h1 class="ds-h1 ds-display">Visão geral <span class="ds-muted">do seu negócio.</span></h1>
+            <p>{{ saudacao_dashboard }} Você está no perfil {{ user.get_perfil_display|lower }}.</p>
+        </div>
+    </div>
+
     <div class="section-heading">
         <div>
-            <h2>Dashboard</h2>
-            <p>{{ saudacao_dashboard }} Você está no perfil {{ user.get_perfil_display|lower }}.</p>
+            <h2>Indicadores</h2>
+            <p>Resumo do período selecionado.</p>
         </div>
         <div class="inline-actions">
             <form method="get" class="filters-form compact-filters">

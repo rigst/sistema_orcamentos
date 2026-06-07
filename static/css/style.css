@@ -1,27 +1,31 @@
 :root {
-  --bg: #eef4fb;
-  --bg-soft: #f7faff;
-  --surface: rgba(255, 255, 255, 0.82);
-  --surface-2: rgba(248, 251, 255, 0.96);
-  --surface-strong: #ffffff;
-  --surface-strong-2: #f5f9ff;
-  --border: rgba(71, 101, 138, 0.14);
-  --border-strong: rgba(71, 101, 138, 0.2);
-  --text: #17304a;
-  --text-soft: #48627e;
-  --muted: #617a95;
-  --accent: #2f78db;
-  --accent-2: #4f90e6;
-  --success: #4fa56a;
-  --danger: #d14545;
-  --warning: #b6781c;
-  --shadow: 0 20px 48px rgba(49, 88, 132, 0.14);
-  --radius-xl: 36px;
-  --radius-lg: 24px;
-  --radius-md: 18px;
-  --radius-sm: 14px;
+  /* Tokens do app mapeados sobre o design system Stölben (--ds-*).
+     Mantemos os nomes de variável do app para que toda a folha de
+     estilo herde a paleta/raios do DS sem reescrever cada regra. */
+  --bg: var(--ds-bg);
+  --bg-soft: var(--ds-panel);
+  --surface: var(--ds-surface);
+  --surface-2: var(--ds-panel);
+  --surface-strong: var(--ds-surface);
+  --surface-strong-2: #f8fafc;
+  --border: var(--ds-line);
+  --border-strong: #dfe3ea;
+  --text: var(--ds-text-900);
+  --text-soft: var(--ds-text-700);
+  --muted: var(--ds-text-500);
+  --accent: var(--ds-blue);
+  --accent-2: var(--ds-blue-light);
+  --success: var(--ds-success);
+  --danger: var(--ds-danger);
+  --warning: var(--ds-warn-strong);
+  --shadow: var(--ds-shadow-soft);
+  --radius-xl: var(--ds-radius-xl);
+  --radius-lg: var(--ds-radius-lg);
+  --radius-md: var(--ds-radius-md);
+  --radius-sm: 0.75rem;
   --max-width: 1180px;
-  --transition: 240ms ease;
+  --transition: 240ms var(--ds-ease);
+  --font-display: var(--ds-font-display);
 }
 
 * {
@@ -35,13 +39,11 @@ html {
 }
 
 body {
-  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--ds-font-sans);
   color: var(--text);
-  background:
-    radial-gradient(circle at top, rgba(47, 120, 219, 0.12), transparent 28%),
-    linear-gradient(180deg, #f7fbff 0%, #eef4fb 48%, #e8eff8 100%);
+  background: var(--ds-bg);
   min-height: 100vh;
-  line-height: 1.68;
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -212,12 +214,14 @@ a {
 .user-role {
   display: inline-flex;
   align-items: center;
-  color: var(--text);
-  font-size: 0.92rem;
-}
-
-.user-role {
-  color: var(--accent);
+  color: var(--ds-blue-dark);
+  background: var(--ds-blue-50);
+  border: 1px solid var(--ds-blue-100);
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .nav-links a {
@@ -366,15 +370,15 @@ section {
 .form-note {
   padding: 0.95rem 1rem;
   border-radius: var(--radius-sm);
-  border: 1px solid rgba(182, 120, 28, 0.18);
-  background: rgba(255, 246, 227, 0.92);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  background: var(--ds-warn-soft);
   color: var(--text);
   font-size: 0.94rem;
   line-height: 1.6;
 }
 
 .form-note strong {
-  color: var(--warning);
+  color: var(--ds-warn-strong);
 }
 
 .form-panel p {
@@ -385,10 +389,10 @@ section {
   list-style: none;
   margin-top: 0.5rem;
   padding: 0.75rem 0.9rem;
-  border-radius: 14px;
-  border: 1px solid rgba(209, 69, 69, 0.22);
-  background: rgba(209, 69, 69, 0.08);
-  color: #9f2e2e;
+  border-radius: var(--ds-radius-md);
+  border: 1px solid var(--ds-danger-border);
+  background: var(--ds-danger-soft);
+  color: var(--ds-danger);
   font-size: 0.92rem;
   line-height: 1.55;
 }
@@ -498,8 +502,10 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
-button:focus-visible {
-  outline: 3px solid rgba(118, 169, 255, 0.34);
+button:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--ds-blue);
   outline-offset: 2px;
 }
 
@@ -559,27 +565,27 @@ button:focus-visible {
 
 .btn-status-approved {
   min-height: 40px;
-  background: rgba(61, 143, 86, 0.12);
-  color: #3d8f56;
-  border-color: rgba(61, 143, 86, 0.22);
+  background: var(--ds-success-soft);
+  color: var(--ds-success);
+  border-color: var(--ds-success-border);
   box-shadow: none;
 }
 
 .btn-status-approved:hover {
-  background: rgba(61, 143, 86, 0.18);
+  background: color-mix(in srgb, var(--ds-success) 16%, white);
   box-shadow: none;
 }
 
 .btn-status-rejected {
   min-height: 40px;
-  background: rgba(190, 68, 68, 0.12);
-  color: #be4444;
-  border-color: rgba(190, 68, 68, 0.22);
+  background: var(--ds-danger-soft);
+  color: var(--ds-danger);
+  border-color: var(--ds-danger-border);
   box-shadow: none;
 }
 
 .btn-status-rejected:hover {
-  background: rgba(190, 68, 68, 0.18);
+  background: color-mix(in srgb, var(--ds-danger) 16%, white);
   box-shadow: none;
 }
 
@@ -632,9 +638,13 @@ button:focus-visible {
 }
 
 .btn-danger {
-  background: rgba(209, 69, 69, 0.1);
-  color: #b63e3e;
-  border-color: rgba(209, 69, 69, 0.18);
+  background: var(--ds-danger-soft);
+  color: var(--ds-danger);
+  border-color: var(--ds-danger-border);
+}
+
+.btn-danger:hover {
+  background: color-mix(in srgb, var(--ds-danger) 14%, white);
 }
 
 .stats-grid {
@@ -688,7 +698,7 @@ label {
 }
 
 .required-mark {
-  color: #b63e3e;
+  color: var(--ds-danger);
   margin-left: 0.2rem;
 }
 
@@ -1236,10 +1246,10 @@ tr:hover td {
 .form-errors {
   margin-bottom: 1rem;
   padding: 0.9rem 1rem;
-  border-radius: 16px;
-  border: 1px solid rgba(209, 69, 69, 0.16);
-  background: rgba(209, 69, 69, 0.08);
-  color: #b63e3e;
+  border-radius: var(--ds-radius-md);
+  border: 1px solid var(--ds-danger-border);
+  background: var(--ds-danger-soft);
+  color: var(--ds-danger);
 }
 
 .form-errors p + p {
@@ -2192,4 +2202,332 @@ tr:hover td {
     width: auto !important;
     max-width: 92vw !important;
   }
+}
+
+/* =================================================================
+   CAMADA DE TEMA STÖLBEN
+   Re-skin sobre os tokens --ds-* sem alterar a estrutura/JS.
+   Mantém os nomes de classe existentes; apenas reestiliza.
+   ================================================================= */
+
+/* ---- Tipografia de display (Manrope) ---- */
+h1, h2, h3,
+.brand,
+.section-heading h2,
+.section-heading-compact h3,
+.stat-card .value,
+.totals-card strong,
+.item-builder-preview strong,
+.auth-header h2 {
+  font-family: var(--font-display);
+  letter-spacing: -0.03em;
+}
+
+/* ---- Shell: header full-bleed fora do shell; mantém sticky ---- */
+.ds-shell { overflow: visible; }
+
+/* ---- NAVBAR: clara e translúcida (combina com o shell claro do DS) ---- */
+.site-header {
+  background: rgba(247, 248, 250, 0.82);
+  -webkit-backdrop-filter: var(--ds-blur);
+  backdrop-filter: var(--ds-blur);
+  border-bottom: 1px solid var(--ds-line);
+  box-shadow: 0 10px 30px rgba(15, 17, 21, 0.05);
+}
+
+.brand { color: var(--ds-text-900); font-weight: 600; }
+.brand span { color: var(--ds-blue); }
+
+.nav-links { color: var(--ds-text-500); }
+.nav-links a {
+  color: var(--ds-text-500);
+  font-weight: 500;
+}
+.nav-links a:hover {
+  color: var(--ds-text-900);
+  background: rgba(15, 17, 21, 0.04);
+}
+.nav-links a.active {
+  color: var(--ds-blue-dark);
+  background: var(--ds-blue-50);
+}
+
+.header-user-greeting { color: var(--ds-text-500); }
+.user-role { color: var(--ds-blue); font-weight: 600; }
+
+.nav-toggle {
+  border-color: var(--ds-line);
+  background: #fff;
+}
+.nav-toggle-bar { background: var(--ds-text-700); }
+
+.nav-logout {
+  border-color: var(--ds-line);
+  background: #fff;
+  color: var(--ds-text-700);
+}
+.nav-logout:hover {
+  border-color: var(--ds-blue-100);
+  background: var(--ds-blue-50);
+  color: var(--ds-blue-dark);
+}
+
+/* ---- BOTÕES ---- */
+/* Primário sólido com elevação sutil; ganha leve realce no hover
+   (antes usava o glow forte fixo, que competia com o conteúdo). */
+.btn-primary {
+  background: var(--ds-blue);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
+}
+.btn-primary:hover {
+  background: var(--ds-blue-dark);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.30);
+}
+
+.btn-primary-lite,
+.btn-soft {
+  background: var(--ds-blue-50);
+  color: var(--ds-blue-dark);
+  border-color: var(--ds-blue-100);
+}
+.btn-primary-lite:hover,
+.btn-soft:hover {
+  background: var(--ds-blue-100);
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--text);
+  border-color: var(--ds-line);
+}
+.btn-secondary:hover {
+  background: var(--ds-blue-50);
+  border-color: var(--ds-blue-100);
+}
+
+/* ---- SUPERFÍCIES: achatar gradientes antigos -> visual DS limpo ---- */
+.panel,
+.form-panel,
+.modal-panel,
+.stat-card,
+.totals-card,
+.item-entry-panel,
+.report-meta-card,
+.report-logo-card,
+.manual-role-card,
+.item-builder-preview,
+.catalog-summary,
+.simple-list-item {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  box-shadow: var(--ds-shadow-soft);
+}
+
+/* Superfícies secundárias: só borda, sem sombra (hierarquia mais leve) */
+.stat-card,
+.report-meta-card,
+.report-logo-card,
+.manual-role-card,
+.item-builder-preview,
+.catalog-summary,
+.simple-list-item {
+  box-shadow: none;
+}
+
+.stat-card { transition: border-color var(--transition), transform var(--transition); }
+.stat-card:hover { border-color: var(--ds-blue-100); transform: translateY(-2px); }
+.stat-card .label {
+  color: var(--ds-text-500);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.74rem;
+}
+.stat-card .value { color: var(--ds-text-900); }
+
+.totals-card-emphasis { background: var(--ds-blue-50); border-color: var(--ds-blue-100); }
+
+.form-submenu {
+  background: var(--ds-surface);
+  border-color: var(--ds-line);
+  border-radius: var(--ds-radius-md);
+}
+
+/* ---- TABELAS / LISTAS: cabeçalho discreto, linhas arejadas ---- */
+.table-wrap {
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+  box-shadow: var(--ds-shadow-soft);
+}
+table { border: 0; border-radius: 0; background: transparent; }
+thead th {
+  background: var(--ds-panel);
+  color: var(--ds-text-500);
+  border-bottom: 1px solid var(--ds-line);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+td { color: var(--ds-text-700); border-bottom: 1px solid var(--ds-line); }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: var(--ds-blue-50); }
+td strong,
+.budget-main-cell strong,
+.items-compact-table td strong { color: var(--ds-text-900); }
+
+/* ---- FORMULÁRIOS ---- */
+input, select, textarea { border-radius: var(--ds-radius-md); border-color: var(--ds-line); }
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--ds-blue-light);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+label { color: var(--ds-text-900); font-weight: 600; }
+.form-note { border-radius: var(--ds-radius-md); }
+
+/* ---- BADGES de status: pílulas semânticas ---- */
+.badge {
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.badge.status-rascunho,
+.badge.status-cancelado {
+  background: #eef1f5; border-color: #e1e6ee; color: #51617a;
+}
+.badge.status-em_elaboracao {
+  background: var(--ds-warn-soft); border-color: rgba(251, 191, 36, 0.32); color: #8a5a0b;
+}
+.badge.status-enviado {
+  background: var(--ds-blue-50); border-color: var(--ds-blue-100); color: var(--ds-blue-dark);
+}
+.badge.status-aprovado {
+  background: rgba(79, 165, 106, 0.12); border-color: rgba(79, 165, 106, 0.3); color: #2f7d49;
+}
+.badge.status-rejeitado {
+  background: rgba(209, 69, 69, 0.1); border-color: rgba(209, 69, 69, 0.28); color: #b03636;
+}
+
+/* ---- LISTAS / VAZIO ---- */
+.simple-list-item { padding: 0.95rem 1.1rem; }
+.empty-state {
+  border: 1px dashed var(--ds-line-dash);
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+  padding: 2rem;
+  text-align: center;
+  color: var(--ds-text-500);
+}
+
+/* No modo card mobile o wrapper já vira "moldura"; remove dupla borda. */
+@media (max-width: 760px) {
+  .table-wrap { border: 0; border-radius: 0; background: transparent; box-shadow: none; }
+}
+
+/* ---- HERO (telas-vitrine: dashboard e login) ---- */
+.page-hero {
+  position: relative;
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+  margin-bottom: 1.25rem;
+}
+.page-hero-inner {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: 0.5rem;
+}
+.page-hero .ds-h1 {
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  color: #fff;
+}
+.page-hero p {
+  color: var(--ds-on-dark-soft);
+  max-width: 60ch;
+}
+.page-hero .ds-kicker { color: var(--ds-on-dark-soft); }
+.page-hero .ds-glow { width: 24rem; height: 24rem; }
+
+/* Login: empilha hero + cartão centralizados */
+.auth-stack {
+  display: grid;
+  gap: 1.25rem;
+  width: min(100%, 460px);
+}
+.auth-stack .auth-card { width: 100%; }
+.auth-hero { margin-bottom: 0; }
+
+/* =================================================================
+   POLIMENTO UI/UX (passe 2026-06) — refinamentos sobre o passe "ds1".
+   Mantém o tema; melhora legibilidade, hierarquia, estados e foco.
+   ================================================================= */
+
+/* ---- TABELAS: valores monetários alinhados à direita (leitura de números)
+   No card mobile (<=760px) a regra de maior especificidade mantém à esquerda. */
+td.money { text-align: right; }
+th.money { text-align: right; }
+
+/* ---- EMPTY STATE: um pouco mais convidativo e consistente ---- */
+.empty-state {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+/* Quando houver ícone (svg) no estado vazio, padroniza o tamanho/cor. */
+.empty-state svg {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: block;
+  margin: 0 auto 0.6rem;
+  color: var(--ds-text-400);
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.6;
+}
+
+/* ---- DECORAÇÃO: telas de trabalho ficam limpas; grade/linhas tracejadas
+   ficam reservadas às telas-vitrine (.is-vitrine = dashboard e login). ---- */
+.ds-root:not(.is-vitrine) .ds-lines { display: none; }
+.ds-root:not(.is-vitrine) .ds-shell {
+  border-left: 0;
+  border-right: 0;
+  background: var(--ds-bg);
+}
+
+/* ---- ESTADO DE CARREGAMENTO: além do esmaecer, cursor de progresso e
+   spinner em botões para feedback claro de ação em andamento. ---- */
+.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+  cursor: progress;
+}
+.btn.is-loading {
+  position: relative;
+  color: transparent !important;
+}
+.btn.is-loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: -0.525rem 0 0 -0.525rem;
+  border-radius: 50%;
+  border: 2px solid var(--ds-blue);
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: ds-spin 0.6s linear infinite;
+}
+.btn-primary.is-loading::after { border-color: #fff; border-top-color: transparent; }
+@keyframes ds-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.is-loading::after { animation: none; }
 }
