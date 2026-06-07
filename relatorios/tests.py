@@ -506,7 +506,7 @@ class RelatoriosAtualizacaoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "orçamentos ainda não enviados")
-        self.assertContains(response, ">Voltar<", html=False)
+        self.assertContains(response, "Voltar para empresas")
         self.assertContains(response, "Salvar empresa")
 
     def test_edicao_de_configuracao_exibe_mensagem_de_propagacao(self):

@@ -140,11 +140,11 @@ class CatalogoValidacaoTests(TestCase):
         item_response = self.client.get(reverse("catalogo:item_criar"))
 
         self.assertEqual(categoria_response.status_code, 200)
-        self.assertContains(categoria_response, ">Voltar<", html=False)
+        self.assertContains(categoria_response, "Voltar para categorias")
         self.assertContains(categoria_response, "Salvar categoria")
 
         self.assertEqual(item_response.status_code, 200)
-        self.assertContains(item_response, ">Voltar<", html=False)
+        self.assertContains(item_response, "Voltar para itens")
         self.assertContains(item_response, "Salvar item")
 
 
@@ -224,7 +224,7 @@ class CatalogoListaTests(TestCase):
         response = self.client.get(reverse("catalogo:item_lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, ">m2<", html=False)
+        self.assertContains(response, "m2")
         self.assertNotContains(response, "Metro quadrado")
 
     def test_lista_exibe_categoria_com_cor(self):

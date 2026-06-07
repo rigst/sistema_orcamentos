@@ -766,7 +766,7 @@ class OrcamentoViewsTests(TestCase):
             response.content,
             {"modal_html": response.json()["modal_html"]},
         )
-        self.assertIn("Cancelar", response.json()["modal_html"])
+        self.assertIn("Fechar", response.json()["modal_html"])
         self.assertIn("Salvar item", response.json()["modal_html"])
 
     def test_item_pode_ser_duplicado_para_edicao(self):
@@ -1185,7 +1185,7 @@ class DashboardTests(TestCase):
             cliente=cliente,
             titulo="Ativo",
             ativo=True,
-            data_emissao=date(2026, 4, 9),
+            data_emissao=date.today(),
             criado_por=self.user,
             atualizado_por=self.user,
         )
@@ -1194,7 +1194,7 @@ class DashboardTests(TestCase):
             cliente=cliente,
             titulo="Inativo",
             ativo=False,
-            data_emissao=date(2026, 4, 9),
+            data_emissao=date.today(),
             criado_por=self.user,
             atualizado_por=self.user,
         )

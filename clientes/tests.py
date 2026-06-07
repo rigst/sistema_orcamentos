@@ -206,7 +206,7 @@ class ClienteAtualizacaoTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "orçamentos ainda não enviados")
-        self.assertContains(response, ">Voltar<", html=False)
+        self.assertContains(response, "Voltar para clientes")
         self.assertContains(response, "Salvar cliente")
 
     def test_edicao_de_cliente_exibe_mensagem_de_propagacao(self):
