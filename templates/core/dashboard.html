@@ -22,7 +22,7 @@
 
     <div class="section-heading">
         <div>
-            <h2>Indicadores</h2>
+            <h2 class="ds-h2">Indicadores</h2>
             <p>Resumo do período selecionado.</p>
         </div>
         <div class="inline-actions">
@@ -34,8 +34,8 @@
                     <option value="todos" {% if periodo == "todos" %}selected{% endif %}>Todo o período</option>
                 </select>
                 <noscript>
-                    <button class="btn btn-secondary btn-icon-action" type="submit" title="Aplicar período" aria-label="Aplicar período">
-                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
+                    <button class="ds-icon-btn" type="submit" title="Aplicar período" aria-label="Aplicar período">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M10 18h4"/></svg>
                         <span class="visually-hidden">Aplicar período</span>
                     </button>
                 </noscript>
@@ -83,19 +83,19 @@
 
     <div class="section-heading" style="margin-bottom: 1rem;">
         <div>
-            <h3>Últimos orçamentos</h3>
+            <h3 class="ds-h3">Últimos orçamentos</h3>
             <p>Os 5 mais recentes criados no sistema.</p>
         </div>
         <div>
             <a class="btn btn-secondary btn-compact" href="{% url 'orcamentos:lista' %}" title="Ver todos os orçamentos">
-                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
                 <span>Ver todos</span>
             </a>
         </div>
     </div>
 
     {% if ultimos_orcamentos %}
-        <div class="table-wrap">
+        <div class="ds-table-wrap">
             <table>
                 <thead>
                     <tr>
@@ -121,16 +121,16 @@
                             <td class="money">{{ orcamento.total_final|brl }}</td>
                             <td class="actions-col">
                                 <div class="actions-stack actions-stack-inline">
-                                    <a class="btn btn-secondary btn-icon-action" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}" title="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}Editar orçamento{% else %}Visualizar orçamento{% endif %}">
+                                    <a class="ds-icon-btn" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}" title="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}Editar orçamento{% else %}Visualizar orçamento{% endif %}">
                                         {% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}
-                                            <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M4 20l4.5-1 9.2-9.2a1.8 1.8 0 0 0 0-2.6l-.9-.9a1.8 1.8 0 0 0-2.6 0L5 15.5 4 20Z"/><path d="M13.5 7.5l3 3"/></svg>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.5-1 9.2-9.2a1.8 1.8 0 0 0 0-2.6l-.9-.9a1.8 1.8 0 0 0-2.6 0L5 15.5 4 20Z"/><path d="M13.5 7.5l3 3"/></svg>
                                         {% else %}
-                                            <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
                                         {% endif %}
                                         <span class="visually-hidden">{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}Editar orçamento{% else %}Visualizar orçamento{% endif %}</span>
                                     </a>
-                                    <a class="btn btn-secondary btn-icon-action" href="{% url 'relatorios:orcamento_central' orcamento.pk %}" title="Relatórios">
-                                        <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6M9 16h6"/></svg>
+                                    <a class="ds-icon-btn" href="{% url 'relatorios:orcamento_central' orcamento.pk %}" title="Relatórios">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6M9 16h6"/></svg>
                                         <span class="visually-hidden">Relatórios</span>
                                     </a>
                                 </div>
@@ -141,7 +141,7 @@
             </table>
         </div>
     {% else %}
-        <div class="empty-state">
+        <div class="ds-empty">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
             Ainda não há orçamentos cadastrados.
         </div>

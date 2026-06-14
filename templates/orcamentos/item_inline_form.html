@@ -2,7 +2,7 @@
     <div class="section-heading section-heading-compact item-modal-heading">
         <div>
             <div class="item-modal-title-row">
-                <h3>{{ titulo|default:"Editar item do orçamento" }}</h3>
+                <h3 class="ds-h3">{{ titulo|default:"Editar item do orçamento" }}</h3>
                 <div id="item-draft-status-{{ item.pk|default:'novo' }}" class="inline-feedback inline-feedback-inline"></div>
             </div>
         </div>
@@ -30,9 +30,9 @@
                     <div class="full">
                         <label for="catalog-search-{{ item.pk|default:'novo' }}">Buscar item do catálogo</label>
                         <div class="catalog-search-row">
-                            <input type="text" id="catalog-search-{{ item.pk|default:'novo' }}" placeholder="Buscar por código ou nome" data-catalog-search>
-                            <button class="btn btn-secondary btn-icon-action" type="button" data-catalog-search-button title="Buscar item do catálogo" aria-label="Buscar item do catálogo">
-                                <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>
+                            <input class="ds-input" type="text" id="catalog-search-{{ item.pk|default:'novo' }}" placeholder="Buscar por código ou nome" data-catalog-search>
+                            <button class="ds-icon-btn" type="button" data-catalog-search-button title="Buscar item do catálogo" aria-label="Buscar item do catálogo">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.2-4.2"/></svg>
                                 <span class="visually-hidden">Buscar item do catálogo</span>
                             </button>
                         </div>
@@ -127,12 +127,12 @@
         </div>
 
         <div class="inline-actions inline-actions-end" style="margin-top: 1rem;">
-            <button class="btn btn-primary" type="submit" title="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}" aria-label="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}">
+            <button class="ds-btn ds-btn--solid" type="submit" title="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}" aria-label="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}">
                 {% if item %}
-                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
                     <span>Salvar item</span>
                 {% else %}
-                    <svg viewBox="0 0 24 24" class="action-icon" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
                     <span>Adicionar item</span>
                 {% endif %}
             </button>

@@ -10,7 +10,7 @@
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
                 Voltar para itens
             </a>
-            <h2>{{ titulo }}</h2>
+            <h2 class="ds-h2">{{ titulo }}</h2>
             <p>Importe categorias e itens em um arquivo Excel `.xlsx` com cabeçalho na primeira linha.</p>
         </div>
     </div>
@@ -38,8 +38,8 @@
             </div>
 
             <div class="inline-actions">
-                <a class="btn btn-secondary" href="{% url 'catalogo:item_lista' %}">Voltar</a>
-                <button class="btn btn-primary" type="submit">Importar</button>
+                <a class="ds-btn ds-btn--ghost" href="{% url 'catalogo:item_lista' %}">Voltar</a>
+                <button class="ds-btn ds-btn--solid" type="submit">Importar</button>
             </div>
         </form>
     </div>
