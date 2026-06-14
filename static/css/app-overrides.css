@@ -166,3 +166,294 @@ html.cards-mode .table-data-col {
   min-width: 220px;
   text-align: center;
 }
+
+/* ===================================================================
+   VISUALIZAÇÕES DE LISTA — componentes específicos por entidade
+   =================================================================== */
+
+/* --- Orçamentos: Card Grid --- */
+.orcamento-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--ds-space-4);
+}
+
+.orcamento-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.orcamento-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.orcamento-card-numero {
+  font-family: var(--ds-font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ds-t-900);
+  letter-spacing: -0.01em;
+}
+
+.orcamento-card-titulo {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ds-t-900);
+  line-height: 1.3;
+}
+
+.orcamento-card-cliente {
+  font-size: 0.88rem;
+  color: var(--ds-t-500);
+}
+
+.orcamento-card-valor {
+  font-family: var(--ds-font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ds-text-strong);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  margin-top: auto;
+}
+
+.orcamento-card-meta {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.78rem;
+  color: var(--ds-t-500);
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ds-line);
+}
+
+.orcamento-card-meta span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.orcamento-card-meta svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  opacity: 0.6;
+}
+
+.orcamento-card-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+/* --- Categorias: Card Chips Grid --- */
+.categoria-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--ds-space-4);
+}
+
+.categoria-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+}
+
+.categoria-card-color {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--ds-radius-md);
+  background: var(--cat-color, var(--ds-accent));
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.categoria-card-color svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  color: #fff;
+}
+
+.categoria-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.categoria-card-nome {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ds-t-900);
+}
+
+.categoria-card-count {
+  font-size: 0.8rem;
+  color: var(--ds-t-500);
+  margin-top: 0.15rem;
+}
+
+.categoria-card-actions {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.categoria-card-inactive {
+  opacity: 0.55;
+}
+
+/* --- Clientes: Tabela melhorada com avatar --- */
+.cliente-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--ds-radius-pill);
+  background: var(--ds-accent);
+  color: var(--ds-on-accent);
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-family: var(--ds-font-display);
+  flex-shrink: 0;
+}
+
+.cliente-nome-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cliente-nome-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.cliente-nome-text strong {
+  color: var(--ds-t-900);
+  font-weight: 500;
+}
+
+.cliente-nome-text small {
+  color: var(--ds-t-500);
+  font-size: 0.78rem;
+}
+
+/* --- Empresas: Card Perfil --- */
+.empresa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: var(--ds-space-6);
+}
+
+.empresa-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.empresa-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.empresa-card-nome {
+  font-family: var(--ds-font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  color: var(--ds-t-900);
+  letter-spacing: -0.02em;
+}
+
+.empresa-card-fantasia {
+  font-size: 0.82rem;
+  color: var(--ds-t-500);
+  margin-top: 0.1rem;
+}
+
+.empresa-card-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.empresa-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.empresa-card-section-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ds-t-400);
+}
+
+.empresa-card-field {
+  font-size: 0.85rem;
+  color: var(--ds-t-700);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.empresa-card-field svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  color: var(--ds-t-400);
+  flex-shrink: 0;
+}
+
+.empresa-card-actions {
+  display: flex;
+  gap: 0.25rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ds-line);
+}
+
+@media (max-width: 640px) {
+  .orcamento-grid { grid-template-columns: 1fr; }
+  .categoria-grid { grid-template-columns: 1fr; }
+  .empresa-grid { grid-template-columns: 1fr; }
+  .empresa-card-sections { grid-template-columns: 1fr; }
+}
+
+/* O template usa .ds-shell como wrapper de página, não como layout com sidebar. */
+.ds-shell {
+  display: block;
+}
+
+/* Correções de legibilidade preservando a UI anterior. */
+.site-header .brand,
+.site-header .nav-links a,
+.site-header .header-user-meta,
+.site-header .header-user-company span,
+.site-header .nav-logout {
+  color: var(--ds-on-dark-dim);
+}
+
+.site-header .brand:hover,
+.site-header .nav-links a:hover,
+.site-header .nav-links a.active,
+.site-header .nav-logout:hover {
+  color: #fff;
+}
+
+.ds-empty > svg {
+  width: 3rem;
+  height: 3rem;
+  display: block;
+  margin: 0 auto 0.85rem;
+  color: var(--ds-t-400);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

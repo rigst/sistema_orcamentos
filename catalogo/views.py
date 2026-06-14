@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -50,7 +51,10 @@ def categoria_lista(request):
     ativo = request.GET.get("ativo", "ativas").strip()
     ordenar = request.GET.get("sort", "nome")
 
-    categorias = queryset_da_empresa(CategoriaItem.objects.all(), request.user)
+    categorias = queryset_da_empresa(
+        CategoriaItem.objects.annotate(itens_count=Count("itens")),
+        request.user,
+    )
 
     if ativo != "inativas":
         categorias = categorias.filter(ativo=True)
