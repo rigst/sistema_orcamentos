@@ -15,8 +15,8 @@
 
     <!-- Design system Stölben (tokens + componentes .ds-*) -->
     <link rel="stylesheet" href="{% static 'css/stolben-ui.css' %}">
-    <!-- Camada específica do app (sobre os tokens do DS) -->
-    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20260607-ds14">
+    <!-- Customizações específicas do app (sobre os tokens do DS) -->
+    <link rel="stylesheet" href="{% static 'css/app-overrides.css' %}">
 </head>
 <body class="ds-root {% block body_class %}{% endblock %}">
     <script nonce="{{ request.csp_nonce }}">

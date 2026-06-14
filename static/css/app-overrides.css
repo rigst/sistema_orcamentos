@@ -1,0 +1,125 @@
+/* ===================================================================
+   app-overrides.css — Customizações específicas do sistema_orcamentos
+   Camada adicional sobre os tokens e componentes do Stölben UI
+   =================================================================== */
+
+/* Utilitários específicos do app */
+
+.money {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Categoria chip — cor dinâmica via CSS variable */
+.category-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: var(--ds-radius-pill);
+  background: color-mix(in srgb, var(--category-color, var(--ds-accent)) 12%, var(--ds-bg));
+  color: var(--category-color, var(--ds-accent));
+  border: 1px solid color-mix(in srgb, var(--category-color, var(--ds-accent)) 25%, transparent);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.category-chip-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--category-color, var(--ds-accent));
+}
+
+.category-chip-inline {
+  display: inline-flex;
+  margin-right: 0.5rem;
+}
+
+/* Estado de cards mode (alternância tabela/cards em mobile) */
+html.cards-mode .table-actions-col,
+html.cards-mode .table-status-col {
+  display: table-cell;
+}
+
+html.cards-mode .table-data-col {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  html.cards-mode table tbody {
+    display: grid;
+  }
+
+  html.cards-mode table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    border-bottom: var(--ds-line) 1px solid;
+    padding: 1rem 0;
+  }
+
+  html.cards-mode table tbody td {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 1rem;
+    align-items: start;
+    padding: 0.5rem 1rem;
+    border-bottom: none;
+  }
+
+  html.cards-mode table tbody td::before {
+    content: attr(data-label);
+    font-weight: 500;
+    color: var(--ds-t-500);
+    font-size: 0.8rem;
+  }
+
+  html.cards-mode table tbody td.table-actions-col,
+  html.cards-mode table tbody td.table-status-col {
+    grid-template-columns: 1fr;
+    padding-top: 1rem;
+  }
+
+  html.cards-mode table tbody td.table-actions-col::before,
+  html.cards-mode table tbody td.table-status-col::before {
+    display: none;
+  }
+}
+
+/* Editor layout — grids específicos para formulários complexos */
+.editor-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--ds-space-6);
+  max-width: 100%;
+}
+
+@media (min-width: 920px) {
+  .editor-shell {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.editor-grid {
+  display: grid;
+  gap: var(--ds-space-4);
+}
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--ds-t-500);
+}
+
+.empty-state-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  color: var(--ds-t-900);
+  margin-bottom: 0.4rem;
+}
