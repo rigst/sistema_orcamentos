@@ -19,14 +19,14 @@
         <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {% if form.non_field_errors %}
-                <div class="form-errors">
+                <div class="ds-alert ds-alert--danger">
                     {% for error in form.non_field_errors %}
                         <p>{{ error }}</p>
                     {% endfor %}
                 </div>
             {% endif %}
 
-            <div class="form-note">
+            <div class="ds-alert ds-alert--info">
                 <strong>Colunas esperadas:</strong> categoria, item, valor, unidade, descrição, observação.
                 As unidades aceitas incluem `m`, `m2`, `m3`, `un`, `unid.` e `-`.
             </div>

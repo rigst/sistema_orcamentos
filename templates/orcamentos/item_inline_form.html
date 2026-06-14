@@ -17,7 +17,7 @@
         <input type="hidden" name="item_sort" value="{{ item_sort }}">
         {{ item_form.concorrencia_atualizado_em }}
         {% if item_form.non_field_errors %}
-            <div class="form-errors">
+            <div class="ds-alert ds-alert--danger">
                 {% for error in item_form.non_field_errors %}
                     <p>{{ error }}</p>
                 {% endfor %}
@@ -39,7 +39,7 @@
                     </div>
 
                     <div class="full">
-                        <label for="{{ item_form.item_catalogo.id_for_label }}">Item do catálogo{% if item_form.item_catalogo.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.item_catalogo.id_for_label }}">Item do catálogo{% if item_form.item_catalogo.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         <select name="item_catalogo" id="{{ item_form.item_catalogo.id_for_label }}" data-catalog-select>
                             <option value="">---------</option>
                             {% for catalogo_item in item_form.item_catalogo.field.queryset %}
@@ -74,7 +74,7 @@
 
                 <div class="form-grid">
                     <div class="full">
-                        <label for="{{ item_form.descricao.id_for_label }}">Descrição{% if item_form.descricao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.descricao.id_for_label }}">Descrição{% if item_form.descricao.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ item_form.descricao }}
                         {{ item_form.descricao.errors }}
                     </div>
@@ -88,37 +88,37 @@
 
                 <div class="form-grid">
                     <div>
-                        <label for="{{ item_form.quantidade.id_for_label }}">Quantidade{% if item_form.quantidade.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.quantidade.id_for_label }}">Quantidade{% if item_form.quantidade.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ item_form.quantidade }}
                         {{ item_form.quantidade.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.valor_unitario.id_for_label }}">Valor unitário (R$){% if item_form.valor_unitario.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.valor_unitario.id_for_label }}">Valor unitário (R$){% if item_form.valor_unitario.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ item_form.valor_unitario }}
                         {{ item_form.valor_unitario.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.desconto_valor.id_for_label }}">Desconto em valor (R$){% if item_form.desconto_valor.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.desconto_valor.id_for_label }}">Desconto em valor (R$){% if item_form.desconto_valor.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ item_form.desconto_valor }}
                         {{ item_form.desconto_valor.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.desconto_percentual.id_for_label }}">Desconto em %{% if item_form.desconto_percentual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.desconto_percentual.id_for_label }}">Desconto em %{% if item_form.desconto_percentual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ item_form.desconto_percentual }}
                         {{ item_form.desconto_percentual.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.acrescimo_valor.id_for_label }}">Acréscimo em valor (R$){% if item_form.acrescimo_valor.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.acrescimo_valor.id_for_label }}">Acréscimo em valor (R$){% if item_form.acrescimo_valor.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ item_form.acrescimo_valor }}
                         {{ item_form.acrescimo_valor.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ item_form.acrescimo_percentual.id_for_label }}">Acréscimo em %{% if item_form.acrescimo_percentual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ item_form.acrescimo_percentual.id_for_label }}">Acréscimo em %{% if item_form.acrescimo_percentual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ item_form.acrescimo_percentual }}
                         {{ item_form.acrescimo_percentual.errors }}
                     </div>

@@ -57,7 +57,7 @@
                     {{ form.status.as_hidden }}
                 {% endif %}
                 {% if form.non_field_errors %}
-                    <div class="form-errors">
+                    <div class="ds-alert ds-alert--danger">
                         {% for error in form.non_field_errors %}
                             <p>{{ error }}</p>
                         {% endfor %}
@@ -68,18 +68,18 @@
                         {% if orcamento %}
                             <div>
                                 <label for="{{ form.numero.id_for_label }}">Número</label>
-                                {% if form.numero.field.required %}<span class="required-mark">*</span>{% endif %}
+                                {% if form.numero.field.required %}<span class="ds-req">*</span>{% endif %}
                                 {{ form.numero }}
                                 {{ form.numero.errors }}
                             </div>
                         {% endif %}
                         <div>
-                            <label for="{{ form.configuracao_empresa.id_for_label }}">Empresa do orçamento{% if form.configuracao_empresa.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.configuracao_empresa.id_for_label }}">Empresa do orçamento{% if form.configuracao_empresa.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.configuracao_empresa }}
                             {{ form.configuracao_empresa.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.cliente.id_for_label }}">Cliente{% if form.cliente.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.cliente.id_for_label }}">Cliente{% if form.cliente.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.cliente }}
                             {{ form.cliente.errors }}
                         </div>
@@ -89,19 +89,19 @@
                         </div>
 
                         <div class="full">
-                            <label for="{{ form.titulo.id_for_label }}">Título{% if form.titulo.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.titulo.id_for_label }}">Título{% if form.titulo.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.titulo }}
                             {{ form.titulo.errors }}
                         </div>
 
                         <div class="full">
-                            <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial{% if form.descricao_inicial.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial{% if form.descricao_inicial.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.descricao_inicial }}
                             {{ form.descricao_inicial.errors }}
                         </div>
 
                         <div class="full">
-                            <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais{% if form.observacoes_gerais.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais{% if form.observacoes_gerais.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.observacoes_gerais }}
                             {{ form.observacoes_gerais.errors }}
                         </div>
@@ -112,45 +112,45 @@
                         <div class="form-submenu-body form-grid">
 
                         <div>
-                            <label for="{{ form.evento_nome.id_for_label }}">Evento ou projeto{% if form.evento_nome.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_nome.id_for_label }}">Evento ou projeto{% if form.evento_nome.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_nome }}
                             {{ form.evento_nome.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.evento_periodo.id_for_label }}">Período{% if form.evento_periodo.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_periodo.id_for_label }}">Período{% if form.evento_periodo.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_periodo }}
                             {{ form.evento_periodo.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.evento_local.id_for_label }}">Local{% if form.evento_local.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_local.id_for_label }}">Local{% if form.evento_local.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_local }}
                             {{ form.evento_local.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.evento_estande.id_for_label }}">Estande{% if form.evento_estande.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_estande.id_for_label }}">Estande{% if form.evento_estande.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_estande }}
                             {{ form.evento_estande.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.evento_area.id_for_label }}">Área{% if form.evento_area.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_area.id_for_label }}">Área{% if form.evento_area.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_area }}
                             {{ form.evento_area.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.evento_contato.id_for_label }}">Contato{% if form.evento_contato.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_contato.id_for_label }}">Contato{% if form.evento_contato.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_contato }}
                             {{ form.evento_contato.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.evento_telefone.id_for_label }}">Telefone do contato{% if form.evento_telefone.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_telefone.id_for_label }}">Telefone do contato{% if form.evento_telefone.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_telefone }}
                             {{ form.evento_telefone.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.evento_email.id_for_label }}">E-mail do contato{% if form.evento_email.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.evento_email.id_for_label }}">E-mail do contato{% if form.evento_email.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.evento_email }}
                             {{ form.evento_email.errors }}
                         </div>
@@ -174,7 +174,7 @@
                         </div>
 
                         <div>
-                            <label for="{{ form.validade_em.id_for_label }}">Validade{% if form.validade_em.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.validade_em.id_for_label }}">Validade{% if form.validade_em.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.validade_em }}
                             {{ form.validade_em.errors }}
                         </div>
@@ -183,23 +183,23 @@
                         {% endif %}
 
                         <div>
-                            <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor{% if form.desconto_global_valor.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor{% if form.desconto_global_valor.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.desconto_global_valor }}
                             {{ form.desconto_global_valor.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %{% if form.desconto_global_percentual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %{% if form.desconto_global_percentual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.desconto_global_percentual }}
                             {{ form.desconto_global_percentual.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor{% if form.acrescimo_global_valor.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor{% if form.acrescimo_global_valor.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.acrescimo_global_valor }}
                             {{ form.acrescimo_global_valor.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %{% if form.acrescimo_global_percentual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %{% if form.acrescimo_global_percentual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.acrescimo_global_percentual }}
                             {{ form.acrescimo_global_percentual.errors }}
                         </div>
@@ -210,24 +210,24 @@
                         <summary>Condições comerciais</summary>
                         <div class="form-submenu-body form-grid">
                             <div class="full">
-                                <label for="{{ form.condicoes_pagamento.id_for_label }}">Condições de pagamento{% if form.condicoes_pagamento.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                                <label for="{{ form.condicoes_pagamento.id_for_label }}">Condições de pagamento{% if form.condicoes_pagamento.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                                 {{ form.condicoes_pagamento }}
                                 {{ form.condicoes_pagamento.errors }}
                             </div>
 
                             <div>
-                                <label for="{{ form.valor_locacao.id_for_label }}">Valor de locação{% if form.valor_locacao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                                <label for="{{ form.valor_locacao.id_for_label }}">Valor de locação{% if form.valor_locacao.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                                 {{ form.valor_locacao }}
                                 {{ form.valor_locacao.errors }}
                             </div>
                             <div>
-                                <label for="{{ form.valor_servico.id_for_label }}">Valor de serviço{% if form.valor_servico.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                                <label for="{{ form.valor_servico.id_for_label }}">Valor de serviço{% if form.valor_servico.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                                 {{ form.valor_servico }}
                                 {{ form.valor_servico.errors }}
                             </div>
 
                             <div class="full">
-                                <label for="{{ form.servicos_taxas_inclusos.id_for_label }}">Serviços e taxas inclusos{% if form.servicos_taxas_inclusos.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                                <label for="{{ form.servicos_taxas_inclusos.id_for_label }}">Serviços e taxas inclusos{% if form.servicos_taxas_inclusos.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                                 {{ form.servicos_taxas_inclusos }}
                                 {{ form.servicos_taxas_inclusos.errors }}
                             </div>
@@ -239,62 +239,62 @@
                         <div class="form-submenu-body form-grid">
 
                         <div>
-                            <label for="{{ form.contrato_razao_social.id_for_label }}">Razão social{% if form.contrato_razao_social.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_razao_social.id_for_label }}">Razão social{% if form.contrato_razao_social.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_razao_social }}
                             {{ form.contrato_razao_social.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.contrato_cnpj.id_for_label }}">CNPJ{% if form.contrato_cnpj.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_cnpj.id_for_label }}">CNPJ{% if form.contrato_cnpj.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_cnpj }}
                             {{ form.contrato_cnpj.errors }}
                         </div>
 
                         <div class="full">
-                            <label for="{{ form.contrato_endereco.id_for_label }}">Endereço{% if form.contrato_endereco.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_endereco.id_for_label }}">Endereço{% if form.contrato_endereco.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_endereco }}
                             {{ form.contrato_endereco.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.contrato_cidade.id_for_label }}">Cidade{% if form.contrato_cidade.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_cidade.id_for_label }}">Cidade{% if form.contrato_cidade.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_cidade }}
                             {{ form.contrato_cidade.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.contrato_cep.id_for_label }}">CEP{% if form.contrato_cep.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_cep.id_for_label }}">CEP{% if form.contrato_cep.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_cep }}
                             {{ form.contrato_cep.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.contrato_responsavel_nome.id_for_label }}">Responsável{% if form.contrato_responsavel_nome.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_responsavel_nome.id_for_label }}">Responsável{% if form.contrato_responsavel_nome.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_responsavel_nome }}
                             {{ form.contrato_responsavel_nome.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.contrato_responsavel_documento.id_for_label }}">Documento do responsável{% if form.contrato_responsavel_documento.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_responsavel_documento.id_for_label }}">Documento do responsável{% if form.contrato_responsavel_documento.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_responsavel_documento }}
                             {{ form.contrato_responsavel_documento.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.contrato_cargo_funcao.id_for_label }}">Cargo ou função{% if form.contrato_cargo_funcao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_cargo_funcao.id_for_label }}">Cargo ou função{% if form.contrato_cargo_funcao.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_cargo_funcao }}
                             {{ form.contrato_cargo_funcao.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.contrato_inscricao_estadual.id_for_label }}">Inscrição estadual{% if form.contrato_inscricao_estadual.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_inscricao_estadual.id_for_label }}">Inscrição estadual{% if form.contrato_inscricao_estadual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_inscricao_estadual }}
                             {{ form.contrato_inscricao_estadual.errors }}
                         </div>
 
                         <div>
-                            <label for="{{ form.contrato_telefone.id_for_label }}">Telefone contratual{% if form.contrato_telefone.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_telefone.id_for_label }}">Telefone contratual{% if form.contrato_telefone.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_telefone }}
                             {{ form.contrato_telefone.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.contrato_email.id_for_label }}">E-mail contratual{% if form.contrato_email.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.contrato_email.id_for_label }}">E-mail contratual{% if form.contrato_email.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.contrato_email }}
                             {{ form.contrato_email.errors }}
                         </div>

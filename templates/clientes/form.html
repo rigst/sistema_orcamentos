@@ -11,17 +11,17 @@
                 Voltar para clientes
             </a>
             <h2 class="ds-h2">{{ titulo }}</h2>
-            <p>Preencha os dados do cliente. Campos com <span class="required-mark">*</span> são obrigatórios.</p>
+            <p>Preencha os dados do cliente. Campos com <span class="ds-req">*</span> são obrigatórios.</p>
         </div>
     </div>
 
-    <div class="form-panel">
+    <div class="ds-card">
         <form method="post" data-unsaved-warning="{% if not somente_leitura %}1{% else %}0{% endif %}">
             {% csrf_token %}
             {{ form.ativo }}
             {{ form.concorrencia_atualizado_em }}
             {% if form.non_field_errors %}
-                <div class="form-errors">
+                <div class="ds-alert ds-alert--danger" style="margin-bottom: 1rem;">
                     {% for error in form.non_field_errors %}
                         <p>{{ error }}</p>
                     {% endfor %}
@@ -29,8 +29,9 @@
             {% endif %}
 
             {% if cliente and not somente_leitura %}
-                <div class="form-note">
-                    <strong>Aviso:</strong> alterações neste cliente passam a valer para os orçamentos ainda não enviados vinculados a ele.
+                <div class="ds-alert ds-alert--info" style="margin-bottom: 1rem;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="11" x2="12" y2="16"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <div><span class="ds-alert-title">Aviso</span> Alterações neste cliente passam a valer para os orçamentos ainda não enviados vinculados a ele.</div>
                 </div>
             {% endif %}
 
@@ -38,92 +39,92 @@
                 <div class="form-grid">
                     <div class="form-subhead">Identificação</div>
                     <div>
-                        <label for="{{ form.tipo_pessoa.id_for_label }}">Tipo{% if form.tipo_pessoa.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.tipo_pessoa.id_for_label }}">Tipo{% if form.tipo_pessoa.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.tipo_pessoa }}
                         {{ form.tipo_pessoa.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.nome_razao_social.id_for_label }}">Nome / Razão social{% if form.nome_razao_social.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.nome_razao_social.id_for_label }}">Nome / Razão social{% if form.nome_razao_social.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.nome_razao_social }}
                         {{ form.nome_razao_social.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia{% if form.nome_fantasia.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.nome_fantasia.id_for_label }}">Nome fantasia{% if form.nome_fantasia.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.nome_fantasia }}
                         {{ form.nome_fantasia.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.cpf_cnpj.id_for_label }}">CPF/CNPJ{% if form.cpf_cnpj.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.cpf_cnpj.id_for_label }}">CPF/CNPJ{% if form.cpf_cnpj.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.cpf_cnpj }}
                         {{ form.cpf_cnpj.errors }}
                     </div>
 
                     <div class="form-subhead">Contato</div>
                     <div>
-                        <label for="{{ form.email.id_for_label }}">E-mail{% if form.email.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.email.id_for_label }}">E-mail{% if form.email.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.email }}
                         {{ form.email.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.contato_responsavel.id_for_label }}">Contato responsável{% if form.contato_responsavel.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.contato_responsavel.id_for_label }}">Contato responsável{% if form.contato_responsavel.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.contato_responsavel }}
                         {{ form.contato_responsavel.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.telefone.id_for_label }}">Telefone{% if form.telefone.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.telefone.id_for_label }}">Telefone{% if form.telefone.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.telefone }}
                         {{ form.telefone.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.celular.id_for_label }}">Celular{% if form.celular.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.celular.id_for_label }}">Celular{% if form.celular.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.celular }}
                         {{ form.celular.errors }}
                     </div>
 
                     <div class="form-subhead">Endereço</div>
                     <div>
-                        <label for="{{ form.cep.id_for_label }}">CEP{% if form.cep.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.cep.id_for_label }}">CEP{% if form.cep.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.cep }}
                         {{ form.cep.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.logradouro.id_for_label }}">Logradouro{% if form.logradouro.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.logradouro.id_for_label }}">Logradouro{% if form.logradouro.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.logradouro }}
                         {{ form.logradouro.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.numero.id_for_label }}">Número{% if form.numero.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.numero.id_for_label }}">Número{% if form.numero.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.numero }}
                         {{ form.numero.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.complemento.id_for_label }}">Complemento{% if form.complemento.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.complemento.id_for_label }}">Complemento{% if form.complemento.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.complemento }}
                         {{ form.complemento.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.bairro.id_for_label }}">Bairro{% if form.bairro.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.bairro.id_for_label }}">Bairro{% if form.bairro.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.bairro }}
                         {{ form.bairro.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.cidade.id_for_label }}">Cidade{% if form.cidade.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.cidade.id_for_label }}">Cidade{% if form.cidade.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.cidade }}
                         {{ form.cidade.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.estado.id_for_label }}">UF{% if form.estado.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.estado.id_for_label }}">UF{% if form.estado.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.estado }}
                         {{ form.estado.errors }}
                     </div>
 
                     <div class="full">
-                        <label for="{{ form.observacoes.id_for_label }}">Observações{% if form.observacoes.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.observacoes.id_for_label }}">Observações{% if form.observacoes.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.observacoes }}
                         {{ form.observacoes.errors }}
                     </div>

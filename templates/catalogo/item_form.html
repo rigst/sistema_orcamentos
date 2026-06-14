@@ -20,7 +20,7 @@
             {{ form.ativo }}
             {{ form.concorrencia_atualizado_em }}
             {% if form.non_field_errors %}
-                <div class="form-errors">
+                <div class="ds-alert ds-alert--danger">
                     {% for error in form.non_field_errors %}
                         <p>{{ error }}</p>
                     {% endfor %}
@@ -31,42 +31,42 @@
                 <div class="form-grid">
                     {% if item %}
                         <div>
-                            <label for="{{ form.codigo.id_for_label }}">Código{% if form.codigo.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                            <label for="{{ form.codigo.id_for_label }}">Código{% if form.codigo.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                             {{ form.codigo }}
                             {{ form.codigo.errors }}
                         </div>
                     {% endif %}
                     <div>
-                        <label for="{{ form.nome.id_for_label }}">Nome{% if form.nome.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.nome.id_for_label }}">Nome{% if form.nome.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.nome }}
                         {{ form.nome.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.categoria.id_for_label }}">Categoria{% if form.categoria.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.categoria.id_for_label }}">Categoria{% if form.categoria.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.categoria }}
                         {{ form.categoria.errors }}
                     </div>
                     <div>
-                        <label for="{{ form.unidade_medida.id_for_label }}">Unidade{% if form.unidade_medida.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.unidade_medida.id_for_label }}">Unidade{% if form.unidade_medida.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.unidade_medida }}
                         {{ form.unidade_medida.errors }}
                     </div>
 
                     <div>
-                        <label for="{{ form.valor_unitario_padrao.id_for_label }}">Valor padrão{% if form.valor_unitario_padrao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.valor_unitario_padrao.id_for_label }}">Valor padrão{% if form.valor_unitario_padrao.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.valor_unitario_padrao }}
                         {{ form.valor_unitario_padrao.errors }}
                     </div>
 
                     <div class="full">
-                        <label for="{{ form.descricao_padrao.id_for_label }}">Descrição padrão{% if form.descricao_padrao.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.descricao_padrao.id_for_label }}">Descrição padrão{% if form.descricao_padrao.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.descricao_padrao }}
                         {{ form.descricao_padrao.errors }}
                     </div>
 
                     <div class="full">
-                        <label for="{{ form.observacoes.id_for_label }}">Observações{% if form.observacoes.field.required %}<span class="required-mark">*</span>{% endif %}</label>
+                        <label for="{{ form.observacoes.id_for_label }}">Observações{% if form.observacoes.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.observacoes }}
                         {{ form.observacoes.errors }}
                     </div>
