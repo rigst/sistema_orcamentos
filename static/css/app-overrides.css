@@ -9,7 +9,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Categoria chip — cor dinâmica via CSS variable */
+/* Categoria chip — cor dinâmica via CSS variable (no DS substitute) */
 .category-chip {
   display: inline-flex;
   align-items: center;
@@ -105,24 +105,7 @@ html.cards-mode .table-data-col {
   gap: var(--ds-space-4);
 }
 
-/* Empty state */
-.empty-state {
-  text-align: center;
-  padding: 3rem 1.5rem;
-  color: var(--ds-t-500);
-}
-
-.empty-state-icon {
-  width: 3rem;
-  height: 3rem;
-  margin: 0 auto 1rem;
-  opacity: 0.5;
-}
-
-.empty-state h3 {
-  color: var(--ds-t-900);
-  margin-bottom: 0.4rem;
-}
+/* Empty state — use .ds-empty from design system */
 
 /* Panel Modal — custom modal system (AJAX carregamento de forms) */
 .panel-modal[hidden] {
@@ -176,20 +159,9 @@ html.cards-mode .table-data-col {
   transition: background 160ms ease;
 }
 
-/* Auth page styling */
-.auth-form {
-  display: grid;
-  gap: 1rem;
-}
+/* Auth page — uses .ds-field grid for form layout */
 
-.auth-error-text {
-  margin-bottom: 1rem;
-  color: #c43d3d;
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-/* Actions column — for tables/lists with action buttons */
+/* Actions column — for table headers/cells with action buttons */
 .actions-col {
   min-width: 220px;
   text-align: center;
