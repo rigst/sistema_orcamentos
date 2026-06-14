@@ -175,3 +175,22 @@ html.cards-mode .table-data-col {
   z-index: 3;
   transition: background 160ms ease;
 }
+
+/* Auth page styling */
+.auth-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.auth-error-text {
+  margin-bottom: 1rem;
+  color: #c43d3d;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Actions column — for tables/lists with action buttons */
+.actions-col {
+  min-width: 220px;
+  text-align: center;
+}
