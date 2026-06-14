@@ -86,14 +86,14 @@
                                         {% if user.eh_admin_perfil and orcamento.status == "aprovado" %}
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" data-confirm="Confirmar retorno para Rascunho?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Retornar a Rascunho" aria-label="Retornar a Rascunho">
+                                                <button class="ds-icon-btn" type="submit" title="Rascunho" aria-label="Retornar a Rascunho">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h8a6 6 0 1 1 0 12"/></svg>
                                                 </button>
                                             </form>
                                         {% elif orcamento.status == "enviado" or orcamento.status == "rejeitado" or orcamento.status == "cancelado" %}
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" data-confirm="Confirmar retorno para Rascunho?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Retornar a Rascunho" aria-label="Retornar a Rascunho">
+                                                <button class="ds-icon-btn" type="submit" title="Rascunho" aria-label="Retornar a Rascunho">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h8a6 6 0 1 1 0 12"/></svg>
                                                 </button>
                                             </form>
