@@ -123,3 +123,55 @@ html.cards-mode .table-data-col {
   color: var(--ds-t-900);
   margin-bottom: 0.4rem;
 }
+
+/* Panel Modal — custom modal system (AJAX carregamento de forms) */
+.panel-modal[hidden] {
+  display: none;
+}
+
+.panel-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  animation: panel-modal-fade 160ms ease;
+}
+
+@keyframes panel-modal-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.panel-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 26, 42, 0.5);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.panel-modal-dialog {
+  position: relative;
+  z-index: 1;
+  width: min(760px, calc(100vw - 2rem));
+  max-height: calc(100vh - 3rem);
+  margin: 1.5rem auto;
+  overflow: auto;
+}
+
+.panel-modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(20, 26, 42, 0.85);
+  color: #fff;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 160ms ease;
+}
