@@ -233,7 +233,10 @@
      Variante legada: [data-ds-dark-toggle] (alterna claro/escuro).
      A leitura inicial deve ser feita por um script inline no <head> (evita flash). */
   var mq = window.matchMedia("(prefers-color-scheme: dark)");
-  function getMode() { try { return localStorage.getItem("ds-theme-mode") || "auto"; } catch (e) { return "auto"; } }
+  /* Este app só tem estilos para o tema claro (style.css passe 12) e nenhum
+     botão de alternância; "auto" seguindo o sistema produzia um misto escuro
+     ilegível. Padrão travado em "light" até existir uma camada escura. */
+  function getMode() { try { return localStorage.getItem("ds-theme-mode") || "light"; } catch (e) { return "light"; } }
   function applyMode() {
     var m = getMode();
     var dark = m === "dark" || (m === "auto" && mq.matches);
