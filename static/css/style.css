@@ -3642,3 +3642,139 @@ th.money { white-space: nowrap; }
   border-top: 1px solid var(--ds-line);
 }
 .value-unit { font-weight: 400; color: var(--text-soft); font-size: 0.86rem; }
+
+/* =================================================================
+   POLIMENTO UI/UX — passe 12 (2026-07)
+   TEMA CLARO: reverte os blocos escuros dos passes 4/5/6/8, no mesmo
+   espírito do redesign claro do site_stolben. Pílula do cabeçalho em
+   vidro branco, faixa de título e heros claros com grade blueprint,
+   destaques financeiros em azul suave. O azul segue como acento.
+   ================================================================= */
+
+/* ---- CABEÇALHO: pílula de vidro branco ---- */
+.nav {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(15, 17, 21, 0.08);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+.site-header.is-scrolled .nav {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(15, 17, 21, 0.1);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+}
+.brand { color: var(--ds-t-900); }
+.brand span { color: var(--ds-blue); }
+.nav-links { color: var(--ds-t-500); }
+.nav-links a { color: var(--ds-t-500); }
+.nav-links a:hover { color: var(--ds-t-900); background: rgba(15, 17, 21, 0.05); }
+.nav-links a.active { color: var(--ds-blue-dark); background: var(--ds-blue-50); }
+.header-user-greeting { color: var(--ds-t-700); }
+.header-sep { color: var(--ds-t-400); }
+.header-user-company span { color: var(--ds-t-500); }
+.user-role {
+  color: var(--ds-blue-dark);
+  background: var(--ds-blue-50);
+  border-color: var(--ds-blue-100);
+}
+.header-company-select {
+  background-color: #fff;
+  color: var(--ds-t-700);
+  border-color: var(--ds-line);
+  background-image:
+    linear-gradient(45deg, transparent 50%, rgba(71, 101, 138, 0.58) 50%),
+    linear-gradient(135deg, rgba(71, 101, 138, 0.58) 50%, transparent 50%);
+}
+.header-company-select:hover { color: var(--ds-t-900); border-color: rgba(71, 101, 138, 0.34); }
+.nav-logout { background: #fff; color: var(--ds-t-700); border-color: var(--ds-line); }
+.nav-logout:hover { background: var(--ds-blue-50); color: var(--ds-blue-dark); border-color: var(--ds-blue-100); }
+.nav-toggle { background: #fff; border-color: var(--ds-line); }
+.nav-toggle-bar { background: var(--ds-t-900); }
+
+/* menu colapsável (mobile) sobre a pílula clara */
+@media (max-width: 1024px) {
+  .nav.nav-open .header-user-meta { border-top-color: var(--ds-line); }
+  .nav.nav-open .header-user-info { background: transparent; border: 0; }
+  .nav.nav-open .header-user-greeting { color: var(--ds-t-900); }
+  .nav.nav-open .header-user-company span { color: var(--ds-t-500); }
+  .nav.nav-open .header-sep { color: var(--ds-t-400); }
+  .nav.nav-open .user-role { color: var(--ds-t-500); }
+  .nav.nav-open .user-role::before { color: var(--ds-t-400); }
+}
+
+/* ---- FAIXA DE TÍTULO (page-head) clara ---- */
+.page-head {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  color: var(--ds-t-700);
+}
+.page-head::after { background: rgba(37, 99, 235, 0.1); }
+.page-head h2, .page-head .ds-h1 { color: var(--ds-t-900); }
+.page-head p { color: var(--ds-t-500); }
+.page-head .ds-kicker { color: var(--ds-blue); }
+.page-back { color: var(--ds-t-500); }
+.page-back:hover { color: var(--ds-t-900); }
+.page-head .btn-secondary { background: #fff; color: var(--ds-t-700); border-color: var(--ds-line); }
+.page-head .btn-secondary:hover { background: var(--ds-blue-50); border-color: var(--ds-blue-100); color: var(--ds-blue-dark); }
+
+/* ---- HERO (dashboard/login) claro com grade blueprint ---- */
+.page-hero.ds-panel-dark,
+.ds-root.is-vitrine .page-hero.ds-panel-dark {
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  color: var(--ds-t-700);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.07);
+}
+.page-hero .ds-media { display: none; }
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(37, 99, 235, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(37, 99, 235, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(120% 90% at 25% 15%, #000 25%, transparent 72%);
+  mask-image: radial-gradient(120% 90% at 25% 15%, #000 25%, transparent 72%);
+}
+.page-hero .ds-glow { background: radial-gradient(circle, rgba(37, 99, 235, 0.12), transparent 70%); }
+.page-hero .ds-h1 { color: var(--ds-t-900); }
+.page-hero .ds-h1 .ds-muted { color: var(--ds-blue); }
+.page-hero p { color: var(--ds-t-500); }
+.page-hero .ds-kicker { color: var(--ds-blue); }
+
+/* ---- DESTAQUES FINANCEIROS em azul suave (antes blocos escuros) ---- */
+.totals-card-emphasis {
+  background: var(--ds-blue-50);
+  border: 1px solid var(--ds-blue-100);
+  box-shadow: none;
+}
+.totals-card-emphasis .preview-label { color: var(--ds-blue-dark); }
+.totals-card-emphasis strong { color: var(--ds-blue-dark); }
+.stat-card--dark { background: var(--ds-blue-50); border: 1px solid var(--ds-blue-100); }
+.stat-card--dark:hover { border-color: var(--ds-blue-light); }
+.stat-card--dark .label { color: var(--ds-blue-dark); opacity: 0.75; }
+.stat-card--dark .value { color: var(--ds-blue-dark); }
+
+/* ---- SUBTÍTULOS DE FORMULÁRIO: barra clara com acento azul ---- */
+.form-subhead {
+  color: var(--ds-t-900);
+  background: var(--ds-blue-50);
+  border-left: 3px solid var(--ds-blue);
+}
+
+/* ---- MODAIS: cabeçalho claro + X escuro sobre fundo claro ---- */
+.panel-modal .page-head { border: 0; border-bottom: 1px solid var(--ds-line); }
+.panel-modal-close { background: #fff; border-color: var(--ds-line); color: var(--ds-t-700); }
+.panel-modal-close:hover { background: var(--ds-blue-50); border-color: var(--ds-blue-100); color: var(--ds-blue-dark); }
+.item-modal .item-modal-heading {
+  background: var(--ds-surface);
+  color: var(--ds-t-900);
+  border-bottom: 1px solid var(--ds-line);
+}
+.item-modal .item-modal-heading h3 { color: var(--ds-t-900); }
+
+/* ---- ALTERNADOR tabela/cards: azul no lugar do escuro ---- */
+.view-switch-thumb { background: var(--ds-blue); box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3); }
+.list-view-toggle button.is-active { background: var(--ds-blue); }

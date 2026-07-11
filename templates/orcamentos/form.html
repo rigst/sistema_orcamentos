@@ -317,15 +317,6 @@
         {% if orcamento %}
             <div id="item-feedback-region" aria-live="polite"></div>
 
-            {% if not modo_somente_leitura %}
-                <div class="inline-actions" style="margin-bottom: 1rem;">
-                    <button class="ds-btn ds-btn--solid" type="button" data-open-item-modal="1" data-modal-url="{% url 'orcamentos:item_criar' orcamento.pk %}">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
-                        <span>Adicionar item</span>
-                    </button>
-                </div>
-            {% endif %}
-
             <div class="table-section">
                 <div class="section-heading section-heading-compact">
                     <div>
@@ -334,6 +325,14 @@
                             <p>Visualização dos itens do orçamento.</p>
                         {% endif %}
                     </div>
+                    {% if not modo_somente_leitura %}
+                        <div class="inline-actions">
+                            <button class="ds-btn ds-btn--solid" type="button" data-open-item-modal="1" data-modal-url="{% url 'orcamentos:item_criar' orcamento.pk %}">
+                                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                                <span>Adicionar item</span>
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
 
                 <form method="get" class="filters-form compact-filters">
@@ -534,6 +533,12 @@
     itemModalContent.innerHTML = "";
     document.body.classList.remove("modal-open");
   };
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && itemModal && !itemModal.hidden) {
+      closeItemModal();
+    }
+  });
 
   document.addEventListener("click", async (event) => {
     const closeModalTrigger = event.target.closest("[data-close-item-modal='1']");

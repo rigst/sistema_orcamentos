@@ -182,6 +182,22 @@
 .ds-icon-btn:hover { color: var(--ds-accent-fg); border-color: var(--ds-accent-100); background: var(--ds-accent-50); }
 .ds-icon-btn svg { width: 1.1rem; height: 1.1rem; }
 
+/* Ícones a traço 24x24 sem atributos de pintura no markup: sem esta regra o
+   SVG herda fill preto (vira mancha) ou fica invisível quando só tem linhas. */
+.ds-root svg[viewBox="0 0 24 24"]:not([fill]) {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Âncoras com cara de botão: `.ds-root a { color: inherit }` tem
+   especificidade maior que a variante; reafirma a cor correta do texto. */
+a.ds-btn--solid { color: var(--ds-on-accent); }
+a.ds-btn--primary, a.ds-btn--danger { color: #fff; }
+a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
+
 /* ---------------------- CABEÇALHO / TOPBAR --------------------------- */
 .ds-topbar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--ds-topbar-bg); backdrop-filter: blur(var(--ds-blur)); border-bottom: 1px solid var(--ds-line); transition: box-shadow var(--ds-dur); }
 .ds-topbar.is-scrolled { box-shadow: 0 8px 24px rgba(15, 17, 21, 0.06); }
