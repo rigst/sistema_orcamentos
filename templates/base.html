@@ -8,10 +8,10 @@
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
     <link rel="apple-touch-icon" href="{% static 'favicon.png' %}">
 
-    <!-- Google Fonts (design system Stölben: Inter + Manrope) -->
+    <!-- Google Fonts (identidade "Livro-Razão": Bricolage Grotesque + Instrument Sans + Spline Sans Mono) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Instrument+Sans:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Design system Stölben (tokens + componentes .ds-*) -->
     <link rel="stylesheet" href="{% static 'css/stolben-ui.css' %}">
@@ -19,6 +19,8 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- Customizações específicas do app (sobre os tokens do DS) -->
     <link rel="stylesheet" href="{% static 'css/app-overrides.css' %}">
+    <!-- Identidade "Livro-Razão": personalidade própria (carrega por último) -->
+    <link rel="stylesheet" href="{% static 'css/orcamentos-identidade.css' %}">
 </head>
 <body class="ds-root {% block body_class %}{% endblock %}">
     <script nonce="{{ request.csp_nonce }}">

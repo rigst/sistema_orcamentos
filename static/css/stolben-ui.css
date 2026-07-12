@@ -7,20 +7,23 @@
 
 /* ------------------------------- TOKENS ------------------------------ */
 :root {
-  /* Superfícies */
-  --ds-bg: #eef0f4;          /* fundo da janela */
-  --ds-panel: #f7f8fa;       /* painel/coluna principal */
-  --ds-surface: #ffffff;     /* cartões e campos */
-  --ds-ink: #0f1115;         /* escuro forte (hero/realce) */
-  --ds-ink-soft: #171a21;    /* escuro suave (áreas interativas) */
-  --ds-topbar-bg: rgba(247, 248, 250, 0.85); /* fundo translúcido do topbar */
+  /* Superfícies — tema "Livro-Razão": papel frio esverdeado, tinta pinho */
+  --ds-bg: #ecefe9;          /* fundo da janela (papel de razão) */
+  --ds-panel: #f3f5ef;       /* painel/coluna principal */
+  --ds-surface: #fcfdfa;     /* cartões e campos (folha) */
+  --ds-ink: #123a30;         /* tinta pinho forte (hero/realce/capa) */
+  --ds-ink-soft: #17483b;    /* pinho suave (áreas interativas) */
+  --ds-topbar-bg: rgba(18, 58, 48, 0.82); /* fundo translúcido do topbar */
 
-  /* Azul da marca (acento padrão) */
-  --ds-blue: #2563eb;
-  --ds-blue-light: #3b82f6;
-  --ds-blue-dark: #1d4ed8;
-  --ds-blue-50: #eff4ff;
-  --ds-blue-100: #dbe6ff;
+  /* Verde-tinta da marca (acento padrão) — antes azul */
+  --ds-blue: #17795a;
+  --ds-blue-light: #2a9d78;
+  --ds-blue-dark: #0e5c43;
+  --ds-blue-50: #e8f3ee;
+  --ds-blue-100: #cfe9dd;
+  /* Latão: acento quente secundário (kickers, carimbos, detalhes) */
+  --ds-brass: #a9762b;
+  --ds-brass-soft: #f2e6cf;
 
   /* Acento temável: cada app troca SÓ --ds-accent (ver classes .ds-theme-*).
      Os tons (light/dark/50/100/fg) são DERIVADOS daqui, para que o tema escuro
@@ -59,19 +62,21 @@
   --ds-line-dash: #cfd3da;
   --ds-line-dark: rgba(255, 255, 255, 0.1);
 
-  /* Tipografia */
-  --ds-font-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --ds-font-display: "Manrope", "Inter", sans-serif;
+  /* Tipografia — Bricolage Grotesque (display) + Instrument Sans (texto) +
+     Spline Sans Mono (valores/códigos, as "colunas de números" do razão) */
+  --ds-font-sans: "Instrument Sans", system-ui, -apple-system, sans-serif;
+  --ds-font-display: "Bricolage Grotesque", "Instrument Sans", sans-serif;
+  --ds-font-mono: "Spline Sans Mono", ui-monospace, "SFMono-Regular", monospace;
   --ds-fs-hero: clamp(2.4rem, 5.5vw, 4rem);
   --ds-fs-h1: clamp(2rem, 4vw, 3rem);
   --ds-fs-h2: clamp(1.6rem, 3vw, 2.3rem);
   --ds-fs-h3: 1.25rem;
 
-  /* Raios */
-  --ds-radius-xl: 2.5rem;
-  --ds-radius-lg: 1.5rem;
-  --ds-radius-md: 1rem;
-  --ds-radius-sm: 0.6rem;
+  /* Raios — firmes, com cara de documento (menos "bolha") */
+  --ds-radius-xl: 1.4rem;
+  --ds-radius-lg: 0.85rem;
+  --ds-radius-md: 0.55rem;
+  --ds-radius-sm: 0.4rem;
   --ds-radius-pill: 999px;
 
   /* Espaço (escala de 4px) */

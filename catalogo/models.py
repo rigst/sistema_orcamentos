@@ -9,6 +9,7 @@ from core.tenancy import obter_grupo_empresa_padrao
 
 class CategoriaItem(models.Model):
     COLOR_CHOICES = [
+        ("#17795A", "Verde-tinta"),
         ("#2563EB", "Azul"),
         ("#DC2626", "Vermelho"),
         ("#EAB308", "Amarelo"),
@@ -22,11 +23,12 @@ class CategoriaItem(models.Model):
     ]
 
     COLOR_SEQUENCE = [
+        "#17795A",
+        "#EA580C",
         "#2563EB",
         "#DC2626",
         "#EAB308",
         "#16A34A",
-        "#EA580C",
         "#7C3AED",
         "#DB2777",
         "#92400E",
@@ -36,7 +38,7 @@ class CategoriaItem(models.Model):
 
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
-    cor = models.CharField(max_length=7, choices=COLOR_CHOICES, default="#2563EB")
+    cor = models.CharField(max_length=7, choices=COLOR_CHOICES, default="#17795A")
     ativo = models.BooleanField(default=True)
     empresa = models.ForeignKey(
         "auth.Group",
