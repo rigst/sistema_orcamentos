@@ -409,7 +409,7 @@ section {
   margin-top: 1rem;
   border: 1px solid rgba(72, 100, 90, 0.14);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(250, 252, 255, 0.98), rgba(244, 248, 255, 0.96));
+  background: linear-gradient(180deg, rgba(251, 253, 249, 0.98), rgba(244, 248, 243, 0.96));
   overflow: hidden;
 }
 
@@ -1234,7 +1234,7 @@ tr:hover td {
   padding: 0.95rem 1rem;
   border-radius: 16px;
   border: 1px solid rgba(72, 100, 90, 0.12);
-  background: rgba(244, 248, 255, 0.86);
+  background: rgba(240, 246, 240, 0.8);
 }
 
 .auth-disclaimer p {
@@ -1306,12 +1306,12 @@ tr:hover td {
 
 .item-row-detail td {
   padding: 0;
-  background: rgba(243, 248, 255, 0.96);
+  background: rgba(243, 248, 242, 0.96);
 }
 
 .item-row-inline-edit td {
   padding: 0;
-  background: rgba(243, 248, 255, 0.96);
+  background: rgba(243, 248, 242, 0.96);
 }
 
 .item-row-detail.is-hidden {
