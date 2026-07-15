@@ -18,7 +18,7 @@
         {% endif %}
     </div>
 
-    <form method="get" class="ds-toolbar" style="margin-bottom: 1.5rem;">
+    <form method="get" class="ds-toolbar" style="margin-bottom: 1.5rem;" data-autosubmit="1">
         <span class="ds-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
             <input class="ds-input" type="search" name="q" placeholder="Buscar número, cliente…" value="{{ busca }}" />
@@ -75,56 +75,62 @@
                             </td>
                             <td>
                                 <div>
-                                <span class="ds-badge {% if orcamento.status == 'rascunho' %}ds-badge--neutral{% elif orcamento.status == 'enviado' %}ds-badge--info{% elif orcamento.status == 'aprovado' %}ds-badge--success{% else %}ds-badge--warn{% endif %}">
+                                <span class="badge status-{{ orcamento.status }}">
                                     {{ orcamento.get_status_display }}
                                 </span>
                                 {% if not orcamento.ativo %}
                                     <span class="ds-badge ds-badge--danger">Inativo</span>
                                 {% endif %}
                                 {% if user.pode_gerenciar_orcamentos and orcamento.ativo %}
-                                    <div class="ds-row" style="gap: 0.25rem; justify-content: flex-start;">
+                                    <div class="status-actions">
                                         {% if user.eh_admin_perfil and orcamento.status == "aprovado" %}
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" data-confirm="Confirmar retorno para Rascunho?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Rascunho" aria-label="Retornar a Rascunho">
+                                                <button class="status-action" type="submit" title="Retornar a Rascunho" aria-label="Retornar a Rascunho">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h8a6 6 0 1 1 0 12"/></svg>
+                                                    <span>Rascunho</span>
                                                 </button>
                                             </form>
                                         {% elif orcamento.status == "enviado" or orcamento.status == "rejeitado" or orcamento.status == "cancelado" %}
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rascunho' %}" data-confirm="Confirmar retorno para Rascunho?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Rascunho" aria-label="Retornar a Rascunho">
+                                                <button class="status-action" type="submit" title="Retornar a Rascunho" aria-label="Retornar a Rascunho">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7 4 12l5 5"/><path d="M4 12h8a6 6 0 1 1 0 12"/></svg>
+                                                    <span>Rascunho</span>
                                                 </button>
                                             </form>
                                         {% endif %}
                                         {% if orcamento.status == "rascunho" or orcamento.status == "em_elaboracao" %}
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'enviado' %}" data-confirm="Confirmar mudança para Enviado?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Enviar" aria-label="Enviar para análise">
+                                                <button class="status-action" type="submit" title="Enviar para análise" aria-label="Enviar para análise">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 3 10 14"/><path d="m21 3-7 18-4-7-7-4 18-7Z"/></svg>
+                                                    <span>Enviar</span>
                                                 </button>
                                             </form>
                                         {% endif %}
                                         {% if orcamento.status == "enviado" %}
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'aprovado' %}" data-confirm="Confirmar mudança para Aprovado?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Aprovar" aria-label="Aprovar orçamento">
+                                                <button class="status-action status-action--positive" type="submit" title="Aprovar orçamento" aria-label="Aprovar orçamento">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+                                                    <span>Aprovar</span>
                                                 </button>
                                             </form>
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'rejeitado' %}" data-confirm="Confirmar mudança para Rejeitado?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Rejeitar" aria-label="Rejeitar orçamento">
+                                                <button class="status-action status-action--negative" type="submit" title="Rejeitar orçamento" aria-label="Rejeitar orçamento">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                                    <span>Rejeitar</span>
                                                 </button>
                                             </form>
                                         {% endif %}
                                         {% if orcamento.status == "rascunho" or orcamento.status == "em_elaboracao" or orcamento.status == "enviado" %}
                                             <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk 'cancelado' %}" data-confirm="Confirmar mudança para Cancelado?">
                                                 {% csrf_token %}
-                                                <button class="ds-icon-btn" type="submit" title="Cancelar" aria-label="Cancelar orçamento">
+                                                <button class="status-action" type="submit" title="Cancelar orçamento" aria-label="Cancelar orçamento">
                                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
+                                                    <span>Cancelar</span>
                                                 </button>
                                             </form>
                                         {% endif %}

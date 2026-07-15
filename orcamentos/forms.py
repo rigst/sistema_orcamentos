@@ -67,8 +67,8 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             "contrato_inscricao_estadual",
         ]
         widgets = {
-            "data_emissao": forms.DateInput(attrs={"type": "date"}),
-            "validade_em": forms.DateInput(attrs={"type": "date"}),
+            "data_emissao": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
+            "validade_em": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
         }
 
     def __init__(self, *args, user=None, **kwargs):

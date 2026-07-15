@@ -3778,3 +3778,155 @@ th.money { white-space: nowrap; }
 /* ---- ALTERNADOR tabela/cards: azul no lugar do escuro ---- */
 .view-switch-thumb { background: var(--ds-blue); box-shadow: 0 4px 12px rgba(23, 121, 90, 0.3); }
 .list-view-toggle button.is-active { background: var(--ds-blue); }
+
+/* =====================================================================
+   PASSE 13 — Edição de orçamento mais dinâmica (jul/2026)
+   Régua de fechamento fixa, contexto no cabeçalho, subtotal ao vivo no
+   modal de item e ações de status com rótulo na lista.
+   ===================================================================== */
+
+/* ---- Cabeçalho da edição: número + carimbo + cliente ---- */
+.page-head-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 0.55rem;
+}
+.page-head-num {
+  font-family: var(--ds-font-mono);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.06em;
+  color: var(--ds-brass);
+}
+.page-head-cliente {
+  color: var(--ds-t-900);
+  font-weight: 500;
+}
+.page-head-emissao {
+  color: var(--ds-t-500);
+  font-size: 0.85rem;
+}
+.page-head-emissao::before {
+  content: "·";
+  margin-right: 0.65rem;
+  color: var(--ds-t-500);
+}
+
+/* ---- Régua de fechamento fixa (linha final do razão, sempre à vista) ---- */
+.ledger-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.6rem;
+  margin-top: 1rem;
+  padding: 0.7rem 1.25rem;
+  background: var(--ds-surface);
+  border: 1px solid var(--ds-line);
+  border-top: 3px double var(--ds-brass);
+  border-radius: var(--ds-radius-md) var(--ds-radius-md) 0 0;
+  box-shadow: 0 -10px 26px rgba(18, 58, 48, 0.12);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+.ledger-bar[data-hidden="1"] {
+  transform: translateY(115%);
+  opacity: 0;
+  pointer-events: none;
+}
+.ledger-bar-group {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+.ledger-bar-label {
+  font-family: var(--ds-font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+}
+.ledger-bar-group-total .ledger-bar-label { color: var(--ds-brass); }
+.ledger-bar-sub {
+  font-size: 0.95rem;
+  color: var(--ds-t-700);
+}
+.ledger-bar-total {
+  font-size: 1.25rem;
+  color: var(--ds-blue-dark);
+}
+.ledger-bar > .ds-btn { margin-left: auto; }
+@media (prefers-reduced-motion: reduce) {
+  .ledger-bar { transition: none; }
+}
+@media (max-width: 640px) {
+  .ledger-bar { gap: 0.35rem 1rem; padding: 0.6rem 0.9rem; }
+  .ledger-bar-total { font-size: 1.1rem; }
+}
+
+/* ---- Subtotal ao vivo no modal de item ---- */
+.item-live-subtotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.9rem;
+  padding-top: 0.65rem;
+  border-top: 1px dashed var(--ds-line-strong);
+}
+.item-live-subtotal span {
+  font-family: var(--ds-font-mono);
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+}
+.item-live-subtotal strong {
+  font-size: 1.05rem;
+  color: var(--ds-blue-dark);
+}
+
+/* ---- Ações de status com rótulo (lista de orçamentos) ---- */
+.status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.45rem;
+}
+.status-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--ds-line-strong);
+  border-radius: 999px;
+  background: var(--ds-surface);
+  color: var(--ds-t-700);
+  font-family: var(--ds-font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+.status-action svg { width: 0.85rem; height: 0.85rem; flex: none; }
+.status-action:hover {
+  border-color: var(--ds-t-700);
+  background: var(--ds-accent-50);
+  color: var(--ds-t-900);
+}
+.status-action--positive:hover {
+  border-color: #57ac7f;
+  background: #e6f4ec;
+  color: #1e7a4d;
+}
+.status-action--negative:hover {
+  border-color: #c9695f;
+  background: #f8ebe9;
+  color: #a5342a;
+}

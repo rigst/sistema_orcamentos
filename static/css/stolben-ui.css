@@ -53,6 +53,8 @@
   --ds-t-400: #8b91a0;
   /* Sobre escuro */
   --ds-on-dark: #e5e7eb;
+  --ds-on-dark-soft: rgba(229, 231, 235, 0.78);
+  --ds-on-dark-mute: rgba(229, 231, 235, 0.55);
   --ds-on-dark-dim: #9aa3b2;
   --ds-on-dark-faint: #6b7685;
 

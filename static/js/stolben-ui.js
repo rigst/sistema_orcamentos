@@ -294,10 +294,25 @@
     });
   }
 
+  /* ---- Filtros dinâmicos (form[data-autosubmit]) ----
+     Selects aplicam o filtro assim que mudam; campos de texto continuam
+     enviando com Enter ou pelo botão do formulário. */
+  function initAutosubmit() {
+    document.querySelectorAll("form[data-autosubmit]").forEach(function (form) {
+      form.querySelectorAll("select").forEach(function (sel) {
+        sel.addEventListener("change", function () {
+          if (form.requestSubmit) form.requestSubmit();
+          else form.submit();
+        });
+      });
+    });
+  }
+
   function init() {
     initReveal(); initTopbar(); initMenus(); initModals();
     initTabs(); initTableSelect(); initToastTriggers();
     initSegments(); initAccordions(); initDropzones(); initThemeSelect(); initThemeMode(); initMobileNav(); initFloatingNav();
+    initAutosubmit();
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

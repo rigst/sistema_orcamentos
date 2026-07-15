@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load br_format %}
 
 {% block title %}{{ titulo }}{% endblock %}
 
@@ -11,10 +12,17 @@
                 Voltar para orçamentos
             </a>
             <h2 class="ds-h2">{{ titulo }}</h2>
-            {% if somente_visualizacao %}
+            {% if orcamento %}
+                <div class="page-head-meta">
+                    <span class="page-head-num">{{ orcamento.numero }}</span>
+                    <span class="badge status-{{ orcamento.status }}">{{ orcamento.get_status_display }}</span>
+                    <span class="page-head-cliente">{{ orcamento.cliente }}</span>
+                    <span class="page-head-emissao">Emissão {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
+                </div>
+            {% elif somente_visualizacao %}
                 <p>Consulte os dados gerais e os itens do orçamento em modo estritamente visual.</p>
             {% else %}
-                <p>Edite os dados do orçamento e gerencie os itens diretamente nesta página.</p>
+                <p>Preencha os dados abaixo para criar o orçamento. Os itens são adicionados na sequência.</p>
             {% endif %}
         </div>
         <div class="inline-actions">
@@ -335,7 +343,7 @@
                     {% endif %}
                 </div>
 
-                <form method="get" class="filters-form compact-filters">
+                <form method="get" class="filters-form compact-filters" data-autosubmit="1">
                     <input class="ds-input" type="text" name="item_q" placeholder="Buscar por nome, código ou descrição" value="{{ item_q }}">
                     <select name="item_categoria">
                         <option value="">Todas as categorias</option>
@@ -367,6 +375,23 @@
                 {% include "orcamentos/partials/totais_card.html" %}
             </div>
 
+            <div class="ledger-bar" id="ledger-bar" role="status" aria-label="Resumo do orçamento">
+                <div class="ledger-bar-group">
+                    <span class="ledger-bar-label">Subtotal</span>
+                    <span class="ledger-bar-sub money" data-ledger-subtotal>{{ orcamento.subtotal_itens|brl }}</span>
+                </div>
+                <div class="ledger-bar-group ledger-bar-group-total">
+                    <span class="ledger-bar-label">Total final</span>
+                    <strong class="ledger-bar-total money" data-ledger-total>{{ orcamento.total_final|brl }}</strong>
+                </div>
+                {% if not modo_somente_leitura %}
+                    <button class="ds-btn ds-btn--solid ds-btn--sm" type="submit" form="orcamento-main-form">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
+                        <span>Salvar orçamento</span>
+                    </button>
+                {% endif %}
+            </div>
+
             {% if not modo_somente_leitura %}
                 <div class="item-modal" id="item-modal" hidden>
                     <div class="item-modal-backdrop" data-close-item-modal="1"></div>
@@ -392,6 +417,31 @@
   };
 
   openSectionsWithErrors();
+
+  const ledgerBar = document.getElementById("ledger-bar");
+
+  const syncLedgerBar = () => {
+    if (!ledgerBar) return;
+    const totais = document.getElementById("totais-card-region");
+    if (!totais) return;
+    const total = totais.querySelector(".totals-card-emphasis strong");
+    const subtotal = totais.querySelector(".totals-strip-general .totals-card strong");
+    const totalOut = ledgerBar.querySelector("[data-ledger-total]");
+    const subtotalOut = ledgerBar.querySelector("[data-ledger-subtotal]");
+    if (total && totalOut) totalOut.textContent = total.textContent.trim();
+    if (subtotal && subtotalOut) subtotalOut.textContent = subtotal.textContent.trim();
+  };
+
+  if (ledgerBar && "IntersectionObserver" in window) {
+    const totaisRegion = document.getElementById("totais-card-region");
+    if (totaisRegion) {
+      new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          ledgerBar.dataset.hidden = entry.isIntersecting ? "1" : "0";
+        });
+      }).observe(totaisRegion);
+    }
+  }
 
   const initItemBuilders = (scope = document) => {
     scope.querySelectorAll("[data-item-builder]").forEach((root) => {
@@ -488,10 +538,35 @@
         document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: form } }));
       };
 
+      const subtotalOut = root.querySelector("[data-item-subtotal]");
+      const round2 = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+      const updateItemSubtotal = () => {
+        if (!subtotalOut || !form) return;
+        const num = (id) => {
+          const field = form.querySelector(id);
+          return field ? parseNumber(field.value) : 0;
+        };
+        const base = num("#id_quantidade") * num("#id_valor_unitario");
+        let subtotal =
+          base -
+          num("#id_desconto_valor") -
+          round2((base * num("#id_desconto_percentual")) / 100) +
+          num("#id_acrescimo_valor") +
+          round2((base * num("#id_acrescimo_percentual")) / 100);
+        if (subtotal < 0) subtotal = 0;
+        subtotalOut.textContent = formatMoney(round2(subtotal));
+      };
+
+      if (form) {
+        form.addEventListener("input", updateItemSubtotal);
+      }
+
       if (select) {
         select.addEventListener("change", () => {
           applyCatalogData();
           updateCatalogSummary();
+          updateItemSubtotal();
         });
       }
 
@@ -510,6 +585,7 @@
       }
 
       updateCatalogSummary();
+      updateItemSubtotal();
       document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: root } }));
     });
   };
@@ -596,7 +672,10 @@
       const feedback = document.getElementById("item-feedback-region");
 
       if (tabela && data.itens_html !== undefined) tabela.innerHTML = data.itens_html;
-      if (totais && data.totais_html !== undefined) totais.innerHTML = data.totais_html;
+      if (totais && data.totais_html !== undefined) {
+        totais.innerHTML = data.totais_html;
+        syncLedgerBar();
+      }
       if (feedback && data.flash_html !== undefined) feedback.innerHTML = data.flash_html;
       if (data.modal_html !== undefined) {
         openItemModal(data.modal_html);
