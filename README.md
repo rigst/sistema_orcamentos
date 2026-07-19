@@ -188,3 +188,7 @@ Tratar como segredo:
 ## CI
 
 Workflow em [`.github/workflows/django.yml`](/home/rodrigo/Projetos/sistema_orcamentos/.github/workflows/django.yml) executa validações de qualidade e segurança de deploy.
+
+## Licença
+
+Este projeto é distribuído sob a **GNU Affero General Public License v3.0** (ver [LICENSE](LICENSE)). Código-fonte: <https://github.com/rigst/sistema_orcamentos>.
