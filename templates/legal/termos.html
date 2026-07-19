@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Termos de Uso · Orçamentos{% endblock %}
+
+{% block content %}
+<div style="max-width:760px;margin:0 auto;padding:1.5rem 0 3rem">
+  <h1 style="margin-bottom:.25rem">Termos de Uso</h1>
+  <p style="opacity:.7;margin-bottom:1.5rem">Última atualização: 19 de julho de 2026</p>
+
+  <p>Ao usar o <strong>Sistema de Orçamentos</strong> (orcamentos.stolben.com), você concorda com estes termos.</p>
+
+  <h2>O serviço</h2>
+  <p>Ferramenta para cadastrar clientes e itens, montar orçamentos e gerar documentos e relatórios. É fornecida "como está", sem garantia formal de disponibilidade, e pode ser alterada ou descontinuada com aviso razoável.</p>
+
+  <h2>Seus dados e seus documentos</h2>
+  <ul>
+    <li>Os dados e documentos que você cria são seus; a plataforma apenas os armazena e formata.</li>
+    <li>Você é responsável pela exatidão das informações dos orçamentos (valores, impostos, condições) e pelo uso dos dados de seus clientes conforme a <a href="{% url 'privacidade' %}">Política de Privacidade</a> e a LGPD.</li>
+    <li>Os documentos gerados não constituem aconselhamento contábil, fiscal ou jurídico.</li>
+  </ul>
+
+  <h2>Conta e uso aceitável</h2>
+  <p>A conta é pessoal; mantenha sua senha em sigilo. A conta "visitante" é demonstrativa e seus dados são apagados automaticamente. É proibido usar o serviço para fins ilícitos ou sobrecarregar a infraestrutura.</p>
+
+  <h2>Responsabilidade e lei aplicável</h2>
+  <p>Na extensão máxima permitida pela lei, o serviço não responde por negócios firmados a partir dos documentos gerados nem por indisponibilidade temporária. Nada aqui afasta direitos do Código de Defesa do Consumidor. Regem-se estes termos pelas leis brasileiras.</p>
+
+  <h2>Código aberto e contato</h2>
+  <p>O código-fonte é distribuído sob a licença <a href="https://github.com/rigst/sistema_orcamentos" target="_blank" rel="noopener">AGPL-3.0</a>. Dúvidas e solicitações: <a href="mailto:rodrigo@stolben.com">rodrigo@stolben.com</a>.</p>
+</div>
+{% endblock %}

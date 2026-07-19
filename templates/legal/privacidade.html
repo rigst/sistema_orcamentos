@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Política de Privacidade · Orçamentos{% endblock %}
+
+{% block content %}
+<div style="max-width:760px;margin:0 auto;padding:1.5rem 0 3rem">
+  <h1 style="margin-bottom:.25rem">Política de Privacidade</h1>
+  <p style="opacity:.7;margin-bottom:1.5rem">Última atualização: 19 de julho de 2026</p>
+
+  <p>Esta política descreve como o <strong>Sistema de Orçamentos</strong> (orcamentos.stolben.com) trata dados pessoais, em conformidade com a LGPD (Lei nº 13.709/2018). Responsável pela plataforma: Rodrigo Stölben — <a href="mailto:rodrigo@stolben.com">rodrigo@stolben.com</a>.</p>
+
+  <h2>O que coletamos</h2>
+  <ul>
+    <li><strong>Conta:</strong> nome de usuário, e-mail e senha (com hash). Base legal: execução de contrato.</li>
+    <li><strong>Dados que você cadastra:</strong> clientes (nome/razão social, CPF/CNPJ, contato, endereço), dados da sua própria empresa (inclusive bancários e chave PIX, para constarem nos documentos), itens de catálogo e orçamentos. São usados exclusivamente para montar orçamentos e relatórios — nunca para publicidade ou venda a terceiros.</li>
+    <li><strong>Registros de acesso:</strong> IP, data/hora e navegador (Marco Civil da Internet), com rotação automática.</li>
+  </ul>
+
+  <h2>Dados de clientes seus (terceiros)</h2>
+  <p>Os dados de clientes que você insere pertencem a pessoas que não usam a plataforma. Nessa relação, <strong>você é o responsável (controlador) por esses dados</strong> — cabe a você ter base legal para usá-los (em regra, a execução dos contratos e orçamentos com seus clientes) — e a plataforma atua como operadora, tratando-os apenas para gerar seus documentos. Se um cliente seu pedir exclusão, você pode removê-lo diretamente no sistema.</p>
+
+  <h2>O que não fazemos</h2>
+  <p>Nenhum dado é enviado a terceiros ou a serviços de IA. Não há rastreadores, analytics ou cookies de terceiros — apenas cookies essenciais de sessão e CSRF. As fontes da página são servidas do próprio domínio.</p>
+
+  <h2>Conta de visitante</h2>
+  <p>A conta demonstrativa "visitante" opera em ambiente próprio e os dados criados nela são efêmeros, removidos automaticamente.</p>
+
+  <h2>Retenção e seus direitos</h2>
+  <p>Os dados são mantidos enquanto a conta existir. Você pode solicitar acesso, correção, portabilidade ou <strong>exclusão da conta e de todos os dados</strong> a qualquer momento: <a href="mailto:rodrigo@stolben.com">rodrigo@stolben.com</a> (LGPD, art. 18).</p>
+
+  <p style="margin-top:1.5rem"><a href="{% url 'termos' %}">Termos de Uso</a></p>
+</div>
+{% endblock %}
