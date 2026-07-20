@@ -803,11 +803,11 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'title="Enviar"')
-        self.assertContains(response, 'title="Cancelar"')
-        self.assertNotContains(response, 'title="Rascunho"')
-        self.assertNotContains(response, 'title="Aprovar"')
-        self.assertNotContains(response, 'title="Rejeitar"')
+        self.assertContains(response, 'title="Enviar para análise"')
+        self.assertContains(response, 'title="Cancelar orçamento"')
+        self.assertNotContains(response, 'title="Retornar a Rascunho"')
+        self.assertNotContains(response, 'title="Aprovar orçamento"')
+        self.assertNotContains(response, 'title="Rejeitar orçamento"')
 
     def test_orcamento_aprovado_nao_exibe_retorno_para_rascunho_para_nao_admin(self):
         self.orcamento.status = "aprovado"
@@ -816,10 +816,10 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'title="Rascunho"')
-        self.assertNotContains(response, 'title="Aprovar"')
-        self.assertNotContains(response, 'title="Rejeitar"')
-        self.assertNotContains(response, 'title="Cancelar"')
+        self.assertNotContains(response, 'title="Retornar a Rascunho"')
+        self.assertNotContains(response, 'title="Aprovar orçamento"')
+        self.assertNotContains(response, 'title="Rejeitar orçamento"')
+        self.assertNotContains(response, 'title="Cancelar orçamento"')
 
     def test_admin_exibe_retorno_para_rascunho_em_orcamento_aprovado(self):
         admin = get_user_model().objects.create_user(
@@ -834,7 +834,7 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'title="Rascunho"')
+        self.assertContains(response, 'title="Retornar a Rascunho"')
 
     def test_duplicar_orcamento_cria_novo_rascunho_com_itens(self):
         ItemOrcamento.objects.create(

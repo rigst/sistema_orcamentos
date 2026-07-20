@@ -19,8 +19,9 @@
                     <span class="page-head-cliente">{{ orcamento.cliente }}</span>
                     <span class="page-head-emissao">Emissão {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
                 </div>
-            {% elif somente_visualizacao %}
-                <p>Consulte os dados gerais e os itens do orçamento em modo estritamente visual.</p>
+                {% if somente_visualizacao %}
+                    <p>Consulte os dados gerais e os itens do orçamento em modo estritamente visual.</p>
+                {% endif %}
             {% else %}
                 <p>Preencha os dados abaixo para criar o orçamento. Os itens são adicionados na sequência.</p>
             {% endif %}
