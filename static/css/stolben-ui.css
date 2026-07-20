@@ -1,5 +1,5 @@
 /* =====================================================================
-   Stölben UI — Design System (tema "Infra Premium")
+   Stölben UI: Design System (tema "Infra Premium")
    Derivado do site stolben.com. Voltado a aplicativos web reais (CRUD).
    CSS puro, sem build. Prefixo de classe: .ds-
    Carregue junto das fontes Manrope + Inter.
@@ -7,23 +7,20 @@
 
 /* ------------------------------- TOKENS ------------------------------ */
 :root {
-  /* Superfícies — tema "Livro-Razão": papel frio esverdeado, tinta pinho */
-  --ds-bg: #ecefe9;          /* fundo da janela (papel de razão) */
-  --ds-panel: #f3f5ef;       /* painel/coluna principal */
-  --ds-surface: #fcfdfa;     /* cartões e campos (folha) */
-  --ds-ink: #123a30;         /* tinta pinho forte (hero/realce/capa) */
-  --ds-ink-soft: #17483b;    /* pinho suave (áreas interativas) */
-  --ds-topbar-bg: rgba(18, 58, 48, 0.82); /* fundo translúcido do topbar */
+  /* Superfícies */
+  --ds-bg: #eef0f4;          /* fundo da janela */
+  --ds-panel: #f7f8fa;       /* painel/coluna principal */
+  --ds-surface: #ffffff;     /* cartões e campos */
+  --ds-ink: #0f1115;         /* escuro forte (hero/realce) */
+  --ds-ink-soft: #171a21;    /* escuro suave (áreas interativas) */
+  --ds-topbar-bg: rgba(247, 248, 250, 0.85); /* fundo translúcido do topbar */
 
-  /* Verde-tinta da marca (acento padrão) — antes azul */
-  --ds-blue: #17795a;
-  --ds-blue-light: #2a9d78;
-  --ds-blue-dark: #0e5c43;
-  --ds-blue-50: #e8f3ee;
-  --ds-blue-100: #cfe9dd;
-  /* Latão: acento quente secundário (kickers, carimbos, detalhes) */
-  --ds-brass: #a9762b;
-  --ds-brass-soft: #f2e6cf;
+  /* Azul da marca (acento padrão) */
+  --ds-blue: #2563eb;
+  --ds-blue-light: #3b82f6;
+  --ds-blue-dark: #1d4ed8;
+  --ds-blue-50: #eff4ff;
+  --ds-blue-100: #dbe6ff;
 
   /* Acento temável: cada app troca SÓ --ds-accent (ver classes .ds-theme-*).
      Os tons (light/dark/50/100/fg) são DERIVADOS daqui, para que o tema escuro
@@ -53,10 +50,16 @@
   --ds-t-400: #8b91a0;
   /* Sobre escuro */
   --ds-on-dark: #e5e7eb;
-  --ds-on-dark-soft: rgba(229, 231, 235, 0.78);
-  --ds-on-dark-mute: rgba(229, 231, 235, 0.55);
   --ds-on-dark-dim: #9aa3b2;
   --ds-on-dark-faint: #6b7685;
+  /* Aliases de compatibilidade: passes antigos do style.css referenciam os
+     nomes extintos (--ds-text-*, --ds-on-dark-soft/mute, --ds-font-mono) */
+  --ds-on-dark-soft: var(--ds-on-dark-dim);
+  --ds-on-dark-mute: var(--ds-on-dark-faint);
+  --ds-text-900: var(--ds-t-900);
+  --ds-text-700: var(--ds-t-700);
+  --ds-text-500: var(--ds-t-500);
+  --ds-font-mono: ui-monospace, "SFMono-Regular", "Cascadia Mono", monospace;
 
   /* Linhas */
   --ds-line: #e7e9ee;
@@ -64,21 +67,19 @@
   --ds-line-dash: #cfd3da;
   --ds-line-dark: rgba(255, 255, 255, 0.1);
 
-  /* Tipografia — Bricolage Grotesque (display) + Instrument Sans (texto) +
-     Spline Sans Mono (valores/códigos, as "colunas de números" do razão) */
-  --ds-font-sans: "Instrument Sans", system-ui, -apple-system, sans-serif;
-  --ds-font-display: "Bricolage Grotesque", "Instrument Sans", sans-serif;
-  --ds-font-mono: "Spline Sans Mono", ui-monospace, "SFMono-Regular", monospace;
+  /* Tipografia */
+  --ds-font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --ds-font-display: "Manrope", "Inter", sans-serif;
   --ds-fs-hero: clamp(2.4rem, 5.5vw, 4rem);
   --ds-fs-h1: clamp(2rem, 4vw, 3rem);
   --ds-fs-h2: clamp(1.6rem, 3vw, 2.3rem);
   --ds-fs-h3: 1.25rem;
 
-  /* Raios — firmes, com cara de documento (menos "bolha") */
-  --ds-radius-xl: 1.4rem;
-  --ds-radius-lg: 0.85rem;
-  --ds-radius-md: 0.55rem;
-  --ds-radius-sm: 0.4rem;
+  /* Raios */
+  --ds-radius-xl: 2.5rem;
+  --ds-radius-lg: 1.5rem;
+  --ds-radius-md: 1rem;
+  --ds-radius-sm: 0.6rem;
   --ds-radius-pill: 999px;
 
   /* Espaço (escala de 4px) */
@@ -120,6 +121,22 @@
 .ds-root ::selection { background: var(--ds-accent); color: var(--ds-on-accent); }
 .ds-root h1, .ds-root h2, .ds-root h3 { text-wrap: balance; }
 .ds-root :where(button, a, input, textarea, select, label) { -webkit-tap-highlight-color: transparent; }
+
+/* Ícones a traço 24x24 sem atributos de pintura no markup: sem esta regra o
+   SVG herda fill preto (vira mancha) ou fica invisível quando só tem linhas. */
+.ds-root svg[viewBox="0 0 24 24"]:not([fill]) {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Âncoras com cara de botão: `.ds-root a { color: inherit }` tem
+   especificidade maior que a variante; reafirma a cor correta do texto. */
+a.ds-btn--solid { color: var(--ds-on-accent); }
+a.ds-btn--primary, a.ds-btn--danger { color: #fff; }
+a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
 
 /* ------------------------- FUNDO / SHELL ----------------------------- */
 .ds-app {
@@ -189,22 +206,6 @@
 .ds-icon-btn:hover { color: var(--ds-accent-fg); border-color: var(--ds-accent-100); background: var(--ds-accent-50); }
 .ds-icon-btn svg { width: 1.1rem; height: 1.1rem; }
 
-/* Ícones a traço 24x24 sem atributos de pintura no markup: sem esta regra o
-   SVG herda fill preto (vira mancha) ou fica invisível quando só tem linhas. */
-.ds-root svg[viewBox="0 0 24 24"]:not([fill]) {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-/* Âncoras com cara de botão: `.ds-root a { color: inherit }` tem
-   especificidade maior que a variante; reafirma a cor correta do texto. */
-a.ds-btn--solid { color: var(--ds-on-accent); }
-a.ds-btn--primary, a.ds-btn--danger { color: #fff; }
-a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
-
 /* ---------------------- CABEÇALHO / TOPBAR --------------------------- */
 .ds-topbar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 1rem; padding: 0.75rem 1.25rem; background: var(--ds-topbar-bg); backdrop-filter: blur(var(--ds-blur)); border-bottom: 1px solid var(--ds-line); transition: box-shadow var(--ds-dur); }
 .ds-topbar.is-scrolled { box-shadow: 0 8px 24px rgba(15, 17, 21, 0.06); }
@@ -259,7 +260,7 @@ a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
 .ds-nav-pill .ds-nav-cta:hover { background: var(--ds-accent-50); }
 /* Controle de tema na nav. Duas opções:
    (a) 3-vias (recomendado): .ds-segment.ds-mode + [data-ds-theme-mode] com
-       botões claro/auto/escuro — já fica em vidro dentro da pílula.
+       botões claro/auto/escuro; já fica em vidro dentro da pílula.
    (b) Simples (2 estados): .ds-nav-toggle + [data-ds-dark-toggle] com dois
        ícones <svg class="ds-icon-moon"> e <svg class="ds-icon-sun">. */
 .ds-nav-pill .ds-segment { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.18); }
@@ -434,7 +435,7 @@ a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
 .ds-truncate { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ===================================================================
-   EXTENSÕES v1.1 — layout de app e mais componentes de CRUD
+   EXTENSÕES v1.1: layout de app e mais componentes de CRUD
    =================================================================== */
 
 /* ---- App shell com sidebar (layout de admin/CRUD) ---- */
@@ -517,7 +518,7 @@ a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
 .ds-icon-btn .ds-count { position: absolute; top: -0.35rem; right: -0.35rem; border: 2px solid var(--ds-panel); }
 
 /* ===================================================================
-   MOBILE — navegação colapsável (gaveta), reorganização e toque.
+   MOBILE: navegação colapsável (gaveta), reorganização e toque.
    No desktop nada muda; no mobile a sidebar vira gaveta off-canvas
    acionada por um botão hambúrguer (data-ds-nav-toggle).
    =================================================================== */
@@ -570,7 +571,7 @@ a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
 }
 
 /* ===================================================================
-   TEMAS DE ACENTO — aplique a classe em .ds-root (ou em um container).
+   TEMAS DE ACENTO: aplique a classe em .ds-root (ou em um container).
    Padrão (sem classe) = azul. Estados success/warn/danger não mudam.
    =================================================================== */
 .ds-theme-indigo  { --ds-accent: #4f46e5; }
@@ -582,7 +583,7 @@ a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
 .ds-theme-slate   { --ds-accent: #475569; }
 
 /* ===================================================================
-   TEMA ESCURO — aplique .ds-dark no <html> (ou na raiz). Funciona com
+   TEMA ESCURO: aplique .ds-dark no <html> (ou na raiz). Funciona com
    qualquer .ds-theme-*. Cinzas suaves (sem preto puro), texto off-white
    e acento clareado para leitura confortável. Vem DEPOIS dos temas para
    recalcular os tons de acento (50/100/dark/fg) em versão escura.
@@ -633,7 +634,7 @@ a.ds-btn--ghost, a.ds-btn--subtle { color: var(--ds-t-900); }
 .ds-dark [data-ds-dark-toggle] .ds-i-sun { display: inline-flex; }
 
 /* ===================================================================
-   VISUALIZAÇÕES DE LISTA — tabela (.ds-table), cards, lista, board.
+   VISUALIZAÇÕES DE LISTA: tabela (.ds-table), cards, lista, board.
    Princípio: só o essencial em destaque, com hierarquia clara
    (título forte > valor > status > meta discreta).
    =================================================================== */

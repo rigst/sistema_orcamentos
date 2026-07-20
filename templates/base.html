@@ -8,17 +8,15 @@
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
     <link rel="apple-touch-icon" href="{% static 'favicon.png' %}">
 
-    <!-- Fontes auto-hospedadas (identidade "Livro-Razão": Bricolage Grotesque + Instrument Sans + Spline Sans Mono) -->
+    <!-- Fontes auto-hospedadas do DS (Inter + Manrope) -->
     <link rel="stylesheet" href="{% static 'fonts/fonts.css' %}">
 
-    <!-- Design system Stölben (tokens + componentes .ds-*) -->
+    <!-- Design system Stölben puro (tokens + componentes .ds-*, sem fork) -->
     <link rel="stylesheet" href="{% static 'css/stolben-ui.css' %}">
     <!-- Camada de layout do app (header, shell, formulários e páginas) -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- Customizações específicas do app (sobre os tokens do DS) -->
     <link rel="stylesheet" href="{% static 'css/app-overrides.css' %}">
-    <!-- Identidade "Livro-Razão": personalidade própria (carrega por último) -->
-    <link rel="stylesheet" href="{% static 'css/orcamentos-identidade.css' %}">
 </head>
 <body class="ds-root {% block body_class %}{% endblock %}">
     <script nonce="{{ request.csp_nonce }}">
