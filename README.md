@@ -192,3 +192,5 @@ Workflow em [`.github/workflows/django.yml`](/home/rodrigo/Projetos/sistema_orca
 ## Licença
 
 Este projeto é distribuído sob a **GNU Affero General Public License v3.0** (ver [LICENSE](LICENSE)). Código-fonte: <https://github.com/rigst/sistema_orcamentos>.
+
+O inventário das bibliotecas de terceiros está em [docs/LICENCAS-TERCEIROS.md](docs/LICENCAS-TERCEIROS.md), regenerável com `./venv/bin/python scripts/licencas_terceiros.py`.
