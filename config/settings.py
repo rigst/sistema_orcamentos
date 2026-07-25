@@ -202,6 +202,11 @@ UNFOLD = {
 # Destino após o aceite nas telas do app `legal`.
 LEGAL_REDIRECT_URL = "dashboard"
 
+# Para onde a tela de aceite de visitante posta, e o que aquela view espera.
+# Aqui a criação do visitante vive no ramo `entrar_visitante` do LoginView.
+LEGAL_VISITOR_ACTION = "login"
+LEGAL_VISITOR_EXTRA = {"entrar_visitante": "1"}
+
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"

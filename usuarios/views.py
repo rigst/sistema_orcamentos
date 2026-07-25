@@ -5,13 +5,14 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView, LogoutView
-from django.shortcuts import redirect
+from django.conf import settings
+from django.shortcuts import redirect, render
 from django.urls import reverse
 
 from core.tenancy import nome_grupo_visitante
 from legal.forms import AceiteForm
 from legal.models import OrigemAceite
-from legal.services import registrar_aceite
+from legal.services import documentos_vigentes, registrar_aceite
 from legal.utils import ip_do_request
 
 from .models import Usuario
@@ -27,19 +28,24 @@ logger = logging.getLogger(__name__)
 class UsuarioLoginView(LoginView):
     template_name = "registration/login.html"
 
-    def get_context_data(self, **kwargs):
-        contexto = super().get_context_data(**kwargs)
-        contexto.setdefault("form_aceite", AceiteForm())
-        return contexto
-
     def post(self, request, *args, **kwargs):
         if "entrar_visitante" in request.POST:
             # O aceite é condição para criar a conta: valida antes de qualquer
             # escrita, para não deixar visitante órfão sem prova de aceite.
             form_aceite = AceiteForm(request.POST)
             if not form_aceite.is_valid():
-                return self.render_to_response(
-                    self.get_context_data(form=self.get_form(), form_aceite=form_aceite)
+                # Volta para a própria tela de aceite com o erro: o checkbox
+                # não existe mais no login, então renderizá-lo lá esconderia a
+                # mensagem.
+                return render(
+                    request,
+                    "legal/aceite.html",
+                    {
+                        "form": form_aceite,
+                        "documentos": list(documentos_vigentes().values()),
+                        "action": reverse("login"),
+                        "campos_extras": settings.LEGAL_VISITOR_EXTRA,
+                    },
                 )
 
             ip = ip_do_request(request)
