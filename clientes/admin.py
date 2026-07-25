@@ -1,11 +1,12 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from core.admin_permissions import PerfilAdminPermissionMixin
 from .models import Cliente
 
 
 @admin.register(Cliente)
-class ClienteAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+class ClienteAdmin(PerfilAdminPermissionMixin, ModelAdmin):
     capability_view = "pode_visualizar_clientes"
     capability_add = "pode_gerenciar_clientes"
     capability_change = "pode_gerenciar_clientes"

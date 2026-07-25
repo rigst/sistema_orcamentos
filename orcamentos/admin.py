@@ -1,10 +1,11 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin, TabularInline
 
 from core.admin_permissions import PerfilAdminPermissionMixin
 from .models import ItemOrcamento, Orcamento
 
 
-class ItemOrcamentoInline(PerfilAdminPermissionMixin, admin.TabularInline):
+class ItemOrcamentoInline(PerfilAdminPermissionMixin, TabularInline):
     model = ItemOrcamento
     extra = 1
     capability_view = "pode_visualizar_orcamentos"
@@ -14,7 +15,7 @@ class ItemOrcamentoInline(PerfilAdminPermissionMixin, admin.TabularInline):
 
 
 @admin.register(Orcamento)
-class OrcamentoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+class OrcamentoAdmin(PerfilAdminPermissionMixin, ModelAdmin):
     capability_view = "pode_visualizar_orcamentos"
     capability_add = "pode_gerenciar_orcamentos"
     capability_change = "pode_gerenciar_orcamentos"
@@ -38,7 +39,7 @@ class OrcamentoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
 
 
 @admin.register(ItemOrcamento)
-class ItemOrcamentoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+class ItemOrcamentoAdmin(PerfilAdminPermissionMixin, ModelAdmin):
     capability_view = "pode_visualizar_orcamentos"
     capability_add = "pode_gerenciar_orcamentos"
     capability_change = "pode_gerenciar_orcamentos"

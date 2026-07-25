@@ -9,6 +9,11 @@ from django.shortcuts import redirect
 from django.urls import reverse
 
 from core.tenancy import nome_grupo_visitante
+from legal.forms import AceiteForm
+from legal.models import OrigemAceite
+from legal.services import registrar_aceite
+from legal.utils import ip_do_request
+
 from .models import Usuario
 from .visitantes import (
     excedeu_rate_limit_visitante,
@@ -22,17 +27,22 @@ logger = logging.getLogger(__name__)
 class UsuarioLoginView(LoginView):
     template_name = "registration/login.html"
 
-    def _client_ip(self):
-        forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR")
-        if forwarded_for:
-            # Behind nginx with `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for`,
-            # the right-most entry is the direct client IP observed by nginx.
-            return forwarded_for.split(",")[-1].strip()
-        return self.request.META.get("REMOTE_ADDR", "")
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto.setdefault("form_aceite", AceiteForm())
+        return contexto
 
     def post(self, request, *args, **kwargs):
         if "entrar_visitante" in request.POST:
-            ip = self._client_ip()
+            # O aceite é condição para criar a conta: valida antes de qualquer
+            # escrita, para não deixar visitante órfão sem prova de aceite.
+            form_aceite = AceiteForm(request.POST)
+            if not form_aceite.is_valid():
+                return self.render_to_response(
+                    self.get_context_data(form=self.get_form(), form_aceite=form_aceite)
+                )
+
+            ip = ip_do_request(request)
             if excedeu_rate_limit_visitante(ip):
                 logger.warning("Rate limit de visitante excedido", extra={"ip": ip})
                 messages.error(
@@ -57,6 +67,12 @@ class UsuarioLoginView(LoginView):
         )
         usuario.groups.add(grupo)
         login(self.request, usuario)
+        registrar_aceite(
+            self.request,
+            usuario=usuario,
+            origem=OrigemAceite.VISITANTE,
+            e_visitante=True,
+        )
         return redirect(reverse("dashboard"))
 
 

@@ -40,6 +40,7 @@
             <p>Quer apenas conhecer a interface? O acesso visitante cria um perfil temporário automaticamente.</p>
             <form method="post">
                 {% csrf_token %}
+                {% include "legal/_checkbox_aceite.html" with field=form_aceite.aceite_legal %}
                 <button class="ds-btn ds-btn--ghost auth-submit" type="submit" name="entrar_visitante" value="1">Entrar como visitante</button>
             </form>
         </div>

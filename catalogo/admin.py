@@ -1,11 +1,12 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 
 from core.admin_permissions import PerfilAdminPermissionMixin
 from .models import CategoriaItem, ItemCatalogo
 
 
 @admin.register(CategoriaItem)
-class CategoriaItemAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+class CategoriaItemAdmin(PerfilAdminPermissionMixin, ModelAdmin):
     capability_view = "pode_visualizar_catalogo"
     capability_add = "pode_gerenciar_catalogo"
     capability_change = "pode_gerenciar_catalogo"
@@ -17,7 +18,7 @@ class CategoriaItemAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
 
 
 @admin.register(ItemCatalogo)
-class ItemCatalogoAdmin(PerfilAdminPermissionMixin, admin.ModelAdmin):
+class ItemCatalogoAdmin(PerfilAdminPermissionMixin, ModelAdmin):
     capability_view = "pode_visualizar_catalogo"
     capability_add = "pode_gerenciar_catalogo"
     capability_change = "pode_gerenciar_catalogo"

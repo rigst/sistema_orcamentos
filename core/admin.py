@@ -1,4 +1,5 @@
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from django.contrib.auth.models import Group
 
 from core.tenancy import VISITOR_GROUP_PREFIX, obter_grupo_empresa_usuario
@@ -12,7 +13,7 @@ except admin.sites.NotRegistered:
 
 
 @admin.register(Group)
-class EmpresaGroupAdmin(admin.ModelAdmin):
+class EmpresaGroupAdmin(ModelAdmin):
     fields = ("name",)
     list_display = ("name",)
     search_fields = ("name",)
@@ -52,7 +53,7 @@ class EmpresaGroupAdmin(admin.ModelAdmin):
 
 
 @admin.register(Empresa)
-class EmpresaAdmin(admin.ModelAdmin):
+class EmpresaAdmin(ModelAdmin):
     list_display = ("nome", "grupo", "ativa", "atualizada_em")
     list_filter = ("ativa",)
     search_fields = ("nome", "grupo__name")

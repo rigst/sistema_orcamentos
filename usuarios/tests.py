@@ -7,7 +7,7 @@ from django.urls import reverse
 from clientes.models import Cliente
 from orcamentos.models import Orcamento
 from relatorios.models import ConfiguracaoEmpresa
-from .views import UsuarioLoginView
+from legal.utils import ip_do_request
 
 
 class AdminPermissaoPerfilTests(TestCase):
@@ -156,7 +156,7 @@ class UsuarioVisitanteTests(TestCase):
         self.assertContains(response, "projeto com foco em aprendizado e portfólio")
 
     def test_login_como_visitante_cria_usuario_temporario_e_remove_no_logout(self):
-        response = self.client.post(reverse("login"), {"entrar_visitante": "1"})
+        response = self.client.post(reverse("login"), {"entrar_visitante": "1", "aceite_legal": "on"})
 
         self.assertEqual(response.status_code, 302)
         visitante = get_user_model().objects.get(perfil="visitante")
@@ -169,7 +169,7 @@ class UsuarioVisitanteTests(TestCase):
         self.assertFalse(Group.objects.filter(pk=grupo.pk).exists())
 
     def test_visitante_exibe_nomes_amigaveis(self):
-        self.client.post(reverse("login"), {"entrar_visitante": "1"})
+        self.client.post(reverse("login"), {"entrar_visitante": "1", "aceite_legal": "on"})
 
         visitante = get_user_model().objects.get(perfil="visitante")
 
@@ -196,7 +196,7 @@ class UsuarioVisitanteTests(TestCase):
         )
         ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Sigilosa", empresa=empresa)
 
-        self.client.post(reverse("login"), {"entrar_visitante": "1"})
+        self.client.post(reverse("login"), {"entrar_visitante": "1", "aceite_legal": "on"})
 
         response_clientes = self.client.get(reverse("clientes:lista"))
         response_dashboard = self.client.get(reverse("dashboard"))
@@ -214,22 +214,21 @@ class UsuarioVisitanteTests(TestCase):
 
 
 class UsuarioVisitanteIpTests(TestCase):
+    """A resolução de IP saiu da view para `legal.utils.ip_do_request`, usada por
+    todos os pontos que gravam IP (rate limit e prova de aceite)."""
+
     def test_login_visitante_usa_ultimo_ip_de_x_forwarded_for(self):
         request = RequestFactory().post(
             reverse("login"),
             HTTP_X_FORWARDED_FOR="198.51.100.10, 203.0.113.77",
         )
-        view = UsuarioLoginView()
-        view.request = request
 
-        self.assertEqual(view._client_ip(), "203.0.113.77")
+        self.assertEqual(ip_do_request(request), "203.0.113.77")
 
     def test_login_visitante_cai_para_remote_addr_sem_x_forwarded_for(self):
         request = RequestFactory().post(
             reverse("login"),
             REMOTE_ADDR="10.0.0.5",
         )
-        view = UsuarioLoginView()
-        view.request = request
 
-        self.assertEqual(view._client_ip(), "10.0.0.5")
+        self.assertEqual(ip_do_request(request), "10.0.0.5")

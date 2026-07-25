@@ -52,6 +52,10 @@ ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
 CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
+    # O unfold precisa vir antes do admin: é assim que os templates dele
+    # sobrescrevem os do django.contrib.admin.
+    "unfold",
+    "unfold.contrib.filters",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -65,6 +69,7 @@ INSTALLED_APPS = [
     "orcamentos",
     "relatorios",
     "auditoria",
+    "legal",
 ]
 
 MIDDLEWARE = [
@@ -74,6 +79,10 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Depois do Authentication (precisa de request.user) e antes do
+    # EmpresaAtivaMiddleware: nova versão dos termos bloqueia o uso antes de
+    # qualquer resolução de empresa ativa.
+    "legal.middleware.AceiteObrigatorioMiddleware",
     "core.middleware.EmpresaAtivaMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -174,6 +183,25 @@ SHORT_DATE_FORMAT = "d/m/Y"
 
 AUTH_USER_MODEL = "usuarios.Usuario"
 
+UNFOLD = {
+    "SITE_TITLE": "Orçamentos",
+    "SITE_HEADER": "Orçamentos",
+    "SITE_SUBHEADER": "Administração",
+    "SHOW_HISTORY": True,
+    "SHOW_VIEW_ON_SITE": False,
+    "COLORS": {
+        "primary": {
+            "50": "239 246 255", "100": "219 234 254", "200": "191 219 254",
+            "300": "147 197 253", "400": "96 165 250", "500": "59 130 246",
+            "600": "37 99 235", "700": "29 78 216", "800": "30 64 175",
+            "900": "30 58 138", "950": "23 37 84",
+        },
+    },
+}
+
+# Destino após o aceite nas telas do app `legal`.
+LEGAL_REDIRECT_URL = "dashboard"
+
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
@@ -226,6 +254,21 @@ CONTENT_SECURITY_POLICY = os.getenv(
     "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
 )
 
+ADMIN_PATH_PREFIX = "/admin/"
+
+# Política exclusiva do admin. O 'unsafe-eval' é exigido pelo Alpine.js que o
+# django-unfold usa: ele compila as expressões de `x-data`/`x-init` com
+# `new Function()`. Sem isso o painel carrega sem menu, abas nem tema. A
+# concessão fica presa ao /admin/, que só `is_staff` alcança — o app público
+# continua sob a política estrita acima.
+CONTENT_SECURITY_POLICY_ADMIN = os.getenv(
+    "DJANGO_CONTENT_SECURITY_POLICY_ADMIN",
+    "default-src 'self'; img-src 'self' data: blob:; "
+    "script-src 'self' 'unsafe-eval' 'nonce-{nonce}'; "
+    "style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; "
+    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+)
+
 if IS_PRODUCTION:
     SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000"))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", True)
@@ -235,6 +278,11 @@ if IS_PRODUCTION:
     CSRF_COOKIE_SAMESITE = "Lax"
 
 if IS_TEST:
+    # Sem isto, rodar a suíte com o .env de produção carregado faz o
+    # SecurityMiddleware devolver 301 em todo request e o healthz exigir token —
+    # e a suíte inteira falha por motivo de ambiente, não de código.
+    SECURE_SSL_REDIRECT = False
+    HEALTHZ_TOKEN = ""
     PASSWORD_HASHERS = [
         "django.contrib.auth.hashers.MD5PasswordHasher",
     ]
