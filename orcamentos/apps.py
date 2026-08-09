@@ -6,4 +6,8 @@ class OrcamentosConfig(AppConfig):
     name = "orcamentos"
 
     def ready(self):
-        pass
+        # Import pelo efeito colateral: é ele que registra os receivers que
+        # recalculam os totais do orçamento. O noqa é necessário — sem ele o
+        # ruff trata como import não usado e o --fix apaga a linha, desligando
+        # os signals sem aviso.
+        import orcamentos.signals  # noqa: F401
