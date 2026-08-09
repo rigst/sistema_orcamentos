@@ -56,7 +56,9 @@ class CategoriaItem(models.Model):
         verbose_name = "Categoria de item"
         verbose_name_plural = "Categorias de itens"
         constraints = [
-            models.UniqueConstraint(fields=["empresa", "nome"], name="categoriaitem_empresa_nome_uniq"),
+            models.UniqueConstraint(
+                fields=["empresa", "nome"], name="categoriaitem_empresa_nome_uniq"
+            ),
         ]
 
     def __str__(self):
@@ -126,7 +128,9 @@ class ItemCatalogo(models.Model):
         verbose_name = "Item de catálogo"
         verbose_name_plural = "Itens de catálogo"
         constraints = [
-            models.UniqueConstraint(fields=["empresa", "codigo"], name="itemcatalogo_empresa_codigo_uniq"),
+            models.UniqueConstraint(
+                fields=["empresa", "codigo"], name="itemcatalogo_empresa_codigo_uniq"
+            ),
         ]
 
     def __str__(self):
@@ -149,7 +153,9 @@ class ItemCatalogo(models.Model):
 
     def definir_codigo_automatico(self):
         if self.pk:
-            codigo_original = type(self).objects.filter(pk=self.pk).values_list("codigo", flat=True).first()
+            codigo_original = (
+                type(self).objects.filter(pk=self.pk).values_list("codigo", flat=True).first()
+            )
             if codigo_original:
                 self.codigo = codigo_original
                 return
@@ -169,7 +175,9 @@ class ItemCatalogo(models.Model):
             except IntegrityError as exc:
                 if self.pk or tentativa == max_tentativas - 1:
                     raise
-                if "itemcatalogo_empresa_codigo_uniq" not in str(exc) and "UNIQUE constraint failed" not in str(exc):
+                if "itemcatalogo_empresa_codigo_uniq" not in str(
+                    exc
+                ) and "UNIQUE constraint failed" not in str(exc):
                     raise
             finally:
                 type(self)._empresa_codigo_context = None

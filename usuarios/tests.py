@@ -1,13 +1,12 @@
-from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory
-from django.test import TestCase
+from django.contrib.auth.models import Group
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from clientes.models import Cliente
+from legal.utils import ip_do_request
 from orcamentos.models import Orcamento
 from relatorios.models import ConfiguracaoEmpresa
-from legal.utils import ip_do_request
 
 
 class AdminPermissaoPerfilTests(TestCase):
@@ -80,9 +79,11 @@ class AdminPermissaoPerfilTests(TestCase):
         response = self.client.get(reverse("admin:auth_group_change", args=[grupo.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Cada grupo representa uma empresa isolada das demais no sistema.")
+        self.assertContains(
+            response, "Cada grupo representa uma empresa isolada das demais no sistema."
+        )
         self.assertContains(response, 'for="id_name"', html=False)
-        self.assertNotContains(response, 'id_permissions')
+        self.assertNotContains(response, "id_permissions")
 
     def test_superusuario_com_perfil_padrao_acessa_telas_restritas_do_admin(self):
         user = get_user_model().objects.create_superuser(
@@ -156,7 +157,9 @@ class UsuarioVisitanteTests(TestCase):
         self.assertContains(response, "projeto com foco em aprendizado e portfólio")
 
     def test_login_como_visitante_cria_usuario_temporario_e_remove_no_logout(self):
-        response = self.client.post(reverse("login"), {"entrar_visitante": "1", "aceite_legal": "on"})
+        response = self.client.post(
+            reverse("login"), {"entrar_visitante": "1", "aceite_legal": "on"}
+        )
 
         self.assertEqual(response.status_code, 302)
         visitante = get_user_model().objects.get(perfil="visitante")

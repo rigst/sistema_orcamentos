@@ -1,11 +1,11 @@
-import secrets
 import logging
+import secrets
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.models import Group
 from django.contrib.auth.views import LoginView, LogoutView
-from django.conf import settings
 from django.shortcuts import redirect, render
 from django.urls import reverse
 

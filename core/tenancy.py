@@ -3,7 +3,6 @@ from django.core.exceptions import PermissionDenied
 
 from core.models import Empresa
 
-
 DEFAULT_EMPRESA_GROUP_NAME = "Empresa padrão"
 VISITOR_GROUP_PREFIX = "__visitante__"
 EMPRESA_ATIVA_SESSION_KEY = "empresa_ativa_id"

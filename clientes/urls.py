@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import cliente_criar, cliente_editar, cliente_excluir, cliente_lista, cliente_visualizar
 
 app_name = "clientes"

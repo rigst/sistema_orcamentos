@@ -191,10 +191,17 @@ UNFOLD = {
     "SHOW_VIEW_ON_SITE": False,
     "COLORS": {
         "primary": {
-            "50": "239 246 255", "100": "219 234 254", "200": "191 219 254",
-            "300": "147 197 253", "400": "96 165 250", "500": "59 130 246",
-            "600": "37 99 235", "700": "29 78 216", "800": "30 64 175",
-            "900": "30 58 138", "950": "23 37 84",
+            "50": "239 246 255",
+            "100": "219 234 254",
+            "200": "191 219 254",
+            "300": "147 197 253",
+            "400": "96 165 250",
+            "500": "59 130 246",
+            "600": "37 99 235",
+            "700": "29 78 216",
+            "800": "30 64 175",
+            "900": "30 58 138",
+            "950": "23 37 84",
         },
     },
 }
@@ -216,16 +223,12 @@ STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = Path(os.getenv("DJANGO_STATIC_ROOT", str(BASE_DIR / "staticfiles")))
 
-USE_MANIFEST_STATICFILES = env_bool(
-    "DJANGO_USE_MANIFEST_STATICFILES", default=IS_PRODUCTION
-)
+USE_MANIFEST_STATICFILES = env_bool("DJANGO_USE_MANIFEST_STATICFILES", default=IS_PRODUCTION)
 
 if USE_MANIFEST_STATICFILES:
     STORAGES = {
         "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"
-        },
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.ManifestStaticFilesStorage"},
     }
 
 MEDIA_URL = "/media/"

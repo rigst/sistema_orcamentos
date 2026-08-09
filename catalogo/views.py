@@ -7,6 +7,7 @@ from core.permissions import require_capability
 from core.query import paginate_queryset
 from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
+
 from .forms import CategoriaItemForm, ImportarCatalogoExcelForm, ItemCatalogoForm
 from .models import CategoriaItem, ItemCatalogo
 
@@ -17,7 +18,9 @@ def obter_queryset_itens_catalogo(request):
     ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "nome")
 
-    itens = queryset_da_empresa(ItemCatalogo.objects.select_related("categoria").all(), request.user)
+    itens = queryset_da_empresa(
+        ItemCatalogo.objects.select_related("categoria").all(), request.user
+    )
 
     if categoria_id:
         itens = itens.filter(categoria_id=categoria_id)
@@ -101,7 +104,9 @@ def categoria_criar(request):
 
 @require_capability("pode_visualizar_catalogo")
 def categoria_visualizar(request, pk):
-    categoria = get_object_or_404(queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk)
+    categoria = get_object_or_404(
+        queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk
+    )
     form = CategoriaItemForm(instance=categoria, user=request.user)
     return render(
         request,
@@ -112,7 +117,9 @@ def categoria_visualizar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def categoria_editar(request, pk):
-    categoria = get_object_or_404(queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk)
+    categoria = get_object_or_404(
+        queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk
+    )
     cor_anterior = categoria.cor
 
     if request.method == "POST":
@@ -142,7 +149,9 @@ def categoria_editar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def categoria_excluir(request, pk):
-    categoria = get_object_or_404(queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk)
+    categoria = get_object_or_404(
+        queryset_da_empresa(CategoriaItem.objects.all(), request.user), pk=pk
+    )
     acao = "reativar" if not categoria.ativo else "inativar"
 
     if request.method == "POST":
@@ -173,7 +182,9 @@ def item_lista(request):
         "categoria": categoria_id,
         "ativo": ativo,
         "sort": ordenar,
-        "categorias": queryset_da_empresa(CategoriaItem.objects.filter(ativo=True).order_by("nome"), request.user),
+        "categorias": queryset_da_empresa(
+            CategoriaItem.objects.filter(ativo=True).order_by("nome"), request.user
+        ),
     }
     return render(request, "catalogo/item_lista.html", context)
 
@@ -214,7 +225,9 @@ def item_criar(request):
 
 @require_capability("pode_visualizar_catalogo")
 def item_visualizar(request, pk):
-    item = get_object_or_404(queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk)
+    item = get_object_or_404(
+        queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk
+    )
     form = ItemCatalogoForm(instance=item, user=request.user)
     return render(
         request,
@@ -225,7 +238,9 @@ def item_visualizar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def item_editar(request, pk):
-    item = get_object_or_404(queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk)
+    item = get_object_or_404(
+        queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk
+    )
 
     if request.method == "POST":
         form = ItemCatalogoForm(request.POST, instance=item, user=request.user)
@@ -244,7 +259,9 @@ def item_editar(request, pk):
 
 @require_capability("pode_gerenciar_catalogo")
 def item_excluir(request, pk):
-    item = get_object_or_404(queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk)
+    item = get_object_or_404(
+        queryset_da_empresa(ItemCatalogo.objects.select_related("categoria"), request.user), pk=pk
+    )
     acao = "reativar" if not item.ativo else "inativar"
 
     if request.method == "POST":

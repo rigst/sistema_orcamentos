@@ -1,5 +1,5 @@
 from datetime import date
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from itertools import groupby
 
 from django.conf import settings
@@ -198,7 +198,9 @@ class Orcamento(models.Model):
     class Meta:
         ordering = ["-criado_em"]
         constraints = [
-            models.UniqueConstraint(fields=["empresa", "numero"], name="orcamento_empresa_numero_uniq"),
+            models.UniqueConstraint(
+                fields=["empresa", "numero"], name="orcamento_empresa_numero_uniq"
+            ),
         ]
 
     def __str__(self):
@@ -221,7 +223,9 @@ class Orcamento(models.Model):
 
     def definir_numero_automatico(self):
         if self.pk:
-            numero_original = type(self).objects.filter(pk=self.pk).values_list("numero", flat=True).first()
+            numero_original = (
+                type(self).objects.filter(pk=self.pk).values_list("numero", flat=True).first()
+            )
             if numero_original:
                 self.numero = numero_original
                 return
@@ -240,7 +244,9 @@ class Orcamento(models.Model):
         if self.configuracao_empresa_id and self.empresa_id:
             if self.configuracao_empresa.empresa_id != self.empresa_id:
                 raise ValidationError(
-                    {"configuracao_empresa": "Selecione uma configuração da mesma empresa do orçamento."}
+                    {
+                        "configuracao_empresa": "Selecione uma configuração da mesma empresa do orçamento."
+                    }
                 )
 
     def calcular_subtotal_itens(self) -> Decimal:
@@ -278,16 +284,22 @@ class Orcamento(models.Model):
             self.save(update_fields=["subtotal_itens", "total_final", "atualizado_em"])
 
     def subtotais_por_categoria(self):
-        itens = self.itens.select_related("item_catalogo__categoria").all().order_by(
-            "item_catalogo__categoria__nome",
-            "ordem",
-            "id",
+        itens = (
+            self.itens.select_related("item_catalogo__categoria")
+            .all()
+            .order_by(
+                "item_catalogo__categoria__nome",
+                "ordem",
+                "id",
+            )
         )
         grupos = []
         for chave, itens_grupo in groupby(
             itens,
             key=lambda item: (
-                item.item_catalogo.categoria_id if item.item_catalogo_id and item.item_catalogo.categoria_id else None,
+                item.item_catalogo.categoria_id
+                if item.item_catalogo_id and item.item_catalogo.categoria_id
+                else None,
                 item.item_catalogo.categoria.nome
                 if item.item_catalogo_id and item.item_catalogo.categoria_id
                 else "Sem categoria",
@@ -302,7 +314,9 @@ class Orcamento(models.Model):
                     "categoria_id": chave[0],
                     "categoria_nome": chave[1],
                     "categoria_cor": chave[2],
-                    "subtotal": arredondar(sum((item.subtotal for item in itens_lista), Decimal("0.00"))),
+                    "subtotal": arredondar(
+                        sum((item.subtotal for item in itens_lista), Decimal("0.00"))
+                    ),
                     "itens": itens_lista,
                 }
             )
@@ -333,7 +347,9 @@ class Orcamento(models.Model):
             except IntegrityError as exc:
                 if self.pk or tentativa == max_tentativas - 1:
                     raise
-                if "orcamento_empresa_numero_uniq" not in str(exc) and "UNIQUE constraint failed" not in str(exc):
+                if "orcamento_empresa_numero_uniq" not in str(
+                    exc
+                ) and "UNIQUE constraint failed" not in str(exc):
                     raise
             finally:
                 type(self)._empresa_numero_context = None
@@ -440,7 +456,9 @@ class ItemOrcamento(models.Model):
             return []
 
         divergencias = []
-        if normalizar_texto_comparacao(self.nome) != normalizar_texto_comparacao(self.item_catalogo.nome):
+        if normalizar_texto_comparacao(self.nome) != normalizar_texto_comparacao(
+            self.item_catalogo.nome
+        ):
             divergencias.append("nome")
         if (self.unidade_medida or "").strip() != (self.item_catalogo.unidade_medida or "").strip():
             divergencias.append("unidade")
@@ -457,7 +475,8 @@ class ItemOrcamento(models.Model):
     def gerar_codigo_item(self) -> str:
         prefixo = f"{self.orcamento.numero}-ITEM-"
         codigos = (
-            type(self).objects.filter(orcamento=self.orcamento)
+            type(self)
+            .objects.filter(orcamento=self.orcamento)
             .exclude(pk=self.pk)
             .values_list("codigo_item", flat=True)
         )
@@ -473,7 +492,9 @@ class ItemOrcamento(models.Model):
 
     def definir_codigo_automatico(self):
         if self.pk:
-            codigo_original = type(self).objects.filter(pk=self.pk).values_list("codigo_item", flat=True).first()
+            codigo_original = (
+                type(self).objects.filter(pk=self.pk).values_list("codigo_item", flat=True).first()
+            )
             if codigo_original:
                 self.codigo_item = codigo_original
                 return

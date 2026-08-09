@@ -1,10 +1,11 @@
-from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from orcamentos.models import Orcamento
+
 from .models import Cliente
 
 
@@ -123,7 +124,9 @@ class ClienteListaTests(TestCase):
         self.assertNotContains(response, "Cliente Inativo")
 
     def test_lista_ordena_por_cidade(self):
-        response = self.client.get(reverse("clientes:lista"), {"sort": "cidade", "ativo": "inativos"})
+        response = self.client.get(
+            reverse("clientes:lista"), {"sort": "cidade", "ativo": "inativos"}
+        )
 
         self.assertEqual(response.status_code, 200)
         clientes = list(response.context["clientes"])
@@ -301,8 +304,12 @@ class ClienteEmpresaIsolationTests(TestCase):
         )
         self.user_b.groups.set([self.empresa_b])
 
-        self.cliente_a = Cliente.objects.create(nome_razao_social="Cliente A", empresa=self.empresa_a)
-        self.cliente_b = Cliente.objects.create(nome_razao_social="Cliente B", empresa=self.empresa_b)
+        self.cliente_a = Cliente.objects.create(
+            nome_razao_social="Cliente A", empresa=self.empresa_a
+        )
+        self.cliente_b = Cliente.objects.create(
+            nome_razao_social="Cliente B", empresa=self.empresa_b
+        )
 
     def test_lista_mostra_apenas_clientes_da_mesma_empresa(self):
         self.client.force_login(self.user_a)

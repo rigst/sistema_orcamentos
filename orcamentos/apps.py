@@ -6,4 +6,4 @@ class OrcamentosConfig(AppConfig):
     name = "orcamentos"
 
     def ready(self):
-        import orcamentos.signals
+        pass

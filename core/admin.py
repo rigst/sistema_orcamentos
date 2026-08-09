@@ -1,10 +1,10 @@
 from django.contrib import admin
-from unfold.admin import ModelAdmin
 from django.contrib.auth.models import Group
+from unfold.admin import ModelAdmin
 
 from core.tenancy import VISITOR_GROUP_PREFIX, obter_grupo_empresa_usuario
-from .models import Empresa
 
+from .models import Empresa
 
 try:
     admin.site.unregister(Group)
@@ -21,7 +21,11 @@ class EmpresaGroupAdmin(ModelAdmin):
     def has_module_permission(self, request):
         if request.user.is_superuser:
             return True
-        return bool(request.user.is_active and request.user.is_staff and getattr(request.user, "eh_admin_perfil", False))
+        return bool(
+            request.user.is_active
+            and request.user.is_staff
+            and getattr(request.user, "eh_admin_perfil", False)
+        )
 
     def has_view_permission(self, request, obj=None):
         return self.has_module_permission(request)
@@ -48,7 +52,9 @@ class EmpresaGroupAdmin(ModelAdmin):
         form = super().get_form(request, obj, **kwargs)
         if "name" in form.base_fields:
             form.base_fields["name"].label = "Empresa"
-            form.base_fields["name"].help_text = "Cada grupo representa uma empresa isolada das demais no sistema."
+            form.base_fields[
+                "name"
+            ].help_text = "Cada grupo representa uma empresa isolada das demais no sistema."
         return form
 
 
@@ -62,7 +68,11 @@ class EmpresaAdmin(ModelAdmin):
     def has_module_permission(self, request):
         if request.user.is_superuser:
             return True
-        return bool(request.user.is_active and request.user.is_staff and getattr(request.user, "eh_admin_perfil", False))
+        return bool(
+            request.user.is_active
+            and request.user.is_staff
+            and getattr(request.user, "eh_admin_perfil", False)
+        )
 
     def has_view_permission(self, request, obj=None):
         return self.has_module_permission(request)
@@ -79,7 +89,9 @@ class EmpresaAdmin(ModelAdmin):
         return request.user.is_superuser
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request).exclude(grupo__name__startswith=VISITOR_GROUP_PREFIX)
+        queryset = (
+            super().get_queryset(request).exclude(grupo__name__startswith=VISITOR_GROUP_PREFIX)
+        )
         grupo = obter_grupo_empresa_usuario(request.user)
         if request.user.is_superuser:
             return queryset

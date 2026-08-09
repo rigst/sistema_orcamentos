@@ -5,6 +5,7 @@ from core.permissions import require_capability
 from core.query import paginate_queryset
 from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
+
 from .forms import ClienteForm
 from .models import Cliente
 

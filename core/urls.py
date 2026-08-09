@@ -1,4 +1,5 @@
 from django.urls import path
+
 from .views import alternar_empresa, dashboard, healthz
 
 urlpatterns = [

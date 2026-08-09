@@ -1,21 +1,22 @@
+from urllib.parse import urlencode
+
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
 from django.template.loader import render_to_string
-from django.views.decorators.http import require_POST, require_http_methods
-from urllib.parse import urlencode
+from django.urls import reverse
+from django.views.decorators.http import require_http_methods, require_POST
 
+from catalogo.models import CategoriaItem
 from core.permissions import require_capability
 from core.query import paginate_queryset
 from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
-from catalogo.models import CategoriaItem
+
 from .forms import ItemOrcamentoForm, OrcamentoForm
 from .models import ItemOrcamento, Orcamento
-
 
 STATUS_PERMITIDOS = {
     "rascunho",
@@ -80,7 +81,10 @@ def obter_estado_itens(request, orcamento):
     if busca:
         itens = filter_ranked_search(itens, busca, ("nome", "codigo_item", "descricao"))
     categorias = (
-        queryset_da_empresa(CategoriaItem.objects.filter(itens__itens_em_orcamentos__orcamento=orcamento), request.user)
+        queryset_da_empresa(
+            CategoriaItem.objects.filter(itens__itens_em_orcamentos__orcamento=orcamento),
+            request.user,
+        )
         .distinct()
         .order_by("nome")
     )
@@ -159,13 +163,17 @@ def responder_ajax_item(
     }
     context_base.update(obter_estado_itens(request, orcamento))
     payload = {
-        "itens_html": render_to_string("orcamentos/partials/itens_tabela.html", context_base, request=request),
+        "itens_html": render_to_string(
+            "orcamentos/partials/itens_tabela.html", context_base, request=request
+        ),
         "totais_html": render_to_string(
             "orcamentos/partials/totais_card.html",
             {"orcamento": orcamento, "subtotais_categoria": orcamento.subtotais_por_categoria()},
             request=request,
         ),
-        "flash_html": render_to_string("orcamentos/partials/item_feedback.html", {"mensagem": mensagem}, request=request),
+        "flash_html": render_to_string(
+            "orcamentos/partials/item_feedback.html", {"mensagem": mensagem}, request=request
+        ),
     }
 
     if item_form is not None:
@@ -189,7 +197,9 @@ def orcamento_lista(request):
     ativo = request.GET.get("ativo", "ativos").strip()
     ordenar = request.GET.get("sort", "recentes")
 
-    orcamentos = queryset_da_empresa(Orcamento.objects.select_related("cliente").all(), request.user)
+    orcamentos = queryset_da_empresa(
+        Orcamento.objects.select_related("cliente").all(), request.user
+    )
 
     if status:
         orcamentos = orcamentos.filter(status=status)
@@ -420,7 +430,9 @@ def orcamento_duplicar(request, pk):
 
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_criar(request, orcamento_pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
     exigir_orcamento_editavel(request.user, orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
@@ -428,7 +440,11 @@ def item_orcamento_criar(request, orcamento_pk):
         if is_ajax:
             modal_html = render_to_string(
                 "orcamentos/partials/item_create_panel.html",
-                {"orcamento": orcamento, "item_form": ItemOrcamentoForm(user=request.user), **obter_estado_itens(request, orcamento)},
+                {
+                    "orcamento": orcamento,
+                    "item_form": ItemOrcamentoForm(user=request.user),
+                    **obter_estado_itens(request, orcamento),
+                },
                 request=request,
             )
             return JsonResponse({"modal_html": modal_html})
@@ -457,7 +473,11 @@ def item_orcamento_criar(request, orcamento_pk):
         if is_ajax:
             modal_html = render_to_string(
                 "orcamentos/partials/item_create_panel.html",
-                {"orcamento": orcamento, "item_form": form, **obter_estado_itens(request, orcamento)},
+                {
+                    "orcamento": orcamento,
+                    "item_form": form,
+                    **obter_estado_itens(request, orcamento),
+                },
                 request=request,
             )
             return responder_ajax_item(
@@ -480,7 +500,9 @@ def item_orcamento_criar(request, orcamento_pk):
 
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_editar(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
     exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -498,7 +520,9 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
                 request=request,
             )
             return JsonResponse({"modal_html": modal_html})
-        return redirect(f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao")
+        return redirect(
+            f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao"
+        )
 
     form = ItemOrcamentoForm(request.POST, instance=item, user=request.user)
     if form.is_valid():
@@ -547,7 +571,9 @@ def item_orcamento_editar(request, orcamento_pk, item_pk):
 
 @require_capability("pode_gerenciar_orcamentos")
 def item_orcamento_excluir(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
     exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
 
@@ -572,15 +598,18 @@ def item_orcamento_excluir(request, orcamento_pk, item_pk):
 @require_capability("pode_gerenciar_orcamentos")
 @require_POST
 def item_orcamento_duplicar(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
     exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     with transaction.atomic():
         (
-            ItemOrcamento.objects.filter(orcamento=orcamento, ordem__gt=item.ordem)
-            .update(ordem=models.F("ordem") + 1)
+            ItemOrcamento.objects.filter(orcamento=orcamento, ordem__gt=item.ordem).update(
+                ordem=models.F("ordem") + 1
+            )
         )
 
         item.pk = None
@@ -603,15 +632,18 @@ def item_orcamento_duplicar(request, orcamento_pk, item_pk):
 @require_capability("pode_gerenciar_orcamentos")
 @require_POST
 def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
     exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     with transaction.atomic():
         (
-            ItemOrcamento.objects.filter(orcamento=orcamento, ordem__gt=item.ordem)
-            .update(ordem=models.F("ordem") + 1)
+            ItemOrcamento.objects.filter(orcamento=orcamento, ordem__gt=item.ordem).update(
+                ordem=models.F("ordem") + 1
+            )
         )
 
         item.pk = None
@@ -630,13 +662,17 @@ def item_orcamento_duplicar_editar(request, orcamento_pk, item_pk):
             mensagem=mensagem,
         )
     messages.success(request, mensagem)
-    return redirect(f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao")
+    return redirect(
+        f"{montar_url_edicao_orcamento(request, orcamento.pk, item_edit=item.pk)}#painel-item-edicao"
+    )
 
 
 @require_capability("pode_gerenciar_orcamentos")
 @require_POST
 def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
     exigir_orcamento_editavel(request.user, orcamento)
     item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -677,12 +713,18 @@ def item_orcamento_preview(request, orcamento_pk):
     if request.method != "GET":
         return HttpResponseBadRequest("Método inválido.")
 
-    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk)
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
     form = ItemOrcamentoForm(request.GET, user=request.user)
     form.is_valid()
     item_preview, erro_validacao = form.construir_item_preview(orcamento)
 
-    return render(request, "orcamentos/partials/item_preview_card.html", {
-        "item_preview": item_preview,
-        "erro_validacao_preview": erro_validacao,
-    })
+    return render(
+        request,
+        "orcamentos/partials/item_preview_card.html",
+        {
+            "item_preview": item_preview,
+            "erro_validacao_preview": erro_validacao,
+        },
+    )

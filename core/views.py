@@ -1,5 +1,5 @@
-from datetime import timedelta
 import secrets
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib import messages
@@ -48,10 +48,7 @@ def dashboard(request):
         orcamentos = orcamentos.filter(data_emissao__gte=inicio)
         ultimos_orcamentos = ultimos_orcamentos.filter(data_emissao__gte=inicio)
 
-    resumo_status = (
-        orcamentos.values("status")
-        .annotate(total=Count("id"))
-    )
+    resumo_status = orcamentos.values("status").annotate(total=Count("id"))
 
     status_map = {
         "rascunho": 0,
@@ -66,12 +63,18 @@ def dashboard(request):
 
     indicadores = orcamentos.aggregate(
         total_orcamentos=Count("id"),
-        valor_total=Coalesce(Sum("total_final"), Value(0), output_field=DecimalField(max_digits=14, decimal_places=2)),
+        valor_total=Coalesce(
+            Sum("total_final"), Value(0), output_field=DecimalField(max_digits=14, decimal_places=2)
+        ),
     )
     indicadores["valor_aprovado"] = orcamentos.filter(status="aprovado").aggregate(
-        total=Coalesce(Sum("total_final"), Value(0), output_field=DecimalField(max_digits=14, decimal_places=2))
+        total=Coalesce(
+            Sum("total_final"), Value(0), output_field=DecimalField(max_digits=14, decimal_places=2)
+        )
     )["total"]
-    indicadores["pendentes"] = orcamentos.filter(status__in=["rascunho", "em_elaboracao", "enviado"]).count()
+    indicadores["pendentes"] = orcamentos.filter(
+        status__in=["rascunho", "em_elaboracao", "enviado"]
+    ).count()
     ultimos_orcamentos = ultimos_orcamentos[:5]
 
     context = {

@@ -1,17 +1,24 @@
+from mimetypes import guess_type
+
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from mimetypes import guess_type
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 from orcamentos.models import Orcamento
+
+from .exporters import (
+    gerar_excel_orcamento,
+    gerar_pdf_memorial_descritivo,
+    gerar_pdf_orcamento,
+    gerar_word_memorial_descritivo,
+    obter_alerta_status,
+)
 from .forms import ConfiguracaoEmpresaForm
-from .exporters import gerar_excel_orcamento, gerar_pdf_orcamento, obter_alerta_status
-from .exporters import gerar_pdf_memorial_descritivo, gerar_word_memorial_descritivo
 from .models import ConfiguracaoEmpresa
 
 
@@ -53,14 +60,20 @@ def configuracao_lista(request):
 
 
 def obter_configuracao_ativa(user):
-    return queryset_da_empresa(ConfiguracaoEmpresa.objects.filter(ativo=True), user).order_by("-atualizado_em").first()
+    return (
+        queryset_da_empresa(ConfiguracaoEmpresa.objects.filter(ativo=True), user)
+        .order_by("-atualizado_em")
+        .first()
+    )
 
 
 def obter_configuracao_do_orcamento(orcamento, user):
     if getattr(orcamento, "configuracao_empresa_id", None):
-        configuracao_vinculada = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user).filter(
-            pk=orcamento.configuracao_empresa_id
-        ).first()
+        configuracao_vinculada = (
+            queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
+            .filter(pk=orcamento.configuracao_empresa_id)
+            .first()
+        )
         if configuracao_vinculada:
             return configuracao_vinculada
     return obter_configuracao_ativa(user)
@@ -87,7 +100,9 @@ def configuracao_criar(request):
 
 @require_capability("pode_visualizar_relatorios")
 def configuracao_visualizar(request, pk):
-    configuracao = get_object_or_404(queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk)
+    configuracao = get_object_or_404(
+        queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk
+    )
     form = ConfiguracaoEmpresaForm(instance=configuracao)
     return render(
         request,
@@ -122,7 +137,9 @@ def configuracao_logo(request, pk):
 
 @require_capability("pode_gerenciar_relatorios")
 def configuracao_editar(request, pk):
-    configuracao = get_object_or_404(queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk)
+    configuracao = get_object_or_404(
+        queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk
+    )
 
     if request.method == "POST":
         form = ConfiguracaoEmpresaForm(request.POST, request.FILES, instance=configuracao)
@@ -145,7 +162,9 @@ def configuracao_editar(request, pk):
 
 @require_capability("pode_gerenciar_relatorios")
 def configuracao_excluir(request, pk):
-    configuracao = get_object_or_404(queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk)
+    configuracao = get_object_or_404(
+        queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk
+    )
     acao = "reativar" if not configuracao.ativo else "inativar"
 
     if request.method == "POST":
@@ -167,7 +186,9 @@ def configuracao_excluir(request, pk):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_relatorio_central(request, pk):
     orcamento = get_object_or_404(
-        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        queryset_da_empresa(
+            Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user
+        ),
         pk=pk,
     )
     if request.method == "POST":
@@ -205,7 +226,9 @@ def orcamento_relatorio_central(request, pk):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_excel(request, pk):
     orcamento = get_object_or_404(
-        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        queryset_da_empresa(
+            Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user
+        ),
         pk=pk,
     )
     configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
@@ -220,7 +243,9 @@ def orcamento_exportar_excel(request, pk):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_pdf(request, pk):
     orcamento = get_object_or_404(
-        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        queryset_da_empresa(
+            Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user
+        ),
         pk=pk,
     )
     configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
@@ -235,26 +260,34 @@ def orcamento_exportar_pdf(request, pk):
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_memorial_pdf(request, pk):
     orcamento = get_object_or_404(
-        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        queryset_da_empresa(
+            Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user
+        ),
         pk=pk,
     )
     configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
     conteudo = gerar_pdf_memorial_descritivo(orcamento, configuracao)
 
     response = HttpResponse(conteudo, content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="memorial-descritivo-{orcamento.numero}.pdf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="memorial-descritivo-{orcamento.numero}.pdf"'
+    )
     return response
 
 
 @require_capability("pode_visualizar_orcamentos")
 def orcamento_exportar_memorial_word(request, pk):
     orcamento = get_object_or_404(
-        queryset_da_empresa(Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user),
+        queryset_da_empresa(
+            Orcamento.objects.select_related("cliente", "configuracao_empresa"), request.user
+        ),
         pk=pk,
     )
     configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
     conteudo = gerar_word_memorial_descritivo(orcamento, configuracao)
 
     response = HttpResponse(conteudo, content_type="application/rtf")
-    response["Content-Disposition"] = f'attachment; filename="memorial-descritivo-{orcamento.numero}.rtf"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="memorial-descritivo-{orcamento.numero}.rtf"'
+    )
     return response

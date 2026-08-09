@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    catalogo_importar_excel,
     categoria_criar,
     categoria_editar,
     categoria_excluir,
@@ -9,7 +10,6 @@ from .views import (
     item_criar,
     item_editar,
     item_excluir,
-    catalogo_importar_excel,
     item_exportar_excel,
     item_lista,
     item_visualizar,

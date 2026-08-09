@@ -1,5 +1,4 @@
-from core.tenancy import EMPRESA_ATIVA_SESSION_KEY
-from core.tenancy import obter_empresas_usuario
+from core.tenancy import EMPRESA_ATIVA_SESSION_KEY, obter_empresas_usuario
 
 
 class EmpresaAtivaMiddleware:

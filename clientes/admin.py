@@ -2,6 +2,7 @@ from django.contrib import admin
 from unfold.admin import ModelAdmin
 
 from core.admin_permissions import PerfilAdminPermissionMixin
+
 from .models import Cliente
 
 
@@ -22,5 +23,6 @@ class ClienteAdmin(PerfilAdminPermissionMixin, ModelAdmin):
     list_filter = ("tipo_pessoa", "ativo")
     search_fields = ("nome_razao_social", "nome_fantasia", "cpf_cnpj", "email")
     ordering = ("nome_razao_social",)
+
 
 # Register your models here.

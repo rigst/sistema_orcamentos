@@ -7,6 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from xml.sax.saxutils import escape
 
+from PIL import Image as PILImage
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4
@@ -16,10 +17,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
-from PIL import Image as PILImage
-
 from core.formatting import formatar_decimal_br, formatar_moeda_br
-
 
 FONT_ROOT = Path("/usr/share/fonts/truetype/dejavu")
 FONT_REGULAR = "DejaVuSans"
@@ -157,7 +155,9 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
     empresa = configuracao.nome_empresa if configuracao else "Sua empresa"
     cliente = str(orcamento.cliente)
     linhas_itens = []
-    for item in orcamento.itens.select_related("item_catalogo__categoria").all().order_by("ordem", "id"):
+    for item in (
+        orcamento.itens.select_related("item_catalogo__categoria").all().order_by("ordem", "id")
+    ):
         categoria_nome = (
             item.item_catalogo.categoria.nome
             if item.item_catalogo_id and item.item_catalogo and item.item_catalogo.categoria_id
@@ -239,7 +239,7 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
    <Row><Cell><Data ss:Type="String">Status: {escape(orcamento.get_status_display())}</Data></Cell></Row>
    <Row><Cell><Data ss:Type="String">Emissão: {formatar_data(orcamento.data_emissao)}</Data></Cell></Row>
    <Row><Cell><Data ss:Type="String">Validade: {formatar_data(orcamento.validade_em)}</Data></Cell></Row>
-   {''.join(linhas_contexto)}
+   {"".join(linhas_contexto)}
    <Row />
    <Row ss:StyleID="Header">
     <Cell><Data ss:Type="String">Ordem</Data></Cell>
@@ -256,10 +256,10 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
     <Cell><Data ss:Type="String">Acrésc. %</Data></Cell>
     <Cell><Data ss:Type="String">Subtotal</Data></Cell>
    </Row>
-   {''.join(linhas_itens)}
+   {"".join(linhas_itens)}
    <Row />
    <Row ss:StyleID="Header"><Cell><Data ss:Type="String">Subtotais por categoria</Data></Cell></Row>
-   {''.join(linhas_subtotais_categoria)}
+   {"".join(linhas_subtotais_categoria)}
    <Row />
    <Row><Cell><Data ss:Type="String">Subtotal dos itens</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">{orcamento.subtotal_itens}</Data></Cell></Row>
    <Row><Cell><Data ss:Type="String">Desconto global em valor</Data></Cell><Cell ss:StyleID="Currency"><Data ss:Type="Number">{orcamento.desconto_global_valor}</Data></Cell></Row>
@@ -284,7 +284,11 @@ def carregar_logo_pdf(configuracao, largura_maxima=140, altura_maxima=48):
             buffer = BytesIO()
             convertido.save(buffer, format="PNG")
             buffer.seek(0)
-            return buffer, min(largura_maxima, convertido.width / 4), min(altura_maxima, convertido.height / 4)
+            return (
+                buffer,
+                min(largura_maxima, convertido.width / 4),
+                min(altura_maxima, convertido.height / 4),
+            )
     except Exception:
         return None
 
@@ -400,7 +404,9 @@ def desenhar_fundo_memorial(canvas, doc):
 
 
 def bloco_info(styles, label: str, valor: str):
-    return Paragraph(f"<font name='{FONT_BOLD}' color='#617A95'>{label}</font><br/>{valor}", styles["body"])
+    return Paragraph(
+        f"<font name='{FONT_BOLD}' color='#617A95'>{label}</font><br/>{valor}", styles["body"]
+    )
 
 
 def quebrar_linhas_texto(valor: str | None) -> str:
@@ -416,9 +422,15 @@ def adicionar_secao_texto(story, styles, titulo: str, conteudo: str | None):
     story.append(Paragraph(quebrar_linhas_texto(texto), styles["body"]))
 
 
-def montar_topo_pdf(orcamento, configuracao, styles, titulo_documento: str, subtitulo: str | None = None):
+def montar_topo_pdf(
+    orcamento, configuracao, styles, titulo_documento: str, subtitulo: str | None = None
+):
     empresa = configuracao.nome_empresa if configuracao else "Sua empresa"
-    nome_fantasia = configuracao.nome_fantasia if configuracao and configuracao.nome_fantasia else "Proposta comercial"
+    nome_fantasia = (
+        configuracao.nome_fantasia
+        if configuracao and configuracao.nome_fantasia
+        else "Proposta comercial"
+    )
     logo = carregar_logo_pdf(configuracao)
 
     header_text = [
@@ -473,7 +485,14 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
     topo = montar_topo_pdf(orcamento, configuracao, styles, f"Orçamento {orcamento.numero}")
 
     status_card = Table(
-        [[Paragraph(f"<font name='{FONT_BOLD}' color='#{status_fg.hexval()[2:]}'> {alerta_status.titulo}</font><br/>{alerta_status.detalhe}", styles["body"])]],
+        [
+            [
+                Paragraph(
+                    f"<font name='{FONT_BOLD}' color='#{status_fg.hexval()[2:]}'> {alerta_status.titulo}</font><br/>{alerta_status.detalhe}",
+                    styles["body"],
+                )
+            ]
+        ],
         colWidths=[166 * mm],
     )
     status_card.setStyle(
@@ -525,7 +544,13 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
             [
                 Paragraph("Descrição inicial", styles["title"]),
                 Table(
-                    [[Paragraph(orcamento.descricao_inicial.replace("\n", "<br/>"), styles["body"])]],
+                    [
+                        [
+                            Paragraph(
+                                orcamento.descricao_inicial.replace("\n", "<br/>"), styles["body"]
+                            )
+                        ]
+                    ],
                     colWidths=[166 * mm],
                     style=TableStyle(
                         [
@@ -571,13 +596,18 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
             [
                 Paragraph(str(item.ordem), styles["body"]),
                 Paragraph("<br/>".join(detalhes), styles["body"]),
-                Paragraph(f"{formatar_decimal_br(item.quantidade)}<br/>{formatar_unidade_relatorio(item)}", styles["body"]),
+                Paragraph(
+                    f"{formatar_decimal_br(item.quantidade)}<br/>{formatar_unidade_relatorio(item)}",
+                    styles["body"],
+                ),
                 Paragraph(formatar_moeda(item.valor_unitario), styles["body"]),
                 Paragraph(f"<b>{formatar_moeda(item.subtotal)}</b>", styles["body"]),
             ]
         )
 
-    tabela_itens = Table(linhas_itens, colWidths=[16 * mm, 78 * mm, 22 * mm, 25 * mm, 25 * mm], repeatRows=1)
+    tabela_itens = Table(
+        linhas_itens, colWidths=[16 * mm, 78 * mm, 22 * mm, 25 * mm, 25 * mm], repeatRows=1
+    )
     tabela_itens.setStyle(
         TableStyle(
             [
@@ -726,7 +756,7 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
         spaceAfter=3,
     )
 
-    cidade_base = (configuracao.cidade if configuracao and configuracao.cidade else "Porto Alegre")
+    cidade_base = configuracao.cidade if configuracao and configuracao.cidade else "Porto Alegre"
     linha_data_local = ""
     if orcamento.evento_periodo and orcamento.evento_local:
         linha_data_local = f"{orcamento.evento_periodo} em {orcamento.evento_local}"
@@ -742,7 +772,9 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
         ),
         Spacer(1, 8),
         Paragraph(f"<b>Expositor:</b> {escape(str(orcamento.cliente))}", style_body),
-        Paragraph(f"<b>Evento:</b> {escape(orcamento.evento_nome or orcamento.titulo)}", style_body),
+        Paragraph(
+            f"<b>Evento:</b> {escape(orcamento.evento_nome or orcamento.titulo)}", style_body
+        ),
     ]
 
     if linha_data_local:
@@ -791,20 +823,40 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
                     bulletText="▪",
                 )
             )
-        story.append(Paragraph(f"Subtotal da categoria: <b>{formatar_moeda(grupo['subtotal'])}</b>", style_body))
+        story.append(
+            Paragraph(
+                f"Subtotal da categoria: <b>{formatar_moeda(grupo['subtotal'])}</b>", style_body
+            )
+        )
         story.append(Spacer(1, 8))
 
     if orcamento.mostrar_financeiro_no_memorial:
         story.append(Paragraph("ESPECIFICAÇÕES FINANCEIRAS", style_title))
-        story.append(Paragraph(f"Valor total: <b>{formatar_moeda(orcamento.total_final)}</b>.", style_body))
+        story.append(
+            Paragraph(f"Valor total: <b>{formatar_moeda(orcamento.total_final)}</b>.", style_body)
+        )
         if orcamento.valor_locacao is not None:
-            story.append(Paragraph(f"Locação: <b>{formatar_moeda(orcamento.valor_locacao)}</b>.", style_body))
+            story.append(
+                Paragraph(f"Locação: <b>{formatar_moeda(orcamento.valor_locacao)}</b>.", style_body)
+            )
         if orcamento.valor_servico is not None:
-            story.append(Paragraph(f"Serviço: <b>{formatar_moeda(orcamento.valor_servico)}</b>.", style_body))
+            story.append(
+                Paragraph(f"Serviço: <b>{formatar_moeda(orcamento.valor_servico)}</b>.", style_body)
+            )
         if orcamento.condicoes_pagamento:
-            story.append(Paragraph(f"Condições de pagamento: {quebrar_linhas_texto(orcamento.condicoes_pagamento)}.", style_body))
+            story.append(
+                Paragraph(
+                    f"Condições de pagamento: {quebrar_linhas_texto(orcamento.condicoes_pagamento)}.",
+                    style_body,
+                )
+            )
         if configuracao and configuracao.dados_bancarios:
-            story.append(Paragraph(f"Dados bancários: {quebrar_linhas_texto(configuracao.dados_bancarios)}.", style_body))
+            story.append(
+                Paragraph(
+                    f"Dados bancários: {quebrar_linhas_texto(configuracao.dados_bancarios)}.",
+                    style_body,
+                )
+            )
         if configuracao and configuracao.chave_pix:
             story.append(Paragraph(f"Chave PIX: {escape(configuracao.chave_pix)}.", style_body))
         validade_texto = formatar_data(orcamento.validade_em)
@@ -835,7 +887,9 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
         if orcamento.contrato_cep:
             cidade_linha.append(f"CEP: {escape(orcamento.contrato_cep)}")
         if orcamento.contrato_inscricao_estadual:
-            cidade_linha.append(f"Inscrição Estadual: {escape(orcamento.contrato_inscricao_estadual)}")
+            cidade_linha.append(
+                f"Inscrição Estadual: {escape(orcamento.contrato_inscricao_estadual)}"
+            )
         if cidade_linha:
             linhas_contrato.append("   ".join(cidade_linha))
         if orcamento.contrato_responsavel_nome:
@@ -856,7 +910,9 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
         if contato_linha:
             linhas_contrato.append("   ".join(contato_linha))
         if orcamento.contrato_email:
-            linhas_contrato.append(f"E-mail para envio do contrato: {escape(orcamento.contrato_email)}")
+            linhas_contrato.append(
+                f"E-mail para envio do contrato: {escape(orcamento.contrato_email)}"
+            )
 
         if linhas_contrato:
             story.append(Paragraph("DADOS PARA CONTRATO", style_title))
@@ -903,7 +959,7 @@ def _rtf_escape(texto: str | None) -> str:
             codigo = ord(caractere)
             if codigo > 32767:
                 codigo -= 65536
-            convertido.append(fr"\u{codigo}?")
+            convertido.append(rf"\u{codigo}?")
         else:
             convertido.append(caractere)
     return "".join(convertido)
@@ -917,7 +973,7 @@ def _rtf_paragrafo(texto: str | None, *, negrito: bool = False, espacamento: int
 
 
 def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
-    cidade_base = (configuracao.cidade if configuracao and configuracao.cidade else "Porto Alegre")
+    cidade_base = configuracao.cidade if configuracao and configuracao.cidade else "Porto Alegre"
     linha_data_local = ""
     if orcamento.evento_periodo and orcamento.evento_local:
         linha_data_local = f"{orcamento.evento_periodo} em {orcamento.evento_local}"
@@ -932,7 +988,9 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
         r"\viewkind4\uc1",
         _rtf_paragrafo(f"{cidade_base}, {formatar_data_extenso(orcamento.data_emissao)}"),
         _rtf_paragrafo(f"Expositor: {texto_ou_linha(str(orcamento.cliente), tamanho=38)}"),
-        _rtf_paragrafo(f"Evento: {texto_ou_linha(orcamento.evento_nome or orcamento.titulo, tamanho=38)}"),
+        _rtf_paragrafo(
+            f"Evento: {texto_ou_linha(orcamento.evento_nome or orcamento.titulo, tamanho=38)}"
+        ),
         _rtf_paragrafo(f"Data e Local: {texto_ou_linha(linha_data_local, tamanho=44)}"),
         _rtf_paragrafo(
             f"Nº do estande: {texto_ou_linha(orcamento.evento_estande, tamanho=14)}   "
@@ -961,12 +1019,19 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
     )
 
     for grupo in orcamento.subtotais_por_categoria():
-        partes.append(_rtf_paragrafo(f"{grupo['categoria_nome'].upper()}:", negrito=True, espacamento=200))
+        partes.append(
+            _rtf_paragrafo(f"{grupo['categoria_nome'].upper()}:", negrito=True, espacamento=200)
+        )
         partes.append(_rtf_paragrafo("ESPECIFICAÇÕES TÉCNICAS:", negrito=True, espacamento=180))
         for item in grupo["itens"]:
             descricao = (item.descricao or "").strip() or item.nome
             quantidade = formatar_decimal_br(item.quantidade)
-            partes.append(_rtf_paragrafo(f"- {quantidade} {formatar_unidade_relatorio(item)} de {descricao}", espacamento=140))
+            partes.append(
+                _rtf_paragrafo(
+                    f"- {quantidade} {formatar_unidade_relatorio(item)} de {descricao}",
+                    espacamento=140,
+                )
+            )
         partes.append(_rtf_paragrafo(f"Subtotal da categoria: {formatar_moeda(grupo['subtotal'])}"))
 
     if orcamento.mostrar_financeiro_no_memorial:
@@ -977,7 +1042,9 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
         if orcamento.valor_servico is not None:
             partes.append(_rtf_paragrafo(f"Serviço: {formatar_moeda(orcamento.valor_servico)}"))
         if orcamento.condicoes_pagamento:
-            partes.append(_rtf_paragrafo(f"Condições de pagamento: {orcamento.condicoes_pagamento}"))
+            partes.append(
+                _rtf_paragrafo(f"Condições de pagamento: {orcamento.condicoes_pagamento}")
+            )
         if configuracao and configuracao.dados_bancarios:
             partes.append(_rtf_paragrafo(f"Dados bancários: {configuracao.dados_bancarios}"))
         if configuracao and configuracao.chave_pix:
@@ -1000,9 +1067,13 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
         partes.append(_rtf_paragrafo("DADOS PARA CONTRATO", negrito=True, espacamento=220))
         partes.extend(
             [
-                _rtf_paragrafo(f"Razão Social: {texto_ou_linha(orcamento.contrato_razao_social, tamanho=32)}"),
+                _rtf_paragrafo(
+                    f"Razão Social: {texto_ou_linha(orcamento.contrato_razao_social, tamanho=32)}"
+                ),
                 _rtf_paragrafo(f"CNPJ: {texto_ou_linha(orcamento.contrato_cnpj, tamanho=24)}"),
-                _rtf_paragrafo(f"Endereço: {texto_ou_linha(orcamento.contrato_endereco, tamanho=36)}"),
+                _rtf_paragrafo(
+                    f"Endereço: {texto_ou_linha(orcamento.contrato_endereco, tamanho=36)}"
+                ),
                 _rtf_paragrafo(
                     f"Cidade: {texto_ou_linha(orcamento.contrato_cidade, tamanho=18)}   "
                     f"CEP: {texto_ou_linha(orcamento.contrato_cep, tamanho=12)}   "
@@ -1020,7 +1091,9 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
                     f"Cargo ou Função: {texto_ou_linha(orcamento.contrato_cargo_funcao, tamanho=24)}   "
                     f"Telefone de contato: {texto_ou_linha(orcamento.contrato_telefone, tamanho=18)}"
                 ),
-                _rtf_paragrafo(f"E-mail para envio do contrato: {texto_ou_linha(orcamento.contrato_email, tamanho=32)}"),
+                _rtf_paragrafo(
+                    f"E-mail para envio do contrato: {texto_ou_linha(orcamento.contrato_email, tamanho=32)}"
+                ),
             ]
         )
 
@@ -1034,10 +1107,18 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
             if parte
         )
         if informacoes_complementares:
-            partes.append(_rtf_paragrafo("INFORMAÇÕES COMPLEMENTARES", negrito=True, espacamento=220))
+            partes.append(
+                _rtf_paragrafo("INFORMAÇÕES COMPLEMENTARES", negrito=True, espacamento=220)
+            )
             partes.append(_rtf_paragrafo(informacoes_complementares))
 
-    partes.append(_rtf_paragrafo(texto_ou_linha(getattr(configuracao, "assinatura_nome", ""), tamanho=36), negrito=True, espacamento=220))
+    partes.append(
+        _rtf_paragrafo(
+            texto_ou_linha(getattr(configuracao, "assinatura_nome", ""), tamanho=36),
+            negrito=True,
+            espacamento=220,
+        )
+    )
     if configuracao and configuracao.assinatura_cargo:
         partes.append(_rtf_paragrafo(configuracao.assinatura_cargo, espacamento=140))
     if configuracao and configuracao.assinatura_contato:

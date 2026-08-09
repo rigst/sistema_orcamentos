@@ -4,8 +4,7 @@ from pathlib import Path
 
 from django import forms
 from django.core.files.uploadedfile import SimpleUploadedFile
-from PIL import Image
-from PIL import ImageOps
+from PIL import Image, ImageOps
 
 from core.concurrency import OptimisticLockModelFormMixin
 from core.form_fields import configurar_campo_mascarado
@@ -16,6 +15,7 @@ from core.validators import (
     validar_telefone_basico,
     validar_uf,
 )
+
 from .models import ConfiguracaoEmpresa
 
 
@@ -51,7 +51,9 @@ class ConfiguracaoEmpresaForm(OptimisticLockModelFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ativo"].widget = forms.HiddenInput()
-        self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        self.fields["ativo"].initial = (
+            True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        )
         self.fields["nome_empresa"].error_messages["required"] = "Informe o nome da empresa."
         configurar_campo_mascarado(self, "cpf_cnpj", "cpf_cnpj", placeholder="00.000.000/0000-00")
         configurar_campo_mascarado(self, "telefone", "phone", placeholder="(00) 00000-0000")
@@ -134,7 +136,9 @@ class ConfiguracaoEmpresaForm(OptimisticLockModelFormMixin, forms.ModelForm):
             raise forms.ValidationError("Envie uma imagem válida para o logo.") from exc
 
         if len(conteudo) > max_bytes:
-            raise forms.ValidationError("Logo excede o tamanho máximo permitido após processamento.")
+            raise forms.ValidationError(
+                "Logo excede o tamanho máximo permitido após processamento."
+            )
 
         nome_base = Path(getattr(logo, "name", "logo")).stem or "logo"
         return SimpleUploadedFile(

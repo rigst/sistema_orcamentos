@@ -9,6 +9,7 @@ from core.validators import (
     validar_telefone_basico,
     validar_uf,
 )
+
 from .models import Cliente
 
 
@@ -38,9 +39,15 @@ class ClienteForm(OptimisticLockModelFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ativo"].widget = forms.HiddenInput()
-        self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
-        self.fields["nome_razao_social"].error_messages["required"] = "Informe o nome ou razão social."
-        configurar_campo_mascarado(self, "cpf_cnpj", "cpf_cnpj", placeholder="000.000.000-00 ou 00.000.000/0000-00")
+        self.fields["ativo"].initial = (
+            True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        )
+        self.fields["nome_razao_social"].error_messages["required"] = (
+            "Informe o nome ou razão social."
+        )
+        configurar_campo_mascarado(
+            self, "cpf_cnpj", "cpf_cnpj", placeholder="000.000.000-00 ou 00.000.000/0000-00"
+        )
         configurar_campo_mascarado(self, "telefone", "phone", placeholder="(00) 0000-0000")
         configurar_campo_mascarado(self, "celular", "phone", placeholder="(00) 00000-0000")
         configurar_campo_mascarado(self, "cep", "cep", placeholder="00000-000")

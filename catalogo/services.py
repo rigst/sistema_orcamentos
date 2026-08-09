@@ -1,18 +1,17 @@
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from io import BytesIO
 import logging
 import os
-from time import monotonic
 import unicodedata
-from zipfile import ZipFile
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
+from io import BytesIO
+from time import monotonic
 from xml.etree import ElementTree as ET
 from xml.sax.saxutils import escape
+from zipfile import ZipFile
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from .models import CategoriaItem, ItemCatalogo
-
 
 XLSX_NS = {"main": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 DUAS_CASAS = Decimal("0.01")
@@ -58,7 +57,9 @@ def _indice_coluna(ref):
 def _linhas_xlsx(arquivo):
     try:
         conteudo = arquivo.read()
-        max_upload_bytes = max(int(os.getenv("DJANGO_MAX_CATALOGO_UPLOAD_BYTES", str(5 * 1024 * 1024))), 1)
+        max_upload_bytes = max(
+            int(os.getenv("DJANGO_MAX_CATALOGO_UPLOAD_BYTES", str(5 * 1024 * 1024))), 1
+        )
         if len(conteudo) > max_upload_bytes:
             raise ValueError("Arquivo .xlsx excede o tamanho máximo permitido.")
 
@@ -70,7 +71,9 @@ def _linhas_xlsx(arquivo):
             first_sheet = workbook.find("main:sheets/main:sheet", XLSX_NS)
             if first_sheet is None:
                 raise ValueError("A planilha não possui abas.")
-            relationship_id = first_sheet.attrib.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id")
+            relationship_id = first_sheet.attrib.get(
+                "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"
+            )
             target = None
             for rel in rels:
                 if rel.attrib.get("Id") == relationship_id:
@@ -91,14 +94,20 @@ def _linhas_xlsx(arquivo):
             total_linhas = 0
             total_celulas_nao_vazias = 0
             inicio_parse = monotonic()
-            limite_segundos = max(int(os.getenv("DJANGO_MAX_XLSX_PARSE_SECONDS", str(MAX_XLSX_PARSE_SECONDS))), 1)
-            limite_celulas = max(int(os.getenv("DJANGO_MAX_XLSX_NON_EMPTY_CELLS", str(MAX_XLSX_NON_EMPTY_CELLS))), 10)
+            limite_segundos = max(
+                int(os.getenv("DJANGO_MAX_XLSX_PARSE_SECONDS", str(MAX_XLSX_PARSE_SECONDS))), 1
+            )
+            limite_celulas = max(
+                int(os.getenv("DJANGO_MAX_XLSX_NON_EMPTY_CELLS", str(MAX_XLSX_NON_EMPTY_CELLS))), 10
+            )
             for row in sheet.findall("main:sheetData/main:row", XLSX_NS):
                 if monotonic() - inicio_parse > limite_segundos:
                     raise ValueError("A planilha demorou além do permitido para processar.")
                 total_linhas += 1
                 if total_linhas > MAX_XLSX_IMPORT_ROWS:
-                    raise ValueError(f"A planilha excede o limite de {MAX_XLSX_IMPORT_ROWS} linhas.")
+                    raise ValueError(
+                        f"A planilha excede o limite de {MAX_XLSX_IMPORT_ROWS} linhas."
+                    )
                 cells = [""] * COLUNAS_IMPORTACAO
                 for cell in row.findall("main:c", XLSX_NS):
                     indice = _indice_coluna(cell.attrib.get("r"))
@@ -210,7 +219,9 @@ def _normalizar_unidade(unidade):
 
 def exportar_catalogo_excel(itens) -> bytes:
     linhas_itens = []
-    itens_iteraveis = itens.select_related("categoria") if hasattr(itens, "select_related") else itens
+    itens_iteraveis = (
+        itens.select_related("categoria") if hasattr(itens, "select_related") else itens
+    )
     for item in itens_iteraveis:
         linhas_itens.append(
             f"""
@@ -247,7 +258,7 @@ def exportar_catalogo_excel(itens) -> bytes:
     <Cell><Data ss:Type="String">DESCRIÇÃO</Data></Cell>
     <Cell><Data ss:Type="String">OBSERVAÇÃO</Data></Cell>
    </Row>
-   {''.join(linhas_itens)}
+   {"".join(linhas_itens)}
   </Table>
  </Worksheet>
 </Workbook>
@@ -287,8 +298,14 @@ def importar_catalogo_excel(arquivo, empresa):
             for indice, linha in enumerate(iter_linhas, start=2):
                 teve_linha_de_dados = True
                 valores = list(linha[:6]) + [""] * max(0, 6 - len(linha))
-                categoria_nome, item_nome, valor, unidade, descricao, observacao = [str(v or "").strip() for v in valores[:6]]
-                campos_preenchidos = [campo for campo in (categoria_nome, item_nome, valor, unidade, descricao, observacao) if campo]
+                categoria_nome, item_nome, valor, unidade, descricao, observacao = [
+                    str(v or "").strip() for v in valores[:6]
+                ]
+                campos_preenchidos = [
+                    campo
+                    for campo in (categoria_nome, item_nome, valor, unidade, descricao, observacao)
+                    if campo
+                ]
 
                 if len(campos_preenchidos) <= 1:
                     continue
@@ -298,7 +315,9 @@ def importar_catalogo_excel(arquivo, empresa):
                 chave_categoria = categoria_nome.casefold()
                 categoria = categorias_cache.get(chave_categoria)
                 if categoria is None:
-                    cor = CategoriaItem.COLOR_SEQUENCE[len(categorias_cache) % len(CategoriaItem.COLOR_SEQUENCE)]
+                    cor = CategoriaItem.COLOR_SEQUENCE[
+                        len(categorias_cache) % len(CategoriaItem.COLOR_SEQUENCE)
+                    ]
                     categoria = CategoriaItem.objects.create(
                         empresa=empresa,
                         nome=categoria_nome,
@@ -330,7 +349,10 @@ def importar_catalogo_excel(arquivo, empresa):
                     raise ValueError(f"Linha {indice}: {_formatar_erro_validacao(exc)}") from exc
                 itens_criados += 1
     except ValueError:
-        logger.info("Falha de validação ao importar catálogo", extra={"empresa_id": getattr(empresa, "pk", None)})
+        logger.info(
+            "Falha de validação ao importar catálogo",
+            extra={"empresa_id": getattr(empresa, "pk", None)},
+        )
         raise
     except Exception as exc:
         logger.exception("Erro inesperado na importação de catálogo")

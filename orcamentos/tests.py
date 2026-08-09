@@ -10,6 +10,7 @@ from django.utils import timezone
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
 from relatorios.models import ConfiguracaoEmpresa
+
 from .models import ItemOrcamento, Orcamento
 
 
@@ -84,7 +85,9 @@ class OrcamentoViewsTests(TestCase):
         self.orcamento.status = "aprovado"
         self.orcamento.save(update_fields=["status", "atualizado_em"])
 
-        response = self.client.post(reverse("orcamentos:alterar_status", args=[self.orcamento.pk, "rascunho"]))
+        response = self.client.post(
+            reverse("orcamentos:alterar_status", args=[self.orcamento.pk, "rascunho"])
+        )
 
         self.assertRedirects(response, reverse("orcamentos:lista"))
         self.orcamento.refresh_from_db()
@@ -225,10 +228,18 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, "Desconto global em valor<span class=\"required-mark\">*</span>", html=True)
-        self.assertNotContains(response, "Desconto global em %<span class=\"required-mark\">*</span>", html=True)
-        self.assertNotContains(response, "Acréscimo global em valor<span class=\"required-mark\">*</span>", html=True)
-        self.assertNotContains(response, "Acréscimo global em %<span class=\"required-mark\">*</span>", html=True)
+        self.assertNotContains(
+            response, 'Desconto global em valor<span class="required-mark">*</span>', html=True
+        )
+        self.assertNotContains(
+            response, 'Desconto global em %<span class="required-mark">*</span>', html=True
+        )
+        self.assertNotContains(
+            response, 'Acréscimo global em valor<span class="required-mark">*</span>', html=True
+        )
+        self.assertNotContains(
+            response, 'Acréscimo global em %<span class="required-mark">*</span>', html=True
+        )
 
     def test_orcamento_novo_recebe_numero_automatico(self):
         response = self.client.post(
@@ -455,11 +466,17 @@ class OrcamentoViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "modo estritamente visual")
-        self.assertContains(response, "Esta tela é exclusiva para consulta e não permite alterações.")
+        self.assertContains(
+            response, "Esta tela é exclusiva para consulta e não permite alterações."
+        )
         self.assertNotContains(response, "Salvar orçamento")
         self.assertNotContains(response, "Adicionar item")
-        self.assertNotContains(response, reverse("orcamentos:item_editar", args=[self.orcamento.pk, item.pk]))
-        self.assertNotContains(response, reverse("orcamentos:item_excluir", args=[self.orcamento.pk, item.pk]))
+        self.assertNotContains(
+            response, reverse("orcamentos:item_editar", args=[self.orcamento.pk, item.pk])
+        )
+        self.assertNotContains(
+            response, reverse("orcamentos:item_excluir", args=[self.orcamento.pk, item.pk])
+        )
 
     def test_visualizador_da_lista_aponta_para_rota_de_visualizacao(self):
         visualizador = get_user_model().objects.create_user(
@@ -532,7 +549,9 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Somente orçamentos em rascunho podem ser editados nesta página.")
+        self.assertContains(
+            response, "Somente orçamentos em rascunho podem ser editados nesta página."
+        )
         self.assertNotContains(response, "Adicionar item")
 
     def test_orcamento_fora_de_rascunho_fica_em_modo_somente_leitura_na_edicao(self):
@@ -544,7 +563,9 @@ class OrcamentoViewsTests(TestCase):
                 response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
 
                 self.assertEqual(response.status_code, 200)
-                self.assertContains(response, "Somente orçamentos em rascunho podem ser editados nesta página.")
+                self.assertContains(
+                    response, "Somente orçamentos em rascunho podem ser editados nesta página."
+                )
                 self.assertNotContains(response, "Adicionar item")
 
     def test_orcamento_fora_de_rascunho_nao_pode_salvar_edicao(self):
@@ -692,7 +713,9 @@ class OrcamentoViewsTests(TestCase):
         response_descer = self.client.post(
             reverse("orcamentos:item_mover", args=[self.orcamento.pk, item_2.pk, "baixo"])
         )
-        self.assertRedirects(response_descer, reverse("orcamentos:editar", args=[self.orcamento.pk]))
+        self.assertRedirects(
+            response_descer, reverse("orcamentos:editar", args=[self.orcamento.pk])
+        )
 
         item_1.refresh_from_db()
         item_2.refresh_from_db()
@@ -796,8 +819,8 @@ class OrcamentoViewsTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Inativo")
-        self.assertNotContains(response, "title=\"Aprovar\"")
-        self.assertNotContains(response, "title=\"Enviar\"")
+        self.assertNotContains(response, 'title="Aprovar"')
+        self.assertNotContains(response, 'title="Enviar"')
 
     def test_orcamento_em_rascunho_exibe_fluxo_inicial_de_status(self):
         response = self.client.get(reverse("orcamentos:lista"))
@@ -847,7 +870,9 @@ class OrcamentoViewsTests(TestCase):
             valor_unitario=Decimal("15.00"),
         )
 
-        response = self.client.post(reverse("orcamentos:duplicar", args=[self.orcamento.pk]), follow=True)
+        response = self.client.post(
+            reverse("orcamentos:duplicar", args=[self.orcamento.pk]), follow=True
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(Orcamento.objects.count(), 2)
@@ -1050,7 +1075,9 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('data-unsaved-warning="1"', data["novo_item_html"])
-        self.assertIn(f'data-draft-key="orcamento:{self.orcamento.pk}:item:novo"', data["novo_item_html"])
+        self.assertIn(
+            f'data-draft-key="orcamento:{self.orcamento.pk}:item:novo"', data["novo_item_html"]
+        )
 
     def test_edicao_nao_permite_alterar_numero_existente(self):
         response = self.client.post(
@@ -1077,14 +1104,18 @@ class OrcamentoViewsTests(TestCase):
         self.assertEqual(self.orcamento.numero, "ORC-2026-0001")
 
     def test_orcamento_pode_ser_inativado_e_reativado(self):
-        response = self.client.post(reverse("orcamentos:excluir", args=[self.orcamento.pk]), follow=True)
+        response = self.client.post(
+            reverse("orcamentos:excluir", args=[self.orcamento.pk]), follow=True
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Orçamento inativado com sucesso.")
         self.orcamento.refresh_from_db()
         self.assertFalse(self.orcamento.ativo)
 
-        response = self.client.post(reverse("orcamentos:excluir", args=[self.orcamento.pk]), follow=True)
+        response = self.client.post(
+            reverse("orcamentos:excluir", args=[self.orcamento.pk]), follow=True
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Orçamento reativado com sucesso.")
@@ -1135,7 +1166,9 @@ class OrcamentoDomainTests(TestCase):
             desconto_valor=Decimal("101.00"),
         )
 
-        with self.assertRaisesMessage(ValidationError, "O desconto total do item não pode ser maior que o valor base do item."):
+        with self.assertRaisesMessage(
+            ValidationError, "O desconto total do item não pode ser maior que o valor base do item."
+        ):
             item.full_clean()
 
     def test_total_final_do_orcamento_nunca_fica_negativo(self):

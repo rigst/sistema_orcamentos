@@ -5,6 +5,7 @@ from unfold.admin import ModelAdmin
 from unfold.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 
 from core.tenancy import VISITOR_GROUP_PREFIX, obter_grupo_empresa_usuario
+
 from .models import Usuario
 
 
@@ -18,7 +19,10 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
     change_password_form = AdminPasswordChangeForm
 
     fieldsets = UserAdmin.fieldsets + (
-        ("Informações adicionais", {"fields": ("perfil", "nome_exibicao", "criado_em", "atualizado_em")}),
+        (
+            "Informações adicionais",
+            {"fields": ("perfil", "nome_exibicao", "criado_em", "atualizado_em")},
+        ),
     )
     readonly_fields = ("criado_em", "atualizado_em")
     list_display = ("username", "email", "perfil", "is_staff", "is_active", "empresa_atual")
@@ -41,7 +45,11 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
         if "groups" in form.base_fields:
             form.base_fields["groups"].queryset = self.grupos_empresa_queryset(request)
             form.base_fields["groups"].label = "Empresa"
-            form.base_fields["groups"].help_text = "Cada usuário deve ficar vinculado apenas à empresa permitida para este acesso."
+            form.base_fields[
+                "groups"
+            ].help_text = (
+                "Cada usuário deve ficar vinculado apenas à empresa permitida para este acesso."
+            )
         return form
 
     def get_queryset(self, request):
@@ -54,7 +62,9 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
         return queryset.filter(groups=grupo)
 
     def has_module_permission(self, request):
-        return bool(request.user.is_active and request.user.is_staff and request.user.eh_admin_perfil)
+        return bool(
+            request.user.is_active and request.user.is_staff and request.user.eh_admin_perfil
+        )
 
     def has_view_permission(self, request, obj=None):
         return self.has_module_permission(request)
@@ -76,4 +86,6 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
         grupo = obter_grupo_empresa_usuario(request.user)
         if grupo is not None:
             form.instance.groups.set([grupo])
+
+
 # Register your models here.

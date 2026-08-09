@@ -6,6 +6,7 @@ from django import forms
 from core.concurrency import OptimisticLockModelFormMixin
 from core.form_fields import substituir_por_decimal_br
 from core.tenancy import queryset_da_empresa
+
 from .models import CategoriaItem, ItemCatalogo
 
 
@@ -17,7 +18,9 @@ class CategoriaItemForm(OptimisticLockModelFormMixin, forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ativo"].widget = forms.HiddenInput()
-        self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        self.fields["ativo"].initial = (
+            True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        )
         self.fields["descricao"].widget.attrs["rows"] = 3
 
     def clean_nome(self):
@@ -44,10 +47,14 @@ class ItemCatalogoForm(OptimisticLockModelFormMixin, forms.ModelForm):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["ativo"].widget = forms.HiddenInput()
-        self.fields["ativo"].initial = True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        self.fields["ativo"].initial = (
+            True if not getattr(self.instance, "pk", None) else self.instance.ativo
+        )
         substituir_por_decimal_br(self, "valor_unitario_padrao", currency=True)
         self.fields["nome"].error_messages["required"] = "Informe o nome do item."
-        self.fields["valor_unitario_padrao"].error_messages["min_value"] = "Informe um valor maior ou igual a zero."
+        self.fields["valor_unitario_padrao"].error_messages["min_value"] = (
+            "Informe um valor maior ou igual a zero."
+        )
         self.fields["codigo"].required = False
         self.fields["codigo"].widget.attrs.update(
             {

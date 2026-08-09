@@ -243,7 +243,9 @@ class CatalogoListaTests(TestCase):
         self.assertContains(response, "Colorida")
         self.assertContains(response, "#DB2777")
 
-    def test_lista_exibe_botoes_principais_com_texto_e_ordem_de_importacao_antes_da_exportacao(self):
+    def test_lista_exibe_botoes_principais_com_texto_e_ordem_de_importacao_antes_da_exportacao(
+        self,
+    ):
         response = self.client.get(reverse("catalogo:item_lista"))
 
         self.assertEqual(response.status_code, 200)
@@ -322,7 +324,9 @@ class CatalogoInativacaoTests(TestCase):
     def test_categoria_pode_ser_inativada(self):
         categoria = CategoriaItem.objects.create(nome="Categoria ativa")
 
-        response = self.client.post(reverse("catalogo:categoria_excluir", args=[categoria.pk]), follow=True)
+        response = self.client.post(
+            reverse("catalogo:categoria_excluir", args=[categoria.pk]), follow=True
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Categoria inativada com sucesso.")
@@ -390,10 +394,7 @@ class CatalogoImportacaoExcelTests(TestCase):
                     cells.append(f'<c r="{ref}"><v>{valor}</v></c>')
                 else:
                     texto = (
-                        str(valor)
-                        .replace("&", "&amp;")
-                        .replace("<", "&lt;")
-                        .replace(">", "&gt;")
+                        str(valor).replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
                     )
                     cells.append(f'<c r="{ref}" t="inlineStr"><is><t>{texto}</t></is></c>')
             sheet_rows.append(f'<row r="{indice}">{"".join(cells)}</row>')
@@ -416,7 +417,7 @@ class CatalogoImportacaoExcelTests(TestCase):
         sheet = f"""<?xml version="1.0" encoding="UTF-8"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
   <sheetData>
-    {''.join(sheet_rows)}
+    {"".join(sheet_rows)}
   </sheetData>
 </worksheet>
 """
@@ -447,29 +448,35 @@ class CatalogoImportacaoExcelTests(TestCase):
         return arquivo
 
     def test_importacao_normaliza_unidades_e_arredonda_valores_do_excel(self):
-        arquivo = self.criar_xlsx([
-            ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
-            ("PISO", "Brita", 85.7142857142857, "m²", "", ""),
-            ("MONTAGEM", "Recepcionista", 1, "unid.", "Atendimento", ""),
-            ("EXTRAS", "Sem piso", 0, "-", "", "Sem cobrança"),
-        ])
+        arquivo = self.criar_xlsx(
+            [
+                ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
+                ("PISO", "Brita", 85.7142857142857, "m²", "", ""),
+                ("MONTAGEM", "Recepcionista", 1, "unid.", "Atendimento", ""),
+                ("EXTRAS", "Sem piso", 0, "-", "", "Sem cobrança"),
+            ]
+        )
 
         categorias_criadas, itens_criados = importar_catalogo_excel(arquivo, self.empresa)
 
         self.assertEqual(categorias_criadas, 3)
         self.assertEqual(itens_criados, 3)
         self.assertEqual(ItemCatalogo.objects.get(nome="Brita").unidade_medida, "m2")
-        self.assertEqual(ItemCatalogo.objects.get(nome="Brita").valor_unitario_padrao, Decimal("85.71"))
+        self.assertEqual(
+            ItemCatalogo.objects.get(nome="Brita").valor_unitario_padrao, Decimal("85.71")
+        )
         self.assertEqual(ItemCatalogo.objects.get(nome="Recepcionista").unidade_medida, "un")
         self.assertEqual(ItemCatalogo.objects.get(nome="Sem piso").unidade_medida, "-")
 
     def test_importacao_ignora_linhas_de_secao_com_texto_fora_da_coluna_categoria(self):
-        arquivo = self.criar_xlsx([
-            ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
-            ("PISO", "Brita", 85.7142857142857, "m²", "", ""),
-            (None, "TAPETE", None, None, None, None),
-            ("PISO", "Deck", 10, "m²", "", ""),
-        ])
+        arquivo = self.criar_xlsx(
+            [
+                ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
+                ("PISO", "Brita", 85.7142857142857, "m²", "", ""),
+                (None, "TAPETE", None, None, None, None),
+                ("PISO", "Deck", 10, "m²", "", ""),
+            ]
+        )
 
         categorias_criadas, itens_criados = importar_catalogo_excel(arquivo, self.empresa)
 
@@ -478,20 +485,24 @@ class CatalogoImportacaoExcelTests(TestCase):
         self.assertFalse(ItemCatalogo.objects.filter(nome="TAPETE").exists())
 
     def test_importacao_rejeita_unidade_desconhecida(self):
-        arquivo = self.criar_xlsx([
-            ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
-            ("PISO", "Item inválido", 10, "litro", "", ""),
-        ])
+        arquivo = self.criar_xlsx(
+            [
+                ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
+                ("PISO", "Item inválido", 10, "litro", "", ""),
+            ]
+        )
 
         with self.assertRaisesMessage(ValueError, "Unidade inválida na importação: litro"):
             importar_catalogo_excel(arquivo, self.empresa)
 
     def test_importacao_cancela_tudo_quando_encontra_erro(self):
-        arquivo = self.criar_xlsx([
-            ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
-            ("PISO", "Item válido", 10, "m2", "", ""),
-            ("PISO", "Item inválido", 10, "litro", "", ""),
-        ])
+        arquivo = self.criar_xlsx(
+            [
+                ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
+                ("PISO", "Item válido", 10, "m2", "", ""),
+                ("PISO", "Item inválido", 10, "litro", "", ""),
+            ]
+        )
 
         with self.assertRaisesMessage(ValueError, "Unidade inválida na importação: litro"):
             importar_catalogo_excel(arquivo, self.empresa)
@@ -500,10 +511,12 @@ class CatalogoImportacaoExcelTests(TestCase):
         self.assertEqual(ItemCatalogo.objects.filter(empresa=self.empresa).count(), 0)
 
     def test_tela_de_importacao_exibe_mensagem_amigavel_sem_quebrar_fluxo(self):
-        arquivo = self.criar_xlsx([
-            ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
-            ("PISO", "Item inválido", 10, "litro", "", ""),
-        ])
+        arquivo = self.criar_xlsx(
+            [
+                ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO"),
+                ("PISO", "Item inválido", 10, "litro", "", ""),
+            ]
+        )
 
         response = self.client.post(
             reverse("catalogo:item_importar_excel"),

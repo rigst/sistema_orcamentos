@@ -4,6 +4,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from core.tenancy import obter_grupo_empresa_padrao
+
 from .visitantes import limpar_dados_visitante
 
 

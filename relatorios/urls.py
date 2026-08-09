@@ -4,12 +4,12 @@ from .views import (
     configuracao_criar,
     configuracao_editar,
     configuracao_excluir,
-    configuracao_logo,
     configuracao_lista,
+    configuracao_logo,
     configuracao_visualizar,
+    orcamento_exportar_excel,
     orcamento_exportar_memorial_pdf,
     orcamento_exportar_memorial_word,
-    orcamento_exportar_excel,
     orcamento_exportar_pdf,
     orcamento_relatorio_central,
 )
@@ -26,6 +26,14 @@ urlpatterns = [
     path("orcamentos/<int:pk>/", orcamento_relatorio_central, name="orcamento_central"),
     path("orcamentos/<int:pk>/excel/", orcamento_exportar_excel, name="orcamento_excel"),
     path("orcamentos/<int:pk>/pdf/", orcamento_exportar_pdf, name="orcamento_pdf"),
-    path("orcamentos/<int:pk>/memorial-descritivo/pdf/", orcamento_exportar_memorial_pdf, name="orcamento_memorial_pdf"),
-    path("orcamentos/<int:pk>/memorial-descritivo/word/", orcamento_exportar_memorial_word, name="orcamento_memorial_word"),
+    path(
+        "orcamentos/<int:pk>/memorial-descritivo/pdf/",
+        orcamento_exportar_memorial_pdf,
+        name="orcamento_memorial_pdf",
+    ),
+    path(
+        "orcamentos/<int:pk>/memorial-descritivo/word/",
+        orcamento_exportar_memorial_word,
+        name="orcamento_memorial_word",
+    ),
 ]

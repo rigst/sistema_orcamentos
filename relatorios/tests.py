@@ -1,17 +1,17 @@
+from decimal import Decimal
 from io import BytesIO
 
-from django.contrib.auth.models import Group
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from PIL import Image
 
-from decimal import Decimal
-
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
 from orcamentos.models import ItemOrcamento, Orcamento
+
 from .models import ConfiguracaoEmpresa
 
 
@@ -42,7 +42,9 @@ class RelatoriosPermissaoTests(TestCase):
         configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Visivel")
         self.client.force_login(user)
 
-        response = self.client.get(reverse("relatorios:configuracao_visualizar", args=[configuracao.pk]))
+        response = self.client.get(
+            reverse("relatorios:configuracao_visualizar", args=[configuracao.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Empresa Visivel")
@@ -65,12 +67,17 @@ class RelatoriosPermissaoTests(TestCase):
         )
         self.client.force_login(user)
 
-        response = self.client.post(reverse("relatorios:orcamento_central", args=[orcamento.pk]), {"mostrar_ajustes_no_relatorio": "on"})
+        response = self.client.post(
+            reverse("relatorios:orcamento_central", args=[orcamento.pk]),
+            {"mostrar_ajustes_no_relatorio": "on"},
+        )
 
         self.assertEqual(response.status_code, 403)
 
     def test_logo_configuracao_exige_login(self):
-        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Visivel", logo=self.gerar_logo_teste())
+        configuracao = ConfiguracaoEmpresa.objects.create(
+            nome_empresa="Empresa Visivel", logo=self.gerar_logo_teste()
+        )
 
         response = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao.pk]))
 
@@ -105,10 +112,16 @@ class RelatoriosPermissaoTests(TestCase):
         )
 
         self.client.force_login(usuario_a)
-        response_propria = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao_a.pk]))
-        response_outra = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao_b.pk]))
+        response_propria = self.client.get(
+            reverse("relatorios:configuracao_logo", args=[configuracao_a.pk])
+        )
+        response_outra = self.client.get(
+            reverse("relatorios:configuracao_logo", args=[configuracao_b.pk])
+        )
         self.client.force_login(usuario_b)
-        response_b = self.client.get(reverse("relatorios:configuracao_logo", args=[configuracao_b.pk]))
+        response_b = self.client.get(
+            reverse("relatorios:configuracao_logo", args=[configuracao_b.pk])
+        )
 
         self.assertEqual(response_propria.status_code, 200)
         self.assertEqual(response_propria["Content-Type"], "image/png")
@@ -156,7 +169,9 @@ class RelatoriosExportacaoTests(TestCase):
         )
 
     def test_central_de_relatorio_mostra_alerta_de_status(self):
-        response = self.client.get(reverse("relatorios:orcamento_central", args=[self.orcamento.pk]))
+        response = self.client.get(
+            reverse("relatorios:orcamento_central", args=[self.orcamento.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Orçamento em rascunho")
@@ -180,12 +195,16 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertContains(response, "Opções do relatório atualizadas.")
 
     def test_central_de_relatorio_exibe_opcoes_adicionais_e_exportacao_word(self):
-        response = self.client.get(reverse("relatorios:orcamento_central", args=[self.orcamento.pk]))
+        response = self.client.get(
+            reverse("relatorios:orcamento_central", args=[self.orcamento.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Mostrar descrição inicial")
         self.assertContains(response, "Mostrar informações financeiras")
-        self.assertContains(response, reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk]))
+        self.assertContains(
+            response, reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk])
+        )
         self.assertContains(response, "Baixar Memorial em Word")
 
     def test_relatorios_respeitam_configuracao_vinculada_ao_orcamento(self):
@@ -199,7 +218,9 @@ class RelatoriosExportacaoTests(TestCase):
             cidade="Campinas",
         )
 
-        response = self.client.get(reverse("relatorios:orcamento_central", args=[self.orcamento.pk]))
+        response = self.client.get(
+            reverse("relatorios:orcamento_central", args=[self.orcamento.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Empresa Escolhida")
@@ -246,7 +267,9 @@ class RelatoriosExportacaoTests(TestCase):
         item.save(update_fields=["item_catalogo", "descricao", "atualizado_em"])
         self.orcamento.descricao_inicial = "Introducao do PDF"
         self.orcamento.observacoes_gerais = "Observacoes do documento"
-        self.orcamento.save(update_fields=["descricao_inicial", "observacoes_gerais", "atualizado_em"])
+        self.orcamento.save(
+            update_fields=["descricao_inicial", "observacoes_gerais", "atualizado_em"]
+        )
         configuracao = ConfiguracaoEmpresa.objects.get()
         configuracao.rodape_relatorio = "Rodape institucional"
         configuracao.save(update_fields=["rodape_relatorio", "atualizado_em"])
@@ -257,12 +280,12 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertEqual(response["Content-Type"], "application/vnd.ms-excel")
         self.assertIn("attachment;", response["Content-Disposition"])
         self.assertIn(b"Or\xc3\xa7amento em rascunho", response.content)
-        self.assertIn("Categoria".encode("utf-8"), response.content)
-        self.assertIn("Civil".encode("utf-8"), response.content)
-        self.assertIn("Descricao detalhada".encode("utf-8"), response.content)
-        self.assertIn("Descrição inicial: Introducao do PDF".encode("utf-8"), response.content)
-        self.assertIn("Observações gerais: Observacoes do documento".encode("utf-8"), response.content)
-        self.assertIn("Rodapé institucional: Rodape institucional".encode("utf-8"), response.content)
+        self.assertIn(b"Categoria", response.content)
+        self.assertIn(b"Civil", response.content)
+        self.assertIn(b"Descricao detalhada", response.content)
+        self.assertIn("Descrição inicial: Introducao do PDF".encode(), response.content)
+        self.assertIn("Observações gerais: Observacoes do documento".encode(), response.content)
+        self.assertIn("Rodapé institucional: Rodape institucional".encode(), response.content)
 
     def test_exportacao_pdf_retorna_arquivo(self):
         response = self.client.get(reverse("relatorios:orcamento_pdf", args=[self.orcamento.pk]))
@@ -290,7 +313,15 @@ class RelatoriosExportacaoTests(TestCase):
         self.orcamento.evento_contato = "Mariana"
         self.orcamento.condicoes_pagamento = "30% na aprovacao"
         self.orcamento.contrato_razao_social = "Cliente Exportacao LTDA"
-        self.orcamento.save(update_fields=["evento_nome", "evento_local", "evento_contato", "condicoes_pagamento", "contrato_razao_social"])
+        self.orcamento.save(
+            update_fields=[
+                "evento_nome",
+                "evento_local",
+                "evento_contato",
+                "condicoes_pagamento",
+                "contrato_razao_social",
+            ]
+        )
         configuracao = ConfiguracaoEmpresa.objects.get()
         configuracao.dados_bancarios = "Banco 001 Ag 1234 Cc 99999-9"
         configuracao.chave_pix = "pix@empresa.com"
@@ -298,18 +329,20 @@ class RelatoriosExportacaoTests(TestCase):
         configuracao.texto_institucional_memorial = "Documento emitido para fins comerciais."
         configuracao.save()
 
-        response = self.client.get(reverse("relatorios:orcamento_memorial_pdf", args=[self.orcamento.pk]))
+        response = self.client.get(
+            reverse("relatorios:orcamento_memorial_pdf", args=[self.orcamento.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertTrue(response.content.startswith(b"%PDF-1.4"))
-        self.assertIn("Memorial Descritivo".encode("utf-8"), response.content)
-        self.assertIn("CIVIL".encode("utf-8"), response.content)
-        self.assertIn("Descricao longa do servico".encode("utf-8"), response.content)
-        self.assertIn("Expodireto 2026".encode("utf-8"), response.content)
-        self.assertIn("30% na aprovacao".encode("utf-8"), response.content)
-        self.assertIn("Cliente Exportacao LTDA".encode("utf-8"), response.content)
-        self.assertIn("pix@empresa.com".encode("utf-8"), response.content)
+        self.assertIn(b"Memorial Descritivo", response.content)
+        self.assertIn(b"CIVIL", response.content)
+        self.assertIn(b"Descricao longa do servico", response.content)
+        self.assertIn(b"Expodireto 2026", response.content)
+        self.assertIn(b"30% na aprovacao", response.content)
+        self.assertIn(b"Cliente Exportacao LTDA", response.content)
+        self.assertIn(b"pix@empresa.com", response.content)
 
     def test_exportacao_memorial_word_retorna_arquivo(self):
         self.orcamento.evento_contato = "Mariana"
@@ -329,16 +362,18 @@ class RelatoriosExportacaoTests(TestCase):
         configuracao.chave_pix = "pix@empresa.com"
         configuracao.save(update_fields=["chave_pix", "atualizado_em"])
 
-        response = self.client.get(reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk]))
+        response = self.client.get(
+            reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/rtf")
         self.assertIn('.rtf"', response["Content-Disposition"])
         self.assertTrue(response.content.startswith(b"{\\rtf1"))
-        self.assertIn("Relatorio profissional".encode("utf-8"), response.content)
-        self.assertIn("Mariana".encode("utf-8"), response.content)
-        self.assertIn("Cliente Exportacao LTDA".encode("utf-8"), response.content)
-        self.assertIn("pix@empresa.com".encode("utf-8"), response.content)
+        self.assertIn(b"Relatorio profissional", response.content)
+        self.assertIn(b"Mariana", response.content)
+        self.assertIn(b"Cliente Exportacao LTDA", response.content)
+        self.assertIn(b"pix@empresa.com", response.content)
 
     def test_exportacao_memorial_word_omite_blocos_desmarcados(self):
         self.orcamento.evento_contato = "Mariana"
@@ -363,13 +398,15 @@ class RelatoriosExportacaoTests(TestCase):
             ]
         )
 
-        response = self.client.get(reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk]))
+        response = self.client.get(
+            reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn("Mariana".encode("utf-8"), response.content)
-        self.assertNotIn("Cliente Exportacao LTDA".encode("utf-8"), response.content)
-        self.assertNotIn("30% na aprovacao".encode("utf-8"), response.content)
-        self.assertNotIn("Observacoes ocultas".encode("utf-8"), response.content)
+        self.assertNotIn(b"Mariana", response.content)
+        self.assertNotIn(b"Cliente Exportacao LTDA", response.content)
+        self.assertNotIn(b"30% na aprovacao", response.content)
+        self.assertNotIn(b"Observacoes ocultas", response.content)
 
 
 class RelatoriosValidacaoTests(TestCase):
@@ -482,7 +519,9 @@ class RelatoriosInativacaoTests(TestCase):
     def test_configuracao_pode_ser_inativada(self):
         configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Toggle")
 
-        response = self.client.post(reverse("relatorios:configuracao_excluir", args=[configuracao.pk]), follow=True)
+        response = self.client.post(
+            reverse("relatorios:configuracao_excluir", args=[configuracao.pk]), follow=True
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Configuração inativada com sucesso.")
@@ -502,7 +541,9 @@ class RelatoriosAtualizacaoTests(TestCase):
     def test_formulario_de_edicao_exibe_aviso_sobre_orcamentos_nao_enviados(self):
         configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Base")
 
-        response = self.client.get(reverse("relatorios:configuracao_editar", args=[configuracao.pk]))
+        response = self.client.get(
+            reverse("relatorios:configuracao_editar", args=[configuracao.pk])
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "orçamentos ainda não enviados")

@@ -10,6 +10,7 @@ from core.concurrency import OptimisticLockModelFormMixin
 from core.form_fields import configurar_campo_mascarado, substituir_por_decimal_br
 from core.formatting import formatar_cep_br, formatar_cpf_cnpj_br, formatar_telefone_br
 from core.validators import validar_cep_basico, validar_cpf_cnpj_basico, validar_telefone_basico
+
 from .models import ItemOrcamento, Orcamento
 
 
@@ -109,7 +110,16 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
 
         for nome, field in self.fields.items():
             widget = field.widget
-            if isinstance(widget, (forms.TextInput, forms.EmailInput, forms.NumberInput, forms.DateInput, forms.Textarea)):
+            if isinstance(
+                widget,
+                (
+                    forms.TextInput,
+                    forms.EmailInput,
+                    forms.NumberInput,
+                    forms.DateInput,
+                    forms.Textarea,
+                ),
+            ):
                 widget.attrs.setdefault("placeholder", placeholders.get(nome, ""))
 
         self.fields["numero"].required = False
@@ -133,8 +143,12 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor"))
 
         configurar_campo_mascarado(self, "evento_telefone", "phone", placeholder="(00) 00000-0000")
-        configurar_campo_mascarado(self, "contrato_cnpj", "cpf_cnpj", placeholder="00.000.000/0000-00")
-        configurar_campo_mascarado(self, "contrato_telefone", "phone", placeholder="(00) 00000-0000")
+        configurar_campo_mascarado(
+            self, "contrato_cnpj", "cpf_cnpj", placeholder="00.000.000/0000-00"
+        )
+        configurar_campo_mascarado(
+            self, "contrato_telefone", "phone", placeholder="(00) 00000-0000"
+        )
         configurar_campo_mascarado(self, "contrato_cep", "cep", placeholder="00000-000")
         for nome in [
             "descricao_inicial",
@@ -146,15 +160,20 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
         if not self.instance.pk and not self.is_bound:
             self.fields["data_emissao"].initial = localdate()
         if user is not None:
+            from django.db.models import Q
+
             from clientes.models import Cliente
             from core.tenancy import queryset_da_empresa
             from relatorios.models import ConfiguracaoEmpresa
-            from django.db.models import Q
 
-            self.fields["cliente"].queryset = queryset_da_empresa(Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user)
+            self.fields["cliente"].queryset = queryset_da_empresa(
+                Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user
+            )
             configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
             if self.instance.pk and self.instance.configuracao_empresa_id:
-                configuracoes = configuracoes.filter(Q(ativo=True) | Q(pk=self.instance.configuracao_empresa_id))
+                configuracoes = configuracoes.filter(
+                    Q(ativo=True) | Q(pk=self.instance.configuracao_empresa_id)
+                )
             else:
                 configuracoes = configuracoes.filter(ativo=True)
             configuracoes = configuracoes.order_by("nome_empresa", "-atualizado_em")
@@ -167,7 +186,9 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
                     self.initial.setdefault("configuracao_empresa", configuracao_inicial.pk)
                     self.fields["configuracao_empresa"].initial = configuracao_inicial.pk
                     data_emissao_inicial = self.fields["data_emissao"].initial or localdate()
-                    validade_inicial = calcular_validade_inicial_configuracao(configuracao_inicial, data_emissao_inicial)
+                    validade_inicial = calcular_validade_inicial_configuracao(
+                        configuracao_inicial, data_emissao_inicial
+                    )
                     if validade_inicial and not self.initial.get("validade_em"):
                         self.initial["validade_em"] = validade_inicial
                         self.fields["validade_em"].initial = validade_inicial
@@ -238,7 +259,9 @@ class ItemOrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
-        queryset = ItemCatalogo.objects.filter(ativo=True).select_related("categoria").order_by("nome")
+        queryset = (
+            ItemCatalogo.objects.filter(ativo=True).select_related("categoria").order_by("nome")
+        )
         if user is not None:
             from core.tenancy import queryset_da_empresa
 
@@ -258,7 +281,11 @@ class ItemOrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
         ]:
             if nome_campo != "quantidade" and nome_campo != "valor_unitario":
                 self.fields[nome_campo].required = False
-            substituir_por_decimal_br(self, nome_campo, currency=nome_campo.endswith("_valor") or nome_campo == "valor_unitario")
+            substituir_por_decimal_br(
+                self,
+                nome_campo,
+                currency=nome_campo.endswith("_valor") or nome_campo == "valor_unitario",
+            )
         self.fields["valor_unitario"].required = False
 
         self.fields["codigo_item"].required = False
