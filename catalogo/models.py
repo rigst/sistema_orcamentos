@@ -136,6 +136,27 @@ class ItemCatalogo(models.Model):
     def __str__(self):
         return f"{self.codigo} - {self.nome}"
 
+    def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            self.empresa = obter_grupo_empresa_padrao()
+        max_tentativas = 5 if not self.pk else 1
+        for tentativa in range(max_tentativas):
+            type(self)._empresa_codigo_context = self.empresa
+            try:
+                self.definir_codigo_automatico()
+                self.full_clean()
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as exc:
+                if self.pk or tentativa == max_tentativas - 1:
+                    raise
+                if "itemcatalogo_empresa_codigo_uniq" not in str(
+                    exc
+                ) and "UNIQUE constraint failed" not in str(exc):
+                    raise
+            finally:
+                type(self)._empresa_codigo_context = None
+
     @classmethod
     def gerar_proximo_codigo(cls) -> str:
         prefixo = "CAT-ITEM-"
@@ -160,24 +181,3 @@ class ItemCatalogo(models.Model):
                 self.codigo = codigo_original
                 return
         self.codigo = self.gerar_proximo_codigo()
-
-    def save(self, *args, **kwargs):
-        if self.empresa_id is None:
-            self.empresa = obter_grupo_empresa_padrao()
-        max_tentativas = 5 if not self.pk else 1
-        for tentativa in range(max_tentativas):
-            type(self)._empresa_codigo_context = self.empresa
-            try:
-                self.definir_codigo_automatico()
-                self.full_clean()
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as exc:
-                if self.pk or tentativa == max_tentativas - 1:
-                    raise
-                if "itemcatalogo_empresa_codigo_uniq" not in str(
-                    exc
-                ) and "UNIQUE constraint failed" not in str(exc):
-                    raise
-            finally:
-                type(self)._empresa_codigo_context = None

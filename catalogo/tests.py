@@ -386,7 +386,7 @@ class CatalogoImportacaoExcelTests(TestCase):
         sheet_rows = []
         for indice, row in enumerate(rows, start=1):
             cells = []
-            for coluna, valor in zip(("A", "B", "C", "D", "E", "F"), row):
+            for coluna, valor in zip(("A", "B", "C", "D", "E", "F"), row, strict=False):
                 ref = f"{coluna}{indice}"
                 if valor is None:
                     continue

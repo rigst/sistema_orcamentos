@@ -206,6 +206,38 @@ class Orcamento(models.Model):
     def __str__(self):
         return f"{self.numero} - {self.cliente}"
 
+    def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            if self.criado_por_id and self.criado_por.groups.exists():
+                self.empresa = self.criado_por.groups.order_by("name", "id").first()
+            else:
+                self.empresa = obter_grupo_empresa_padrao()
+        if self.configuracao_empresa_id is None and self.empresa_id:
+            from relatorios.models import ConfiguracaoEmpresa
+
+            self.configuracao_empresa = (
+                ConfiguracaoEmpresa.objects.filter(empresa=self.empresa, ativo=True)
+                .order_by("-atualizado_em", "nome_empresa")
+                .first()
+            )
+        max_tentativas = 5 if not self.pk else 1
+        for tentativa in range(max_tentativas):
+            type(self)._empresa_numero_context = self.empresa
+            try:
+                self.definir_numero_automatico()
+                self.full_clean()
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as exc:
+                if self.pk or tentativa == max_tentativas - 1:
+                    raise
+                if "orcamento_empresa_numero_uniq" not in str(
+                    exc
+                ) and "UNIQUE constraint failed" not in str(exc):
+                    raise
+            finally:
+                type(self)._empresa_numero_context = None
+
     @classmethod
     def gerar_proximo_numero(cls, ano: int) -> str:
         prefixo = f"ORC-{ano}-"
@@ -322,38 +354,6 @@ class Orcamento(models.Model):
             )
         return grupos
 
-    def save(self, *args, **kwargs):
-        if self.empresa_id is None:
-            if self.criado_por_id and self.criado_por.groups.exists():
-                self.empresa = self.criado_por.groups.order_by("name", "id").first()
-            else:
-                self.empresa = obter_grupo_empresa_padrao()
-        if self.configuracao_empresa_id is None and self.empresa_id:
-            from relatorios.models import ConfiguracaoEmpresa
-
-            self.configuracao_empresa = (
-                ConfiguracaoEmpresa.objects.filter(empresa=self.empresa, ativo=True)
-                .order_by("-atualizado_em", "nome_empresa")
-                .first()
-            )
-        max_tentativas = 5 if not self.pk else 1
-        for tentativa in range(max_tentativas):
-            type(self)._empresa_numero_context = self.empresa
-            try:
-                self.definir_numero_automatico()
-                self.full_clean()
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as exc:
-                if self.pk or tentativa == max_tentativas - 1:
-                    raise
-                if "orcamento_empresa_numero_uniq" not in str(
-                    exc
-                ) and "UNIQUE constraint failed" not in str(exc):
-                    raise
-            finally:
-                type(self)._empresa_numero_context = None
-
 
 class ItemOrcamento(models.Model):
     UNIDADE_CHOICES = [
@@ -451,6 +451,12 @@ class ItemOrcamento(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.orcamento.numero})"
 
+    def save(self, *args, **kwargs):
+        self.definir_codigo_automatico()
+        self.full_clean()
+        self.subtotal = self.calcular_subtotal()
+        super().save(*args, **kwargs)
+
     def campos_divergentes_catalogo(self):
         if not self.item_catalogo_id:
             return []
@@ -535,9 +541,3 @@ class ItemOrcamento(models.Model):
             subtotal = Decimal("0.00")
 
         return arredondar(subtotal)
-
-    def save(self, *args, **kwargs):
-        self.definir_codigo_automatico()
-        self.full_clean()
-        self.subtotal = self.calcular_subtotal()
-        super().save(*args, **kwargs)

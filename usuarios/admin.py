@@ -18,7 +18,8 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
 
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = (
+        *UserAdmin.fieldsets,
         (
             "Informações adicionais",
             {"fields": ("perfil", "nome_exibicao", "criado_em", "atualizado_em")},
