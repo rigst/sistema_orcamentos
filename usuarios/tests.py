@@ -4,6 +4,7 @@ from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
 from clientes.models import Cliente
+from core.testing import SENHA_TESTE
 from legal.utils import ip_do_request
 from orcamentos.models import Orcamento
 from relatorios.models import ConfiguracaoEmpresa
@@ -13,7 +14,7 @@ class AdminPermissaoPerfilTests(TestCase):
     def criar_usuario(self, username, perfil):
         return get_user_model().objects.create_user(
             username=username,
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil=perfil,
             is_staff=True,
         )
@@ -89,7 +90,7 @@ class AdminPermissaoPerfilTests(TestCase):
         user = get_user_model().objects.create_superuser(
             username="root_admin",
             email="root_admin@example.com",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
         )
         self.client.force_login(user)
 
@@ -108,7 +109,7 @@ class UsuarioPermissaoPropriedadesTests(TestCase):
     def test_admin_tem_capacidades_de_gestao(self):
         user = get_user_model().objects.create_user(
             username="admin_props",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
 
@@ -120,7 +121,7 @@ class UsuarioPermissaoPropriedadesTests(TestCase):
     def test_visualizador_fica_apenas_com_visualizacao(self):
         user = get_user_model().objects.create_user(
             username="vis_props",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
 
@@ -137,7 +138,7 @@ class UsuarioPermissaoPropriedadesTests(TestCase):
         user = get_user_model().objects.create_superuser(
             username="super_props",
             email="super_props@example.com",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
         )
 
         self.assertTrue(user.eh_admin_perfil)
@@ -183,7 +184,7 @@ class UsuarioVisitanteTests(TestCase):
         empresa = Group.objects.create(name="Empresa Real")
         usuario = get_user_model().objects.create_user(
             username="empresa_real",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         usuario.groups.set([empresa])

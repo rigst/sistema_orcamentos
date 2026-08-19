@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from core.testing import SENHA_TESTE
 from orcamentos.models import Orcamento
 
 from .models import Cliente
@@ -13,7 +14,7 @@ class ClientePermissaoTests(TestCase):
     def test_visualizador_nao_pode_criar_cliente(self):
         user = get_user_model().objects.create_user(
             username="visualizador",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         self.client.force_login(user)
@@ -25,7 +26,7 @@ class ClientePermissaoTests(TestCase):
     def test_visualizador_nao_pode_excluir_cliente(self):
         user = get_user_model().objects.create_user(
             username="visualizador_delete",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         cliente = Cliente.objects.create(nome_razao_social="Cliente Bloqueado")
@@ -38,7 +39,7 @@ class ClientePermissaoTests(TestCase):
     def test_visualizador_nao_ve_atalho_de_novo_cliente(self):
         user = get_user_model().objects.create_user(
             username="visualizador_sem_atalho",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         self.client.force_login(user)
@@ -53,7 +54,7 @@ class ClienteValidacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="orc_clientes",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.client.force_login(self.user)
@@ -109,7 +110,7 @@ class ClienteListaTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="lista_clientes",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.client.force_login(self.user)
@@ -153,7 +154,7 @@ class ClienteExclusaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="gerente_clientes",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.client.force_login(self.user)
@@ -197,7 +198,7 @@ class ClienteAtualizacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="editor_clientes",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.client.force_login(self.user)
@@ -293,13 +294,13 @@ class ClienteEmpresaIsolationTests(TestCase):
         self.empresa_b = Group.objects.create(name="Empresa B")
         self.user_a = get_user_model().objects.create_user(
             username="empresa_a",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.user_a.groups.set([self.empresa_a])
         self.user_b = get_user_model().objects.create_user(
             username="empresa_b",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.user_b.groups.set([self.empresa_b])

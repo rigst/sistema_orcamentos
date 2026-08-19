@@ -10,6 +10,7 @@ from PIL import Image
 
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
+from core.testing import SENHA_TESTE
 from orcamentos.models import ItemOrcamento, Orcamento
 
 from .models import ConfiguracaoEmpresa
@@ -24,7 +25,7 @@ class RelatoriosPermissaoTests(TestCase):
     def test_orcamentista_nao_pode_criar_configuracao_empresa(self):
         user = get_user_model().objects.create_user(
             username="orcamentista",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.client.force_login(user)
@@ -36,7 +37,7 @@ class RelatoriosPermissaoTests(TestCase):
     def test_visualizador_pode_visualizar_configuracao(self):
         user = get_user_model().objects.create_user(
             username="visualizador_empresa",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Visivel")
@@ -52,7 +53,7 @@ class RelatoriosPermissaoTests(TestCase):
     def test_visualizador_nao_pode_alterar_opcoes_do_relatorio(self):
         user = get_user_model().objects.create_user(
             username="visualizador_relatorio",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         cliente = Cliente.objects.create(nome_razao_social="Cliente Permissao")
@@ -89,13 +90,13 @@ class RelatoriosPermissaoTests(TestCase):
         empresa_b = Group.objects.create(name="Empresa B")
         usuario_a = get_user_model().objects.create_user(
             username="usuario_logo_a",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         usuario_a.groups.set([empresa_a])
         usuario_b = get_user_model().objects.create_user(
             username="usuario_logo_b",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         usuario_b.groups.set([empresa_b])
@@ -138,7 +139,7 @@ class RelatoriosExportacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="orcamentista_export",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.client.force_login(self.user)
@@ -413,7 +414,7 @@ class RelatoriosValidacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_relatorios",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
@@ -469,7 +470,7 @@ class RelatoriosListaTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_lista_rel",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
@@ -511,7 +512,7 @@ class RelatoriosInativacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_toggle_empresa",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
@@ -533,7 +534,7 @@ class RelatoriosAtualizacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_edita_empresa",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)

@@ -6,6 +6,8 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from core.testing import SENHA_TESTE
+
 from .models import CategoriaItem, ItemCatalogo
 from .services import importar_catalogo_excel
 
@@ -14,7 +16,7 @@ class CatalogoPermissaoTests(TestCase):
     def test_orcamentista_nao_pode_criar_item_catalogo(self):
         user = get_user_model().objects.create_user(
             username="orcamentista",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="orcamentista",
         )
         self.client.force_login(user)
@@ -26,7 +28,7 @@ class CatalogoPermissaoTests(TestCase):
     def test_admin_pode_criar_item_catalogo(self):
         user = get_user_model().objects.create_user(
             username="admin",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(user)
@@ -38,7 +40,7 @@ class CatalogoPermissaoTests(TestCase):
     def test_visualizador_pode_visualizar_item_catalogo(self):
         user = get_user_model().objects.create_user(
             username="visualizador_catalogo",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         item = ItemCatalogo.objects.create(
@@ -59,7 +61,7 @@ class CatalogoValidacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_catalogo",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
@@ -152,7 +154,7 @@ class CatalogoListaTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="lista_catalogo",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
@@ -301,7 +303,7 @@ class CatalogoInativacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_toggle_catalogo",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
@@ -338,7 +340,7 @@ class CatalogoAtualizacaoTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_edita_categoria",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
@@ -376,7 +378,7 @@ class CatalogoImportacaoExcelTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="admin_importacao_catalogo",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.empresa = self.user.groups.get()

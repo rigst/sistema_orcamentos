@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from clientes.models import Cliente
 from core.models import Empresa
+from core.testing import SENHA_TESTE
 from orcamentos.models import Orcamento
 
 
@@ -17,7 +18,7 @@ class DashboardTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="dashboard_user",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
         )
         self.client.force_login(self.user)
         self.cliente = Cliente.objects.create(nome_razao_social="Cliente Dashboard")
@@ -135,7 +136,7 @@ class MultiEmpresaAtivaTests(TestCase):
         self.empresa_b = Group.objects.create(name="Empresa B")
         self.user = get_user_model().objects.create_user(
             username="usuario_multiempresa",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.user.groups.set([self.empresa_a, self.empresa_b])
