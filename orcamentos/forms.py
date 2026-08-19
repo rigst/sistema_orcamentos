@@ -1,5 +1,6 @@
 import re
 from datetime import timedelta
+from typing import cast
 
 from django import forms
 from django.core.exceptions import ValidationError
@@ -166,7 +167,7 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             from core.tenancy import queryset_da_empresa
             from relatorios.models import ConfiguracaoEmpresa
 
-            self.fields["cliente"].queryset = queryset_da_empresa(
+            cast("forms.ModelChoiceField", self.fields["cliente"]).queryset = queryset_da_empresa(
                 Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user
             )
             configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
@@ -177,7 +178,9 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             else:
                 configuracoes = configuracoes.filter(ativo=True)
             configuracoes = configuracoes.order_by("nome_empresa", "-atualizado_em")
-            self.fields["configuracao_empresa"].queryset = configuracoes
+            cast(
+                "forms.ModelChoiceField", self.fields["configuracao_empresa"]
+            ).queryset = configuracoes
             self.fields["configuracao_empresa"].required = False
 
             if not self.instance.pk and not self.is_bound:
@@ -266,7 +269,7 @@ class ItemOrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             from core.tenancy import queryset_da_empresa
 
             queryset = queryset_da_empresa(queryset, user)
-        self.fields["item_catalogo"].queryset = queryset
+        cast("forms.ModelChoiceField", self.fields["item_catalogo"]).queryset = queryset
         self.fields["item_catalogo"].required = False
         self.fields["nome"].required = False
         self.fields["unidade_medida"].required = False

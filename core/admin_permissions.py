@@ -1,11 +1,23 @@
+from typing import TYPE_CHECKING, ClassVar
+
 from core.tenancy import obter_grupo_empresa_usuario
 
+if TYPE_CHECKING:
+    from django.contrib.admin import ModelAdmin
 
-class PerfilAdminPermissionMixin:
-    capability_view = None
-    capability_add = None
-    capability_change = None
-    capability_delete = None
+    AdminBase = ModelAdmin
+else:
+    AdminBase = object
+
+
+class PerfilAdminPermissionMixin(AdminBase):
+    # ClassVar[str | None]: cada admin concreto sobrescreve com o nome da
+    # capability. Sem a anotação o mypy infere `None` da base e reprova as
+    # quatro atribuições em cada um dos seis admins.
+    capability_view: ClassVar[str | None] = None
+    capability_add: ClassVar[str | None] = None
+    capability_change: ClassVar[str | None] = None
+    capability_delete: ClassVar[str | None] = None
 
     def _has_capability(self, request, capability_name):
         return bool(

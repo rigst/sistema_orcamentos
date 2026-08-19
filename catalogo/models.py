@@ -1,5 +1,7 @@
 from decimal import Decimal
+from typing import ClassVar
 
+from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import IntegrityError, models
 from django.db.models import Max
@@ -132,6 +134,11 @@ class ItemCatalogo(models.Model):
                 fields=["empresa", "codigo"], name="itemcatalogo_empresa_codigo_uniq"
             ),
         ]
+
+    # Carona de escopo entre save() e gerar_proximo_codigo(), que é classmethod
+    # e não recebe a instância. Anotado porque só era criado por atribuição
+    # dentro do save, e o mypy não enxerga atributo que nasce assim.
+    _empresa_codigo_context: ClassVar[Group | None] = None
 
     def __str__(self):
         return f"{self.codigo} - {self.nome}"

@@ -1,6 +1,7 @@
 import os
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 from django import forms
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -102,9 +103,9 @@ class ConfiguracaoEmpresaForm(OptimisticLockModelFormMixin, forms.ModelForm):
         max_height = max(int(os.getenv("DJANGO_MAX_LOGO_HEIGHT", "2000")), 64)
 
         try:
-            with Image.open(logo) as imagem:
-                formato = (imagem.format or "").upper()
-                imagem = ImageOps.exif_transpose(imagem)
+            with Image.open(logo) as arquivo_imagem:
+                formato = (arquivo_imagem.format or "").upper()
+                imagem = ImageOps.exif_transpose(arquivo_imagem)
                 imagem.load()
 
                 if formato not in {"PNG", "JPEG", "WEBP"}:
@@ -115,7 +116,7 @@ class ConfiguracaoEmpresaForm(OptimisticLockModelFormMixin, forms.ModelForm):
                     imagem = imagem.convert("RGB")
 
                 buffer = BytesIO()
-                save_kwargs = {"optimize": True}
+                save_kwargs: dict[str, Any] = {"optimize": True}
                 extensao = ".png"
                 content_type = "image/png"
 
