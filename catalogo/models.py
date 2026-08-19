@@ -1,5 +1,7 @@
 from decimal import Decimal
+from typing import ClassVar
 
+from django.contrib.auth.models import Group
 from django.core.validators import MinValueValidator
 from django.db import IntegrityError, models
 from django.db.models import Max
@@ -133,8 +135,34 @@ class ItemCatalogo(models.Model):
             ),
         ]
 
+    # Carona de escopo entre save() e gerar_proximo_codigo(), que é classmethod
+    # e não recebe a instância. Anotado porque só era criado por atribuição
+    # dentro do save, e o mypy não enxerga atributo que nasce assim.
+    _empresa_codigo_context: ClassVar[Group | None] = None
+
     def __str__(self):
         return f"{self.codigo} - {self.nome}"
+
+    def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            self.empresa = obter_grupo_empresa_padrao()
+        max_tentativas = 5 if not self.pk else 1
+        for tentativa in range(max_tentativas):
+            type(self)._empresa_codigo_context = self.empresa
+            try:
+                self.definir_codigo_automatico()
+                self.full_clean()
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as exc:
+                if self.pk or tentativa == max_tentativas - 1:
+                    raise
+                if "itemcatalogo_empresa_codigo_uniq" not in str(
+                    exc
+                ) and "UNIQUE constraint failed" not in str(exc):
+                    raise
+            finally:
+                type(self)._empresa_codigo_context = None
 
     @classmethod
     def gerar_proximo_codigo(cls) -> str:
@@ -160,24 +188,3 @@ class ItemCatalogo(models.Model):
                 self.codigo = codigo_original
                 return
         self.codigo = self.gerar_proximo_codigo()
-
-    def save(self, *args, **kwargs):
-        if self.empresa_id is None:
-            self.empresa = obter_grupo_empresa_padrao()
-        max_tentativas = 5 if not self.pk else 1
-        for tentativa in range(max_tentativas):
-            type(self)._empresa_codigo_context = self.empresa
-            try:
-                self.definir_codigo_automatico()
-                self.full_clean()
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as exc:
-                if self.pk or tentativa == max_tentativas - 1:
-                    raise
-                if "itemcatalogo_empresa_codigo_uniq" not in str(
-                    exc
-                ) and "UNIQUE constraint failed" not in str(exc):
-                    raise
-            finally:
-                type(self)._empresa_codigo_context = None

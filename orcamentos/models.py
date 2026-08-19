@@ -1,8 +1,10 @@
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from itertools import groupby
+from typing import ClassVar
 
 from django.conf import settings
+from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models
@@ -203,8 +205,45 @@ class Orcamento(models.Model):
             ),
         ]
 
+    # Carona de escopo entre save() e gerar_proximo_numero(), que é classmethod
+    # e não recebe a instância. Anotado porque só era criado por atribuição
+    # dentro do save, e o mypy não enxerga atributo que nasce assim.
+    _empresa_numero_context: ClassVar[Group | None] = None
+
     def __str__(self):
         return f"{self.numero} - {self.cliente}"
+
+    def save(self, *args, **kwargs):
+        if self.empresa_id is None:
+            if self.criado_por_id and self.criado_por.groups.exists():
+                self.empresa = self.criado_por.groups.order_by("name", "id").first()
+            else:
+                self.empresa = obter_grupo_empresa_padrao()
+        if self.configuracao_empresa_id is None and self.empresa_id:
+            from relatorios.models import ConfiguracaoEmpresa
+
+            self.configuracao_empresa = (
+                ConfiguracaoEmpresa.objects.filter(empresa=self.empresa, ativo=True)
+                .order_by("-atualizado_em", "nome_empresa")
+                .first()
+            )
+        max_tentativas = 5 if not self.pk else 1
+        for tentativa in range(max_tentativas):
+            type(self)._empresa_numero_context = self.empresa
+            try:
+                self.definir_numero_automatico()
+                self.full_clean()
+                super().save(*args, **kwargs)
+                return
+            except IntegrityError as exc:
+                if self.pk or tentativa == max_tentativas - 1:
+                    raise
+                if "orcamento_empresa_numero_uniq" not in str(
+                    exc
+                ) and "UNIQUE constraint failed" not in str(exc):
+                    raise
+            finally:
+                type(self)._empresa_numero_context = None
 
     @classmethod
     def gerar_proximo_numero(cls, ano: int) -> str:
@@ -241,8 +280,9 @@ class Orcamento(models.Model):
             raise ValidationError(
                 {"validade_em": "A validade não pode ser anterior à data de emissão."}
             )
-        if self.configuracao_empresa_id and self.empresa_id:
-            if self.configuracao_empresa.empresa_id != self.empresa_id:
+        configuracao = self.configuracao_empresa if self.configuracao_empresa_id else None
+        if configuracao and self.empresa_id:
+            if configuracao.empresa_id != self.empresa_id:
                 raise ValidationError(
                     {
                         "configuracao_empresa": "Selecione uma configuração da mesma empresa do orçamento."
@@ -293,21 +333,23 @@ class Orcamento(models.Model):
                 "id",
             )
         )
+
+        def categoria_do_item(item):
+            """(id, nome, cor) da categoria, com o fallback de "sem categoria".
+
+            Uma função em vez do lambda de três condicionais que estava aqui:
+            cada ramo repetia a mesma navegação anulável por três níveis
+            (item -> item_catalogo -> categoria), e o encadeamento por
+            `item_catalogo_id` não prova ao checador que `item_catalogo` existe.
+            """
+            catalogo = item.item_catalogo if item.item_catalogo_id else None
+            categoria = catalogo.categoria if catalogo and catalogo.categoria_id else None
+            if categoria is None:
+                return None, "Sem categoria", "#CBD5E1"
+            return categoria.pk, categoria.nome, categoria.cor
+
         grupos = []
-        for chave, itens_grupo in groupby(
-            itens,
-            key=lambda item: (
-                item.item_catalogo.categoria_id
-                if item.item_catalogo_id and item.item_catalogo.categoria_id
-                else None,
-                item.item_catalogo.categoria.nome
-                if item.item_catalogo_id and item.item_catalogo.categoria_id
-                else "Sem categoria",
-                item.item_catalogo.categoria.cor
-                if item.item_catalogo_id and item.item_catalogo.categoria_id
-                else "#CBD5E1",
-            ),
-        ):
+        for chave, itens_grupo in groupby(itens, key=categoria_do_item):
             itens_lista = list(itens_grupo)
             grupos.append(
                 {
@@ -321,38 +363,6 @@ class Orcamento(models.Model):
                 }
             )
         return grupos
-
-    def save(self, *args, **kwargs):
-        if self.empresa_id is None:
-            if self.criado_por_id and self.criado_por.groups.exists():
-                self.empresa = self.criado_por.groups.order_by("name", "id").first()
-            else:
-                self.empresa = obter_grupo_empresa_padrao()
-        if self.configuracao_empresa_id is None and self.empresa_id:
-            from relatorios.models import ConfiguracaoEmpresa
-
-            self.configuracao_empresa = (
-                ConfiguracaoEmpresa.objects.filter(empresa=self.empresa, ativo=True)
-                .order_by("-atualizado_em", "nome_empresa")
-                .first()
-            )
-        max_tentativas = 5 if not self.pk else 1
-        for tentativa in range(max_tentativas):
-            type(self)._empresa_numero_context = self.empresa
-            try:
-                self.definir_numero_automatico()
-                self.full_clean()
-                super().save(*args, **kwargs)
-                return
-            except IntegrityError as exc:
-                if self.pk or tentativa == max_tentativas - 1:
-                    raise
-                if "orcamento_empresa_numero_uniq" not in str(
-                    exc
-                ) and "UNIQUE constraint failed" not in str(exc):
-                    raise
-            finally:
-                type(self)._empresa_numero_context = None
 
 
 class ItemOrcamento(models.Model):
@@ -451,19 +461,28 @@ class ItemOrcamento(models.Model):
     def __str__(self):
         return f"{self.nome} ({self.orcamento.numero})"
 
+    def save(self, *args, **kwargs):
+        self.definir_codigo_automatico()
+        self.full_clean()
+        self.subtotal = self.calcular_subtotal()
+        super().save(*args, **kwargs)
+
+    # Anexado pelo formulário de pré-visualização para o template ler, e não
+    # persistido: o card do item precisa da lista de divergências já calculada.
+    divergencias_catalogo: list[str] | None = None
+
     def campos_divergentes_catalogo(self):
-        if not self.item_catalogo_id:
+        catalogo = self.item_catalogo if self.item_catalogo_id else None
+        if catalogo is None:
             return []
 
         divergencias = []
-        if normalizar_texto_comparacao(self.nome) != normalizar_texto_comparacao(
-            self.item_catalogo.nome
-        ):
+        if normalizar_texto_comparacao(self.nome) != normalizar_texto_comparacao(catalogo.nome):
             divergencias.append("nome")
-        if (self.unidade_medida or "").strip() != (self.item_catalogo.unidade_medida or "").strip():
+        if (self.unidade_medida or "").strip() != (catalogo.unidade_medida or "").strip():
             divergencias.append("unidade")
         if arredondar(self.valor_unitario or Decimal("0.00")) != arredondar(
-            self.item_catalogo.valor_unitario_padrao or Decimal("0.00")
+            catalogo.valor_unitario_padrao or Decimal("0.00")
         ):
             divergencias.append("valor")
         return divergencias
@@ -535,9 +554,3 @@ class ItemOrcamento(models.Model):
             subtotal = Decimal("0.00")
 
         return arredondar(subtotal)
-
-    def save(self, *args, **kwargs):
-        self.definir_codigo_automatico()
-        self.full_clean()
-        self.subtotal = self.calcular_subtotal()
-        super().save(*args, **kwargs)

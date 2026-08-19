@@ -268,7 +268,7 @@ def exportar_catalogo_excel(itens) -> bytes:
 
 def _formatar_erro_validacao(exc):
     if hasattr(exc, "message_dict"):
-        mensagens = []
+        mensagens: list[str] = []
         for campo, erros in exc.message_dict.items():
             rotulo = campo.replace("_", " ")
             mensagens.extend(f"{rotulo}: {erro}" for erro in erros)

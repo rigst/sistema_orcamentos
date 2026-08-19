@@ -10,6 +10,7 @@ from django.utils import timezone
 
 from clientes.models import Cliente
 from core.models import Empresa
+from core.testing import SENHA_TESTE
 from orcamentos.models import Orcamento
 
 
@@ -17,7 +18,7 @@ class DashboardTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="dashboard_user",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
         )
         self.client.force_login(self.user)
         self.cliente = Cliente.objects.create(nome_razao_social="Cliente Dashboard")
@@ -98,12 +99,22 @@ class InfraestruturaTests(TestCase):
     def test_workflow_de_ci_chama_o_pipeline_compartilhado(self):
         # O pipeline vive em github.com/rigst/ci; o arquivo local só declara os
         # parâmetros do projeto. O que este teste protege é o encanamento: que
-        # o repositório continue ligado ao CI compartilhado, e na tag esperada.
+        # o repositório continue ligado ao CI compartilhado.
+        #
+        # A referência é um SHA de 40 caracteres, e não a tag `v1`: tag é
+        # ponteiro móvel, e quem puder reescrevê-la passa a rodar código
+        # arbitrário com os secrets deste repositório. Por isso o teste casa
+        # com o formato do SHA em vez de um valor fixo — prender o SHA aqui
+        # faria toda subida do pipeline compartilhado quebrar a suíte, que é
+        # exatamente o trabalho que o Dependabot existe para fazer.
         workflow = Path(__file__).resolve().parent.parent / ".github" / "workflows" / "ci.yml"
 
         self.assertTrue(workflow.exists())
         conteudo = workflow.read_text(encoding="utf-8")
-        self.assertIn("rigst/ci/.github/workflows/python-django.yml@v1", conteudo)
+        self.assertRegex(
+            conteudo,
+            r"rigst/ci/\.github/workflows/python-django\.yml@[0-9a-f]{40}\b",
+        )
 
     def test_healthz_retorna_ok_sem_autenticacao(self):
         response = self.client.get(reverse("healthz"))
@@ -135,7 +146,7 @@ class MultiEmpresaAtivaTests(TestCase):
         self.empresa_b = Group.objects.create(name="Empresa B")
         self.user = get_user_model().objects.create_user(
             username="usuario_multiempresa",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.user.groups.set([self.empresa_a, self.empresa_b])

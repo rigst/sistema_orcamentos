@@ -10,12 +10,13 @@ from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_safe
 
 from core.tenancy import definir_empresa_ativa, queryset_da_empresa
 from orcamentos.models import Orcamento
 
 
+@require_safe
 def healthz(request):
     healthz_token = getattr(settings, "HEALTHZ_TOKEN", "")
     if healthz_token:

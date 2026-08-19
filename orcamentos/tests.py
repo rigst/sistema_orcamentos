@@ -9,6 +9,7 @@ from django.utils import timezone
 
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
+from core.testing import SENHA_TESTE
 from relatorios.models import ConfiguracaoEmpresa
 
 from .models import ItemOrcamento, Orcamento
@@ -18,7 +19,7 @@ class OrcamentoViewsTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="tester",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
         )
         self.client.force_login(self.user)
 
@@ -78,7 +79,7 @@ class OrcamentoViewsTests(TestCase):
     def test_admin_pode_reabrir_orcamento_aprovado_para_rascunho(self):
         admin = get_user_model().objects.create_user(
             username="admin_orcamento",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(admin)
@@ -442,7 +443,7 @@ class OrcamentoViewsTests(TestCase):
     def test_visualizador_pode_ver_orcamento_em_modo_somente_leitura(self):
         visualizador = get_user_model().objects.create_user(
             username="visualizador",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         self.client.force_login(visualizador)
@@ -481,7 +482,7 @@ class OrcamentoViewsTests(TestCase):
     def test_visualizador_da_lista_aponta_para_rota_de_visualizacao(self):
         visualizador = get_user_model().objects.create_user(
             username="visualizador_lista_link",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         self.client.force_login(visualizador)
@@ -502,7 +503,7 @@ class OrcamentoViewsTests(TestCase):
     def test_visualizador_nao_ve_botoes_de_edicao_na_lista(self):
         visualizador = get_user_model().objects.create_user(
             username="visualizador_lista",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         self.client.force_login(visualizador)
@@ -516,7 +517,7 @@ class OrcamentoViewsTests(TestCase):
     def test_visualizador_nao_pode_salvar_orcamento(self):
         visualizador = get_user_model().objects.create_user(
             username="visualizador2",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="visualizador",
         )
         self.client.force_login(visualizador)
@@ -847,7 +848,7 @@ class OrcamentoViewsTests(TestCase):
     def test_admin_exibe_retorno_para_rascunho_em_orcamento_aprovado(self):
         admin = get_user_model().objects.create_user(
             username="admin_lista_orcamento",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(admin)
@@ -1127,7 +1128,7 @@ class OrcamentoDomainTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="dominio",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
         )
         self.cliente = Cliente.objects.create(nome_razao_social="Cliente Dominio")
         self.orcamento = Orcamento.objects.create(
@@ -1209,7 +1210,7 @@ class DashboardTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             username="dashboard_user",
-            password="senha-forte-123",
+            password=SENHA_TESTE,
         )
         self.client.force_login(self.user)
         cliente = Cliente.objects.create(nome_razao_social="Cliente Dashboard")

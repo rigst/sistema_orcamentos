@@ -21,8 +21,8 @@ def parse_decimal_br(valor, default=None):
 
     try:
         return Decimal(texto)
-    except (InvalidOperation, TypeError, ValueError):
-        raise ValueError("Valor decimal inválido.")
+    except (InvalidOperation, TypeError, ValueError) as erro:
+        raise ValueError("Valor decimal inválido.") from erro
 
 
 def formatar_decimal_br(valor, casas=2):

@@ -123,7 +123,6 @@ def renderizar_editor_orcamento(
     item_form_edicao_override=None,
     somente_visualizacao=False,
 ):
-    itens = orcamento.itens.all()
     item_editando, item_form_edicao = obter_item_em_edicao(request, orcamento, modo_somente_leitura)
     if item_editando_override is not None:
         item_editando = item_editando_override

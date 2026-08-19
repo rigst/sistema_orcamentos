@@ -1,3 +1,6 @@
+from typing import cast
+
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
@@ -18,7 +21,8 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
 
-    fieldsets = UserAdmin.fieldsets + (
+    fieldsets = (
+        *(UserAdmin.fieldsets or ()),
         (
             "Informações adicionais",
             {"fields": ("perfil", "nome_exibicao", "criado_em", "atualizado_em")},
@@ -40,10 +44,12 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
             return queryset.none()
         return queryset.filter(pk=grupo.pk)
 
-    def get_form(self, request, obj=None, **kwargs):
-        form = super().get_form(request, obj, **kwargs)
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        form = super().get_form(request, obj, change=change, **kwargs)
         if "groups" in form.base_fields:
-            form.base_fields["groups"].queryset = self.grupos_empresa_queryset(request)
+            cast(
+                "forms.ModelChoiceField", form.base_fields["groups"]
+            ).queryset = self.grupos_empresa_queryset(request)
             form.base_fields["groups"].label = "Empresa"
             form.base_fields[
                 "groups"

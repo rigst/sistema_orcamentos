@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import cast
 
 from django import forms
 
@@ -66,7 +67,7 @@ class ItemCatalogoForm(OptimisticLockModelFormMixin, forms.ModelForm):
         self.fields["descricao_padrao"].widget.attrs["rows"] = 3
         self.fields["observacoes"].widget.attrs["rows"] = 3
         if user is not None:
-            self.fields["categoria"].queryset = queryset_da_empresa(
+            cast("forms.ModelChoiceField", self.fields["categoria"]).queryset = queryset_da_empresa(
                 CategoriaItem.objects.filter(ativo=True).order_by("nome"),
                 user,
             )
