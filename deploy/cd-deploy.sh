@@ -10,9 +10,10 @@ APP_DIR=/var/www/sistema_orcamentos/current
 FETCH_URL=https://github.com/rigst/sistema_orcamentos.git   # HTTPS anônimo — repo público, sem credencial
 VENV=/var/www/sistema_orcamentos/venv
 ENV_FILE=/var/www/sistema_orcamentos/shared/.env
-SERVICES=(sistema_orcamentos.service)
+WEB_SERVICE=sistema_orcamentos.service   # reload (SIGHUP): zero downtime, socket nunca cai
+OTHER_SERVICES=()                        # sem celery neste app
 HEALTH_URL="https://orcamentos.stolben.com/healthz/"
-HEALTH_HEADER="X-Healthz-Token: 52f654371b282c80c706a84dc37754413548616af16044a30f627139e14823ce"
+HEALTH_HEADER=""   # montado depois de carregar o .env — nunca hardcoded aqui (gitleaks reprova, com razão)
 BACKUP_SCRIPT=/var/www/sistema_orcamentos/shared/scripts/backup_postgres.sh
 EXTRA_ENV=""
 LOCK_FILE=/tmp/sistema_orcamentos_cd_deploy.lock
@@ -49,11 +50,14 @@ main() {
   [[ -n "$EXTRA_ENV" ]] && eval "export $EXTRA_ENV"
   set +a
 
+  [[ -n "${DJANGO_HEALTHZ_TOKEN:-}" ]] && HEALTH_HEADER="X-Healthz-Token: $DJANGO_HEALTHZ_TOKEN"
+
   "$VENV/bin/python" manage.py check --deploy --fail-level ERROR
   "$VENV/bin/python" manage.py migrate --check || "$VENV/bin/python" manage.py migrate
   "$VENV/bin/python" manage.py collectstatic --noinput
 
-  for unidade in "${SERVICES[@]}"; do
+  sudo systemctl reload "$WEB_SERVICE"
+  for unidade in "${OTHER_SERVICES[@]}"; do
     sudo systemctl restart "$unidade"
   done
 
@@ -64,10 +68,10 @@ main() {
     local codigo
     for _ in 1 2 3 4 5; do
       codigo="$(curl -s -o /dev/null -w '%{http_code}' ${HEALTH_HEADER:+-H "$HEALTH_HEADER"} "$HEALTH_URL")"
-      [[ "$codigo" == "200" ]] && break
+      [[ "$codigo" =~ ^[23][0-9][0-9]$ ]] && break   # 2xx/3xx: alguns apps redirecionam a home pro login
       sleep 2
     done
-    if [[ "$codigo" != "200" ]]; then
+    if [[ ! "$codigo" =~ ^[23][0-9][0-9]$ ]]; then
       echo "Smoke-test falhou ($codigo). Rollback manual: git -C $APP_DIR reset --hard $antes"
       exit 1
     fi
