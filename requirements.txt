@@ -7,7 +7,7 @@ psycopg[binary]==3.2.12
 reportlab==4.4.10
 sqlparse==0.6.0
 
-redis==5.2.1
+redis==8.1.0
 
 # Conformidade legal (app `legal`): render e sanitização das políticas.
 markdown==3.10.2
