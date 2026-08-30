@@ -185,9 +185,9 @@ charset-normalizer==3.5.1 \
 dj-database-url==3.0.1 \
     --hash=sha256:43950018e1eeea486bf11136384aec0fe55b29fe6fd8a44553231b85661d9383 \
     --hash=sha256:8994961efb888fc6bf8c41550870c91f6f7691ca751888ebaa71442b7f84eff8
-django==6.0.8 \
-    --hash=sha256:9b98b7e1902e0e575ea4f42c175fc9512784f7f2580898286aee3388b322219d \
-    --hash=sha256:cb0bd962d27fc866f3c514b20aae6a7df56ec80b488f9899da46d675cd051526
+django==6.1 \
+    --hash=sha256:6c132cd980c9392b06807d4ca52d72530d631dc65a85d9dacede00a780cefbbe \
+    --hash=sha256:86a2aacd59b817e4d6ac2ebfe22356c58f66f7b24e503f71b7c2fead677ee48b
 django-unfold==0.101.0 \
     --hash=sha256:3b03a28fa87f2dcde16e714a5a93872f725c8af58ff0ee1c739eff744fbee35b \
     --hash=sha256:4b80bbd22e5d2f90568dd5c0a98f3579e748401ece4b63414dc3c8f625abf4a8
