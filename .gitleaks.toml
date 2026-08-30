@@ -1,0 +1,18 @@
+# Estende a config compartilhada (rigst/ci) e acrescenta só a exceção
+# específica deste projeto.
+
+[extend]
+path = ".ci-shared/configs/gitleaks.toml"
+
+# Token de X-Healthz-Token commitado por engano em deploy/cd-deploy.sh
+# (rigst/sistema_orcamentos@06a1ceb — hardcoded em vez de lido do .env).
+# Rotacionado no mesmo dia em que o gitleaks acusou; o valor abaixo já não
+# autentica nada em produção. Fica só pra não reprovar o histórico antigo
+# pra sempre — reescrever o histórico do repositório público por causa de
+# um token de healthz (sem acesso a dado nenhum) não vale o custo.
+[[allowlists]]
+description = "Token de healthz rotacionado (vazamento histórico, já sem efeito)"
+regexTarget = "secret"
+regexes = [
+    '''^52f654371b282c80c706a84dc37754413548616af16044a30f627139e14823ce$''',
+]
