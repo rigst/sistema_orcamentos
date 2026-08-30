@@ -10,7 +10,8 @@ APP_DIR=/var/www/sistema_orcamentos/current
 FETCH_URL=https://github.com/rigst/sistema_orcamentos.git   # HTTPS anônimo — repo público, sem credencial
 VENV=/var/www/sistema_orcamentos/venv
 ENV_FILE=/var/www/sistema_orcamentos/shared/.env
-SERVICES=(sistema_orcamentos.service)
+WEB_SERVICE=sistema_orcamentos.service   # reload (SIGHUP): zero downtime, socket nunca cai
+OTHER_SERVICES=()                        # sem celery neste app
 HEALTH_URL="https://orcamentos.stolben.com/healthz/"
 HEALTH_HEADER=""   # montado depois de carregar o .env — nunca hardcoded aqui (gitleaks reprova, com razão)
 BACKUP_SCRIPT=/var/www/sistema_orcamentos/shared/scripts/backup_postgres.sh
@@ -55,7 +56,8 @@ main() {
   "$VENV/bin/python" manage.py migrate --check || "$VENV/bin/python" manage.py migrate
   "$VENV/bin/python" manage.py collectstatic --noinput
 
-  for unidade in "${SERVICES[@]}"; do
+  sudo systemctl reload "$WEB_SERVICE"
+  for unidade in "${OTHER_SERVICES[@]}"; do
     sudo systemctl restart "$unidade"
   done
 
