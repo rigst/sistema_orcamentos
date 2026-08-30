@@ -3,7 +3,7 @@ Django==6.0.8
 dj-database-url==3.0.1
 gunicorn==23.0.0
 pillow==12.3.0
-psycopg[binary]==3.2.12
+psycopg[binary]==3.3.4
 reportlab==4.4.10
 sqlparse==0.6.0
 
