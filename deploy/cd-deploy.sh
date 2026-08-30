@@ -12,7 +12,7 @@ VENV=/var/www/sistema_orcamentos/venv
 ENV_FILE=/var/www/sistema_orcamentos/shared/.env
 SERVICES=(sistema_orcamentos.service)
 HEALTH_URL="https://orcamentos.stolben.com/healthz/"
-HEALTH_HEADER="X-Healthz-Token: 52f654371b282c80c706a84dc37754413548616af16044a30f627139e14823ce"
+HEALTH_HEADER=""   # montado depois de carregar o .env — nunca hardcoded aqui (gitleaks reprova, com razão)
 BACKUP_SCRIPT=/var/www/sistema_orcamentos/shared/scripts/backup_postgres.sh
 EXTRA_ENV=""
 LOCK_FILE=/tmp/sistema_orcamentos_cd_deploy.lock
@@ -48,6 +48,8 @@ main() {
   source "$ENV_FILE"
   [[ -n "$EXTRA_ENV" ]] && eval "export $EXTRA_ENV"
   set +a
+
+  [[ -n "${DJANGO_HEALTHZ_TOKEN:-}" ]] && HEALTH_HEADER="X-Healthz-Token: $DJANGO_HEALTHZ_TOKEN"
 
   "$VENV/bin/python" manage.py check --deploy --fail-level ERROR
   "$VENV/bin/python" manage.py migrate --check || "$VENV/bin/python" manage.py migrate
