@@ -148,10 +148,12 @@ Resposta esperada: HTTP `200`.
 ## Atualização de versão (deploy contínuo simples)
 
 **Desde que o CD (`.github/workflows/deploy.yml`) foi ligado, os passos
-abaixo acontecem sozinhos a cada push em `main` que passar no CI** — via
+abaixo acontecem sozinhos a cada PR mesclado em `main` que passar no CI** — via
 `deploy/cd-deploy.sh`, disparado por SSH pelo workflow reutilizável
-`deploy-django.yml` do `rigst/ci` (RUNBOOK.md seção 7). Fica valendo pra
-rollback manual e pra depurar um deploy que falhou.
+`deploy-django.yml` do `rigst/ci` (RUNBOOK.md seção 7). A branch `main` tem
+proteção ativa (checks obrigatórios, sem push direto nem pra admin); mudanças
+sempre entram por PR, sem exigir aprovação de terceiros. O procedimento manual
+fica valendo pra rollback e pra depurar um deploy que falhou.
 
 ```bash
 cd /var/www/sistema_orcamentos/current
