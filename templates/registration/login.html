@@ -38,8 +38,10 @@
 
         <div class="auth-visitor-section">
             <p>Quer apenas conhecer a interface? O acesso visitante cria um perfil temporário automaticamente.</p>
-            {# O aceite acontece na própria página de aceite, não aqui: o texto
-               que a pessoa precisa ler não cabe ao lado de um botão. #}
+            {% comment %}
+                O aceite acontece na própria página de aceite, não aqui: o texto
+                que a pessoa precisa ler não cabe ao lado de um botão.
+            {% endcomment %}
             <a class="ds-btn ds-btn--ghost auth-submit" href="{% url 'legal:aceite_visitante' %}">Entrar como visitante</a>
         </div>
 
