@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_GET
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
@@ -10,6 +11,7 @@ from .forms import ClienteForm
 from .models import Cliente
 
 
+@require_GET
 @require_capability("pode_visualizar_clientes")
 def cliente_lista(request):
     busca = request.GET.get("q", "").strip()
@@ -63,6 +65,7 @@ def cliente_criar(request):
     return render(request, "clientes/form.html", {"form": form, "titulo": "Novo cliente"})
 
 
+@require_GET
 @require_capability("pode_visualizar_clientes")
 def cliente_visualizar(request, pk):
     cliente = get_object_or_404(queryset_da_empresa(Cliente.objects.all(), request.user), pk=pk)
