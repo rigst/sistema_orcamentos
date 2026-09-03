@@ -27,7 +27,7 @@
             <option value="ativos" {% if ativo != "inativos" %}selected{% endif %}>Ativos</option>
             <option value="inativos" {% if ativo == "inativos" %}selected{% endif %}>Inativos</option>
         </select>
-        <select aria-label="Filtrar por status" name="status" class="ds-select" style="width: auto;">
+        <select aria-label="Todos os status — filtrar por status" name="status" class="ds-select" style="width: auto;">
             <option value="">Todos os status</option>
             {% for valor, rotulo in status_choices %}
                 <option value="{{ valor }}" {% if status == valor %}selected{% endif %}>{{ rotulo }}</option>

@@ -32,7 +32,7 @@
 
     <form method="get" class="ds-toolbar">
         <input aria-label="Buscar itens do catálogo" class="ds-input" type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
-        <select aria-label="Filtrar por categoria" name="categoria">
+        <select aria-label="Todas as categorias — filtrar por categoria" name="categoria">
             <option value="">Todas as categorias</option>
             {% for categoria_obj in categorias %}
                 <option value="{{ categoria_obj.pk }}" {% if categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
