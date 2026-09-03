@@ -346,7 +346,8 @@
 
                 <form method="get" class="filters-form compact-filters" data-autosubmit="1">
                     <input aria-label="Buscar itens para adicionar" class="ds-input" type="text" name="item_q" placeholder="Buscar por nome, código ou descrição" value="{{ item_q }}">
-                    <select aria-label="Todas as categorias" name="item_categoria">
+                    <label class="visually-hidden" for="filtro-item-categoria">Categoria</label>
+                    <select id="filtro-item-categoria" name="item_categoria">
                         <option value="">Todas as categorias</option>
                         {% for categoria_obj in categorias_item %}
                             <option value="{{ categoria_obj.pk }}" {% if item_categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
