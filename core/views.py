@@ -10,7 +10,7 @@ from django.http import HttpResponseNotFound, JsonResponse
 from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from django.views.decorators.http import require_POST, require_safe
+from django.views.decorators.http import require_GET, require_POST, require_safe
 
 from core.tenancy import definir_empresa_ativa, queryset_da_empresa
 from orcamentos.models import Orcamento
@@ -26,6 +26,7 @@ def healthz(request):
     return JsonResponse({"status": "ok"})
 
 
+@require_GET
 @login_required
 def dashboard(request):
     periodo = request.GET.get("periodo", "30")
