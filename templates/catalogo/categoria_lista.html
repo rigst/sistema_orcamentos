@@ -31,8 +31,8 @@
     </div>
 
     <form method="get" class="ds-toolbar">
-        <input class="ds-input" type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
-        <select name="sort">
+        <input aria-label="Buscar categorias" class="ds-input" type="text" name="q" placeholder="Buscar categoria" value="{{ busca }}">
+        <select aria-label="Ordenar categorias" name="sort">
             <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
             <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
         </select>

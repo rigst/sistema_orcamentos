@@ -31,14 +31,15 @@
     </div>
 
     <form method="get" class="ds-toolbar">
-        <input class="ds-input" type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
-        <select name="categoria">
+        <input aria-label="Buscar itens do catálogo" class="ds-input" type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
+        <label class="visually-hidden" for="filtro-categoria">Categoria</label>
+        <select id="filtro-categoria" name="categoria">
             <option value="">Todas as categorias</option>
             {% for categoria_obj in categorias %}
                 <option value="{{ categoria_obj.pk }}" {% if categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
             {% endfor %}
         </select>
-        <select name="sort">
+        <select aria-label="Ordenar itens" name="sort">
             <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
             <option value="codigo" {% if sort == "codigo" %}selected{% endif %}>Ordenar por código</option>
             <option value="categoria" {% if sort == "categoria" %}selected{% endif %}>Ordenar por categoria</option>
