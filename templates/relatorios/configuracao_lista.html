@@ -21,8 +21,8 @@
     </div>
 
     <form method="get" class="ds-toolbar">
-        <input class="ds-input" type="text" name="q" placeholder="Buscar por empresa, e-mail ou cidade" value="{{ busca }}">
-        <select name="sort">
+        <input aria-label="Buscar configurações" class="ds-input" type="text" name="q" placeholder="Buscar por empresa, e-mail ou cidade" value="{{ busca }}">
+        <select aria-label="Ordenar configurações" name="sort">
             <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
             <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
             <option value="cidade" {% if sort == "cidade" %}selected{% endif %}>Ordenar por cidade</option>

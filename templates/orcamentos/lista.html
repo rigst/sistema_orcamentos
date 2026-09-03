@@ -21,19 +21,19 @@
     <form method="get" class="ds-toolbar" style="margin-bottom: 1.5rem;" data-autosubmit="1">
         <span class="ds-search">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <input class="ds-input" type="search" name="q" placeholder="Buscar número, cliente…" value="{{ busca }}" />
+            <input aria-label="Buscar orçamentos" class="ds-input" type="search" name="q" placeholder="Buscar número, cliente…" value="{{ busca }}" />
         </span>
-        <select name="ativo" class="ds-select" style="width: auto;">
+        <select aria-label="Filtrar por situação" name="ativo" class="ds-select" style="width: auto;">
             <option value="ativos" {% if ativo != "inativos" %}selected{% endif %}>Ativos</option>
             <option value="inativos" {% if ativo == "inativos" %}selected{% endif %}>Inativos</option>
         </select>
-        <select name="status" class="ds-select" style="width: auto;">
+        <select aria-label="Filtrar por status" name="status" class="ds-select" style="width: auto;">
             <option value="">Todos os status</option>
             {% for valor, rotulo in status_choices %}
                 <option value="{{ valor }}" {% if status == valor %}selected{% endif %}>{{ rotulo }}</option>
             {% endfor %}
         </select>
-        <select name="sort" class="ds-select" style="width: auto;">
+        <select aria-label="Ordenar orçamentos" name="sort" class="ds-select" style="width: auto;">
             <option value="recentes" {% if sort == "recentes" %}selected{% endif %}>Mais recentes</option>
             <option value="numero" {% if sort == "numero" %}selected{% endif %}>Número</option>
             <option value="cliente" {% if sort == "cliente" %}selected{% endif %}>Cliente</option>

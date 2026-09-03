@@ -345,14 +345,14 @@
                 </div>
 
                 <form method="get" class="filters-form compact-filters" data-autosubmit="1">
-                    <input class="ds-input" type="text" name="item_q" placeholder="Buscar por nome, código ou descrição" value="{{ item_q }}">
-                    <select name="item_categoria">
+                    <input aria-label="Buscar itens para adicionar" class="ds-input" type="text" name="item_q" placeholder="Buscar por nome, código ou descrição" value="{{ item_q }}">
+                    <select aria-label="Filtrar por categoria" name="item_categoria">
                         <option value="">Todas as categorias</option>
                         {% for categoria_obj in categorias_item %}
                             <option value="{{ categoria_obj.pk }}" {% if item_categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
                         {% endfor %}
                     </select>
-                    <select name="item_sort">
+                    <select aria-label="Ordenar itens" name="item_sort">
                         <option value="ordem" {% if item_sort == "ordem" %}selected{% endif %}>Ordem manual</option>
                         <option value="categoria" {% if item_sort == "categoria" %}selected{% endif %}>Categoria</option>
                         <option value="nome" {% if item_sort == "nome" %}selected{% endif %}>Nome</option>
