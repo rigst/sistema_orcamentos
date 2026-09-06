@@ -14,7 +14,7 @@ markdown==3.10.2
 nh3==0.3.6
 
 # Tema do admin.
-django-unfold==0.101.0
+django-unfold==0.104.1
 
 # Monitoramento de erros (ativo só com SENTRY_DSN definido)
 sentry-sdk==2.68.1
