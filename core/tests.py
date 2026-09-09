@@ -2,9 +2,10 @@ from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase, override_settings
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -180,3 +181,12 @@ class MultiEmpresaAtivaTests(TestCase):
         response_trocado = self.client.get(reverse("clientes:lista"))
         self.assertContains(response_trocado, "Cliente B")
         self.assertNotContains(response_trocado, "Cliente A")
+
+
+class GuardaDeTesteTests(SimpleTestCase):
+    def test_is_test_fecha_tambem_com_python_m_pytest(self):
+        # `Path(sys.argv[0]).name` vira `__main__.py` quando a suíte roda como
+        # `python -m pytest`, e o prefixo não bate: IS_TEST ficava False e a
+        # suíte rodava com o SECURE_SSL_REDIRECT de produção — 301 em todo
+        # request do test client — além do hasher lento e do Sentry ligado.
+        self.assertTrue(settings.IS_TEST)
