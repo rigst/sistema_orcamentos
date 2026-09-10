@@ -24,20 +24,13 @@ jobs:
     # O comentário ao lado é o que o Dependabot lê para propor a subida — as
     # melhorias do pipeline compartilhado continuam chegando, só que como PR
     # revisável em vez de silenciosamente.
-    # TEMPORÁRIO: commit de trabalho de rigst/ci#5, para exercitar as etapas
-    # novas num runner de verdade antes de a tag v1 se mover. Volta para o
-    # SHA da v1 antes do merge.
-    uses: rigst/ci/.github/workflows/python-django.yml@ebe4cd24db922dc710fbb5e355ead7fed8b71e00
+    uses: rigst/ci/.github/workflows/python-django.yml@ee6ee2999cc132c890023f5af6d9667e400fc926 # v1
     # Explícito em vez de `secrets: inherit`: o workflow chamado recebe só
     # estes dois, e não tudo que o repositório tiver hoje ou vier a ter.
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     with:
-      # Enquanto o "uses" aponta para um commit de trabalho, o ci-ref precisa
-      # acompanhar: sem ele o .ci-shared vem da v1 (ou da main) e os scripts
-      # novos nao existem la. Sai junto com o pin, quando a v1 se mover.
-      ci-ref: "ebe4cd24db922dc710fbb5e355ead7fed8b71e00"
       python-version: "3.12"
       django-settings-module: config.settings
       source-paths: "auditoria catalogo clientes config core legal orcamentos relatorios usuarios"
