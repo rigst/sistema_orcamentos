@@ -27,7 +27,7 @@ jobs:
     # TEMPORÁRIO: commit de trabalho de rigst/ci#5, para exercitar as etapas
     # novas num runner de verdade antes de a tag v1 se mover. Volta para o
     # SHA da v1 antes do merge.
-    uses: rigst/ci/.github/workflows/python-django.yml@6bc3caa343b686de357c9be0a32be3c1962bdb26
+    uses: rigst/ci/.github/workflows/python-django.yml@10677fb41fd8c97b74f8361838a24fbb5bc5d9e0
     # Explícito em vez de `secrets: inherit`: o workflow chamado recebe só
     # estes dois, e não tudo que o repositório tiver hoje ou vier a ter.
     secrets:
