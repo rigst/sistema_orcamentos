@@ -34,7 +34,9 @@ class ImportarMemorialForm(forms.Form):
     )
 
     def clean(self):
-        dados = super().clean()
+        # `or {}`: Form.clean() é declarado devolvendo dict | None (mesmo caso
+        # documentado em core/concurrency.py).
+        dados = super().clean() or {}
         if not dados.get("arquivo") and not (dados.get("texto") or "").strip():
             raise forms.ValidationError("Envie o arquivo do memorial ou cole o texto dele.")
         if dados.get("arquivo") and (dados.get("texto") or "").strip():
