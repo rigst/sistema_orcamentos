@@ -1,5 +1,6 @@
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.db import models, transaction
@@ -139,6 +140,7 @@ def renderizar_editor_orcamento(
         "somente_visualizacao": somente_visualizacao,
         "bloqueio_status": orcamento_bloqueado_para_edicao(orcamento),
         "subtotais_categoria": orcamento.subtotais_por_categoria(),
+        "memorial_ia_disponivel": bool(getattr(settings, "ANTHROPIC_API_KEY", "")),
     }
     context.update(obter_estado_itens(request, orcamento))
     return render(request, "orcamentos/form.html", context)

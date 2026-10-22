@@ -79,6 +79,7 @@ INSTALLED_APPS = [
     "clientes",
     "catalogo",
     "orcamentos",
+    "memoriais",
     "relatorios",
     "auditoria",
     "legal",
@@ -230,6 +231,21 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "login"
 HEALTHZ_TOKEN = os.getenv("DJANGO_HEALTHZ_TOKEN", "").strip()
+
+# Importação de memorial descritivo com IA (app `memoriais`). Sem a chave, a
+# opção some da tela e a rota responde que a integração não está configurada.
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "").strip()
+MEMORIAL_IA_MODEL = os.getenv("MEMORIAL_IA_MODEL", "claude-sonnet-5")
+MEMORIAL_IA_EFFORT = os.getenv("MEMORIAL_IA_EFFORT", "medium")
+MEMORIAL_IA_MAX_TOKENS = int(os.getenv("MEMORIAL_IA_MAX_TOKENS", "32000"))
+MEMORIAL_IA_TIMEOUT = float(os.getenv("MEMORIAL_IA_TIMEOUT", "600"))
+MEMORIAL_IA_EXPIRA_MINUTOS = int(os.getenv("MEMORIAL_IA_EXPIRA_MINUTOS", "20"))
+MEMORIAL_IA_MAX_UPLOAD_BYTES = int(os.getenv("MEMORIAL_IA_MAX_UPLOAD_BYTES", str(15 * 1024 * 1024)))
+MEMORIAL_IA_MAX_CARACTERES = int(os.getenv("MEMORIAL_IA_MAX_CARACTERES", "300000"))
+MEMORIAL_IA_LIMITE_DIARIO = int(os.getenv("MEMORIAL_IA_LIMITE_DIARIO", "30"))
+MEMORIAL_IA_LIMITE_DIARIO_VISITANTE = int(os.getenv("MEMORIAL_IA_LIMITE_DIARIO_VISITANTE", "3"))
+# Nos testes a "thread" roda no on_commit do próprio processo, sem rede.
+MEMORIAL_IA_ASSINCRONO = env_bool("MEMORIAL_IA_ASSINCRONO", default=not IS_TEST)
 
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]

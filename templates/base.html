@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- Customizações específicas do app (sobre os tokens do DS) -->
     <link rel="stylesheet" href="{% static 'css/app-overrides.css' %}">
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="ds-root {% block body_class %}{% endblock %}">
     <script nonce="{{ request.csp_nonce }}">
