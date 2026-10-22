@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Importação do memorial{% endblock %}
+
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/memoriais.css' %}">{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading page-head">
+        <div>
+            <a class="page-back" href="{% url 'orcamentos:editar' orcamento.pk %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                Voltar para o orçamento
+            </a>
+            <h2 class="ds-h2">Importação do memorial</h2>
+            <p>{{ importacao.arquivo_nome }} · orçamento {{ orcamento.numero }}</p>
+        </div>
+    </div>
+
+    <div id="memorial-status"
+         {% if importacao.em_andamento %}data-poll-url="{% url 'memoriais:status' orcamento.pk importacao.pk %}"{% endif %}
+         aria-live="polite">
+        {% include "memoriais/partials/status.html" %}
+    </div>
+</section>
+
+<script nonce="{{ request.csp_nonce }}">
+(() => {
+  const regiao = document.getElementById("memorial-status");
+  const url = regiao && regiao.dataset.pollUrl;
+  if (!url) return;
+  const consultar = async () => {
+    try {
+      const resposta = await fetch(url, { headers: { "X-Requested-With": "XMLHttpRequest" } });
+      if (!resposta.ok) throw new Error(String(resposta.status));
+      const html = await resposta.text();
+      regiao.innerHTML = html;
+      if (regiao.querySelector("[data-memorial-andamento]")) {
+        setTimeout(consultar, 4000);
+      }
+    } catch (erro) {
+      setTimeout(consultar, 10000);
+    }
+  };
+  setTimeout(consultar, 4000);
+})();
+</script>
+{% endblock %}

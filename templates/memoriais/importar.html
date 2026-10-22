@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Importar memorial descritivo{% endblock %}
+
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/memoriais.css' %}">{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading page-head">
+        <div>
+            <a class="page-back" href="{% url 'orcamentos:editar' orcamento.pk %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                Voltar para o orçamento
+            </a>
+            <h2 class="ds-h2">Importar memorial descritivo</h2>
+            <p>A IA lê o memorial do edital, escolhe os itens do teu catálogo e calcula as quantidades. Os preços vêm sempre do catálogo. Tudo entra no orçamento {{ orcamento.numero }} para tu revisar e editar.</p>
+        </div>
+    </div>
+
+    <div class="memorial-grid">
+        <div class="ds-card">
+            <form method="post" enctype="multipart/form-data" class="memorial-form" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="ds-alert ds-alert--danger" role="alert">
+                        <div>{% for erro in form.non_field_errors %}<p>{{ erro }}</p>{% endfor %}</div>
+                    </div>
+                {% endif %}
+
+                {% if catalogo_vazio %}
+                    <div class="ds-alert ds-alert--warn" role="status">
+                        <div>
+                            <p class="ds-alert-title">Teu catálogo está vazio</p>
+                            <p>Sem itens cadastrados a IA só consegue sugerir itens com valor zero. <a href="{% url 'catalogo:item_lista' %}">Cadastrar itens</a></p>
+                        </div>
+                    </div>
+                {% endif %}
+
+                <div class="ds-field">
+                    <label for="{{ form.arquivo.id_for_label }}">{{ form.arquivo.label }}</label>
+                    {{ form.arquivo }}
+                    <p class="ds-help">{{ form.arquivo.help_text }}</p>
+                    {% for erro in form.arquivo.errors %}<p class="ds-help ds-help--error">{{ erro }}</p>{% endfor %}
+                </div>
+
+                <p class="memorial-divisor">ou</p>
+
+                <div class="ds-field">
+                    <label for="{{ form.texto.id_for_label }}">{{ form.texto.label }}</label>
+                    {{ form.texto }}
+                    {% for erro in form.texto.errors %}<p class="ds-help ds-help--error">{{ erro }}</p>{% endfor %}
+                </div>
+
+                <div class="ds-field">
+                    <label for="{{ form.instrucoes.id_for_label }}">{{ form.instrucoes.label }}</label>
+                    {{ form.instrucoes }}
+                    <p class="ds-help">{{ form.instrucoes.help_text }}</p>
+                    {% for erro in form.instrucoes.errors %}<p class="ds-help ds-help--error">{{ erro }}</p>{% endfor %}
+                </div>
+
+                <label class="ds-check">{{ form.incluir_fora_catalogo }} <span>{{ form.incluir_fora_catalogo.label }}</span></label>
+                <label class="ds-check">{{ form.preencher_evento }} <span>{{ form.preencher_evento.label }}</span></label>
+
+                <div class="memorial-acoes">
+                    <a class="ds-btn ds-btn--ghost" href="{% url 'orcamentos:editar' orcamento.pk %}">Cancelar</a>
+                    <button class="ds-btn ds-btn--solid" type="submit" {% if restantes <= 0 %}disabled{% endif %}>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                        <span>Ler memorial e montar orçamento</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <aside class="ds-card">
+            <h3 class="ds-h3">Como funciona</h3>
+            <ol class="memorial-lista">
+                <li>Os itens sugeridos são <strong>somados</strong> aos que já existem no orçamento. Nada é apagado.</li>
+                <li>Itens do catálogo entram com o <strong>valor do cadastro</strong>. A IA nunca define preço.</li>
+                <li>Itens fora do catálogo entram com <strong>valor zero</strong> para tu precificar.</li>
+                <li>Cada item traz nas observações a conta da quantidade e o trecho do memorial que o motivou.</li>
+                <li>A leitura leva de 1 a 5 minutos. Pode sair da página: o resultado fica salvo.</li>
+            </ol>
+            <p class="ds-help">Importações restantes hoje: {{ restantes }} de {{ limite }}.</p>
+
+            {% if anteriores %}
+                <h3 class="ds-h3">Importações anteriores</h3>
+                <ul class="memorial-anteriores">
+                    {% for anterior in anteriores %}
+                        <li>
+                            <a href="{% url 'memoriais:status' orcamento.pk anterior.pk %}">{{ anterior.arquivo_nome|truncatechars:40 }}</a>
+                            <span>{{ anterior.get_status_display }} · {{ anterior.criado_em|date:"d/m H:i" }}</span>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </aside>
+    </div>
+</section>
+{% endblock %}

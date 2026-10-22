@@ -1,0 +1,66 @@
+/* Importação de memorial descritivo com IA (app `memoriais`).
+   Só tokens do design system: nenhuma cor ou medida solta. */
+
+.memorial-grid {
+  display: grid;
+  gap: var(--ds-space-6);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 60rem) {
+  .memorial-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+
+.memorial-form .ds-field + .ds-field { margin-top: var(--ds-space-4); }
+.memorial-form .ds-check { margin-top: var(--ds-space-3); align-items: flex-start; }
+.memorial-form .ds-check input { margin-top: 0.15rem; }
+.memorial-acoes { display: flex; gap: var(--ds-space-3); justify-content: flex-end; flex-wrap: wrap; margin-top: var(--ds-space-6); }
+
+.memorial-divisor {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-3);
+  margin: var(--ds-space-4) 0;
+  color: var(--ds-t-500);
+  font-size: 0.85rem;
+}
+.memorial-divisor::before,
+.memorial-divisor::after { content: ""; flex: 1; border-top: 1px solid var(--ds-line); }
+
+.memorial-lista { margin: 0; padding-left: var(--ds-space-5); }
+.memorial-lista li + li { margin-top: var(--ds-space-2); }
+
+.memorial-anteriores { list-style: none; margin: var(--ds-space-3) 0 0; padding: 0; }
+.memorial-anteriores li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-2) 0;
+  border-bottom: 1px solid var(--ds-line);
+  font-size: 0.9rem;
+}
+.memorial-anteriores li:last-child { border-bottom: 0; }
+
+.memorial-progresso {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-4);
+}
+.memorial-spinner {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 3px solid var(--ds-line);
+  border-top-color: var(--ds-accent-fg);
+  animation: memorial-gira 0.9s linear infinite;
+}
+@keyframes memorial-gira { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .memorial-spinner { animation-duration: 3s; }
+}
+
+.memorial-secao + .memorial-secao { margin-top: var(--ds-space-6); }
+.memorial-secao h3 { margin-bottom: var(--ds-space-3); }
+.memorial-tabela td small { display: block; color: var(--ds-t-500); margin-top: var(--ds-space-1); }
+.memorial-tabela .num { text-align: right; white-space: nowrap; }

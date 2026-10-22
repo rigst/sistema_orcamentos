@@ -33,7 +33,7 @@ jobs:
     with:
       python-version: "3.12"
       django-settings-module: config.settings
-      source-paths: "auditoria catalogo clientes config core legal orcamentos relatorios usuarios"
+      source-paths: "auditoria catalogo clientes config core legal memoriais orcamentos relatorios usuarios"
 
       # Valores fictícios, só para o check --deploy conseguir importar os
       # settings de produção. Nada aqui é segredo real.

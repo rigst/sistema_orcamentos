@@ -1,0 +1,88 @@
+{% load br_format %}
+{% if importacao.em_andamento %}
+    <div class="ds-card" data-memorial-andamento="1">
+        <div class="memorial-progresso">
+            <span class="memorial-spinner" aria-hidden="true"></span>
+            <div>
+                <p class="ds-alert-title">{{ importacao.get_status_display }}…</p>
+                <p class="ds-help">A IA está lendo o memorial e cruzando com o teu catálogo. Isso leva de 1 a 5 minutos. Pode sair da página: o resultado fica salvo aqui.</p>
+            </div>
+        </div>
+    </div>
+{% elif importacao.status == "erro" %}
+    <div class="ds-alert ds-alert--danger" role="alert">
+        <div>
+            <p class="ds-alert-title">Não deu para montar o orçamento</p>
+            <p>{{ importacao.erro }}</p>
+            <p>Nenhum item foi adicionado.</p>
+        </div>
+    </div>
+    <div class="memorial-acoes">
+        <a class="ds-btn ds-btn--ghost" href="{% url 'orcamentos:editar' orcamento.pk %}">Voltar ao orçamento</a>
+        <a class="ds-btn ds-btn--solid" href="{% url 'memoriais:importar' orcamento.pk %}">Tentar de novo</a>
+    </div>
+{% else %}
+    <div class="ds-alert ds-alert--success" role="status">
+        <div>
+            <p class="ds-alert-title">{{ importacao.itens_criados }} itens adicionados ao orçamento</p>
+            <p>Revise quantidades e valores antes de enviar. {% if fora_catalogo %}{{ fora_catalogo|length }} item{{ fora_catalogo|length|pluralize:"s" }} fora do catálogo entr{{ fora_catalogo|length|pluralize:"ou,aram" }} com valor zero.{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="memorial-acoes">
+        <a class="ds-btn ds-btn--solid" href="{% url 'memoriais:status' orcamento.pk importacao.pk %}?seguir=1">Revisar e editar o orçamento</a>
+    </div>
+
+    {% if pendencias %}
+        <div class="ds-card memorial-secao">
+            <h3 class="ds-h3">Pontos para tu conferir</h3>
+            <ul class="memorial-lista">
+                {% for pendencia in pendencias %}<li>{{ pendencia }}</li>{% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if fora_catalogo %}
+        <div class="ds-card memorial-secao">
+            <h3 class="ds-h3">Fora do catálogo, com valor zero</h3>
+            <ul class="memorial-lista">
+                {% for item in fora_catalogo %}<li><strong>{{ item.nome }}</strong>: {{ item.quantidade_aplicada }} {{ item.unidade }}. {{ item.justificativa }}</li>{% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if itens_sugeridos %}
+        <div class="memorial-secao">
+            <h3 class="ds-h3">O que a IA leu</h3>
+            <div class="ds-table-wrap">
+                <table class="ds-table memorial-tabela">
+                    <caption class="visually-hidden">Itens sugeridos pela IA a partir do memorial</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Item</th>
+                            <th scope="col" class="num">Qtd.</th>
+                            <th scope="col" class="num">Unitário</th>
+                            <th scope="col">Confiança</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in itens_sugeridos %}
+                            <tr>
+                                <td>
+                                    {% if item.catalogo_codigo %}{{ item.catalogo_codigo }} · {% endif %}{{ item.nome }}
+                                    <small>{{ item.justificativa }}</small>
+                                    {% if item.situacao == "ignorado" %}<small>Não adicionado: {{ item.motivo }}</small>{% endif %}
+                                </td>
+                                <td class="num">{{ item.quantidade_aplicada|default:item.quantidade }} {{ item.unidade }}</td>
+                                <td class="num">{% if item.valor_unitario %}{{ item.valor_unitario|brl }}{% else %}-{% endif %}</td>
+                                <td>
+                                    <span class="ds-badge {% if item.confianca == 'alta' %}ds-badge--success{% elif item.confianca == 'media' %}ds-badge--info{% else %}ds-badge--warn{% endif %}">{{ item.confianca }}</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+{% endif %}
