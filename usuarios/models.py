@@ -82,3 +82,11 @@ class Usuario(AbstractUser):
         if self.eh_visitante:
             return "Visitante"
         return self.nome_exibicao or self.get_full_name() or self.username
+
+    @property
+    def primeiro_nome(self) -> str:
+        """Para saudação: o primeiro nome de quem está logado."""
+        if self.eh_visitante:
+            return ""
+        nome = (self.nome_exibicao or self.first_name or self.username or "").strip()
+        return nome.split()[0].capitalize() if nome else ""

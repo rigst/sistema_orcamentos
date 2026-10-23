@@ -28,6 +28,7 @@ from .forms import (
     OrcamentoRapidoForm,
 )
 from .models import NAO_REGISTRADO, ItemOrcamento, Orcamento
+from .saudacao import frase_do_momento, saudacao
 from .versoes import estado_historico, garantir_versao_base, registrar_versao
 
 STATUS_PERMITIDOS = {
@@ -307,6 +308,8 @@ def orcamento_lista(request):
         "page_obj": page_obj,
         "recentes": recentes,
         "resumo_inicio": resumo_inicio,
+        "saudacao": saudacao(),
+        "frase": frase_do_momento(),
         "busca": busca,
         "status": status,
         "ativo": ativo,

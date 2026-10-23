@@ -38,7 +38,7 @@ class TelaEmAbasTests(BaseFluxoTests):
             reverse("orcamentos:editar", args=[orcamento.pk])
         ).content.decode()
 
-        self.assertIn("Desconto ou acréscimo no total", conteudo)
+        self.assertIn("Editar desconto e acréscimo", conteudo)
         self.assertIn('name="desconto_global_percentual"', conteudo)
         self.assertRegex(
             conteudo, r'name="desconto_global_percentual"[^>]*form="orcamento-main-form"'

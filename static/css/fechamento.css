@@ -1,0 +1,177 @@
+/* Fechamento do orçamento: subtotais por categoria, conta e o bloco de
+   desconto/acréscimo. Separado de orcamento-edicao.css. */
+
+/* ---------- fechamento ---------- */
+.fechamento {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(17rem, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+.fechamento > section {
+  border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.12));
+  border-radius: var(--ds-radius-md, 0.75rem);
+  background: var(--ds-surface, #fff);
+  padding: 1rem 1.25rem;
+}
+.fechamento-titulo {
+  margin: 0 0 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+}
+/* Tabela de largura fixa: todas as linhas com as mesmas colunas, alinhadas. */
+.fechamento-tabela {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.fechamento-tabela td,
+.fechamento-tabela th {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--ds-line, rgba(0, 0, 0, 0.08));
+  vertical-align: middle;
+  font-weight: inherit;
+  text-align: left;
+}
+.fechamento-tabela tr:last-child > * { border-bottom: 0; }
+/* O nome fica com o que sobra (as outras colunas têm largura fixa). O `th`
+   herdava o fundo e a largura de cabeçalho de tabela do tema. */
+/* Larguras pelo colgroup: com table-layout fixed, quem manda é a primeira
+   linha, que aqui é o cabeçalho escondido. */
+.fechamento-tabela .fc-nome { width: 15rem; }
+.fechamento-tabela .fc-itens { width: 4.5rem; }
+.fechamento-tabela .fc-barra { width: auto; }
+.fechamento-tabela .fc-pct { width: 3rem; }
+.fechamento-tabela .fc-valor { width: 8.5rem; }
+.fechamento-tabela th.fechamento-categoria-nome {
+  background: transparent;
+  font-weight: 600;
+  color: var(--ds-t-900, inherit);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+.fechamento-categoria-nome > * { vertical-align: middle; }
+.fechamento-categoria-nome .item-icone { margin-right: 0.6rem; }
+.fechamento-categoria-texto {
+  display: inline-block;
+  max-width: calc(100% - 2.6rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.fechamento-conta-itens { width: 4.5rem; font-size: 0.8rem; color: var(--ds-t-500); white-space: nowrap; }
+/* A barra fica com o que sobra. */
+.fechamento-tabela td.fechamento-barra-col { width: auto; padding-right: 0.75rem; }
+.fechamento-tabela td.fechamento-percentual { width: 3rem; font-size: 0.8rem; color: var(--ds-t-500); text-align: right; font-variant-numeric: tabular-nums; }
+.fechamento-tabela td.fechamento-valor { width: 8.5rem; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; font-weight: 600; }
+.fechamento-barra {
+  display: block;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--ds-bg-soft, rgba(0, 0, 0, 0.06));
+  overflow: hidden;
+}
+.fechamento-barra > span {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  border-radius: inherit;
+  background: var(--category-color, var(--ds-accent));
+}
+
+.fechamento-conta dl { margin: 0; display: grid; }
+.fechamento-linha {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.4rem 0;
+}
+.fechamento-linha dt { color: var(--ds-t-500); }
+.fechamento-linha dd { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fechamento-linha--menos dd { color: var(--ds-success, #15803d); }
+.fechamento-linha--mais dd { color: var(--ds-danger, #b91c1c); }
+/* Zerado: aparece, para mostrar que existe, mas apagado. */
+.fechamento-linha--zero dt,
+.fechamento-linha--zero dd { color: var(--ds-t-400, #9ca3af); }
+.fechamento-total {
+  margin-top: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 2px solid var(--ds-ink, #0f1115);
+}
+.fechamento-total dt { color: var(--ds-t-900, inherit); font-weight: 700; font-size: 1rem; }
+.fechamento-total strong { font-size: 1.6rem; letter-spacing: -0.02em; color: var(--ds-text-strong, inherit); }
+
+@media (max-width: 960px) {
+  .fechamento { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Desconto/acréscimo: fica fora da região trocada por AJAX (para não perder
+   o que se digita), mas encostado na coluna da conta, logo abaixo dela. */
+.orc-totais {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(17rem, 1fr);
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+}
+.orc-totais-regiao { grid-column: 1 / -1; }
+.orc-ajustes {
+  grid-column: 2;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.orc-ajustes > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  list-style: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--ds-accent-dark, var(--ds-accent));
+  padding: 0.25rem 0.1rem;
+}
+.orc-ajustes > summary::-webkit-details-marker { display: none; }
+.orc-ajustes > summary svg { width: 0.95rem; height: 0.95rem; fill: none; stroke: currentColor; stroke-width: 2; }
+.orc-ajustes[open] > summary { margin-bottom: 0.6rem; }
+.orc-ajustes fieldset {
+  border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.12));
+  border-radius: var(--ds-radius-md, 0.75rem);
+  background: var(--ds-surface, #fff);
+  padding: 0.9rem 1rem;
+  margin: 0;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 960px) {
+  .orc-totais { grid-template-columns: minmax(0, 1fr); }
+  .orc-ajustes { grid-column: 1; }
+}
+
+/* O modo cards (app-overrides.css) vira toda tabela em blocos no celular; o
+   fechamento é compacto e continua tabela. */
+@media (max-width: 820px) {
+  html.cards-mode .fechamento-tabela tbody { display: table-row-group; }
+  html.cards-mode .fechamento-tabela tbody tr { display: table-row; padding: 0; border-bottom: 0; }
+  html.cards-mode .fechamento-tabela tbody td,
+  html.cards-mode .fechamento-tabela tbody th { display: table-cell; padding: 0.55rem 0; border-bottom: 1px solid var(--ds-line, rgba(0, 0, 0, 0.08)); }
+  html.cards-mode .fechamento-tabela tbody td::before { content: none; }
+  html.cards-mode .fechamento-tabela tbody td.fechamento-barra-col { padding-right: 0.75rem; }
+  html.cards-mode .fechamento-tabela tbody th.fechamento-categoria-nome { padding-right: 0.5rem; }
+}
+@media (max-width: 820px) {
+  html.cards-mode .fechamento-tabela { display: table; width: 100%; }
+}
+@media (max-width: 520px) {
+  .fechamento-tabela { table-layout: auto; }
+  .fechamento-tabela colgroup { display: none; }
+  .fechamento-tabela th.fechamento-categoria-nome { width: 100%; white-space: normal; }
+  .fechamento-tabela .fechamento-barra-col { width: 3.5rem; min-width: 3.5rem; }
+  html.cards-mode .fechamento-tabela tbody .fechamento-conta-itens,
+  html.cards-mode .fechamento-tabela tbody .fechamento-percentual { display: none; }
+}

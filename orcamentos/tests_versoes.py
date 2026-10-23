@@ -332,10 +332,13 @@ class TelaDeEdicaoTests(BaseFluxoTests):
         nomes = [g["categoria_nome"] for g in self.orcamento.subtotais_por_categoria()]
         self.assertEqual(nomes, ["Estrutura", "Sem categoria"])
 
-    def test_fechamento_mostra_so_os_ajustes_que_existem(self):
+    def test_fechamento_mostra_ajustes_mesmo_zerados(self):
         conteudo = self._tela()
         self.assertIn("Subtotal dos itens", conteudo)
-        self.assertNotIn("Desconto de", conteudo)
+        # Zerados aparecem (apagados), para mostrar que dá para usar.
+        self.assertIn("Desconto em valor", conteudo)
+        self.assertIn("Acréscimo de 0", conteudo)
+        self.assertIn("fechamento-linha--zero", conteudo)
 
         Orcamento.objects.filter(pk=self.orcamento.pk).update(desconto_global_percentual=10)
         self.orcamento.refresh_from_db()

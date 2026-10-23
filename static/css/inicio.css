@@ -1,0 +1,154 @@
+/* Cabeçalho, página inicial e cor de identificação dos orçamentos.
+   Carregado por último no base.html: ajusta o que vem de style.css. */
+
+/* ---------- cabeçalho: rola com a página ---------- */
+.site-header { position: absolute; }
+.site-header.is-scrolled .nav { box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06); }
+
+/* Marca, Catálogo e Clientes juntos à esquerda; usuário à direita. */
+.nav { grid-template-columns: auto 1fr auto; }
+.nav-bottom { justify-content: flex-start; }
+.nav-links { justify-content: flex-start; gap: 0.15rem; }
+
+.header-user-meta { gap: 1.1rem; }
+.header-user-nome {
+  font-weight: 600;
+  color: var(--ds-t-700);
+  white-space: nowrap;
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-user-actions { gap: 0.6rem; }
+/* Engrenagem e Sair sem contorno; o contorno só aparece no foco. */
+.header-acao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ds-t-500);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.header-acao svg { width: 1.15rem; height: 1.15rem; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.header-acao:hover { background: rgba(15, 17, 21, 0.05); color: var(--ds-t-900); }
+.header-acao:focus-visible { border-color: var(--ds-accent); outline: 2px solid color-mix(in srgb, var(--ds-accent) 30%, transparent); }
+.header-acao[aria-current="page"] { color: var(--ds-blue-dark); background: var(--ds-blue-50); }
+
+@media (max-width: 1024px) {
+  .nav { grid-template-columns: 1fr; }
+  .header-user-meta { justify-content: space-between; width: 100%; }
+}
+
+/* ---------- página inicial: faixa com foto ---------- */
+.inicio-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1.5rem;
+  min-height: clamp(15rem, 30vw, 21rem);
+  margin: -0.5rem 0 2rem;
+  padding: clamp(1.5rem, 4vw, 2.75rem);
+  border-radius: var(--ds-radius-lg, 1rem);
+  overflow: hidden;
+  color: #fff;
+}
+.inicio-hero-fundo,
+.inicio-hero-fundo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.inicio-hero-fundo { z-index: -2; }
+.inicio-hero-fundo img { object-fit: cover; object-position: center 40%; }
+/* Escurece à esquerda (onde fica o texto) e embaixo. */
+.inicio-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(8, 12, 18, 0.82) 0%, rgba(8, 12, 18, 0.55) 45%, rgba(8, 12, 18, 0.1) 80%),
+    linear-gradient(0deg, rgba(8, 12, 18, 0.45) 0%, transparent 55%);
+}
+.inicio-hero-conteudo { display: grid; gap: 0.75rem; max-width: 40rem; }
+.inicio-saudacao {
+  margin: 0;
+  font-family: var(--ds-font-display, inherit);
+  font-size: clamp(1.9rem, 4.2vw, 3rem);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: #fff;
+}
+.inicio-frase { margin: 0; }
+.inicio-frase blockquote {
+  margin: 0;
+  font-size: clamp(1rem, 1.6vw, 1.2rem);
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.9);
+}
+.inicio-frase blockquote::before { content: "“"; }
+.inicio-frase blockquote::after { content: "”"; }
+.inicio-frase figcaption { margin-top: 0.2rem; font-size: 0.85rem; color: rgba(255, 255, 255, 0.65); }
+.inicio-frase figcaption::before { content: "— "; }
+.inicio-resumo {
+  margin: 0.4rem 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-variant-numeric: tabular-nums;
+}
+.inicio-novo { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
+.inicio-credito {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.4rem;
+  margin: 0;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+@media (max-width: 640px) {
+  .inicio-hero { grid-template-columns: 1fr; align-items: start; }
+  .inicio-novo { justify-self: start; }
+}
+
+/* ---------- cor de identificação de cada orçamento ---------- */
+.recente {
+  border-top: 4px solid var(--orc-cor, var(--ds-accent));
+}
+.recente .recente-numero { color: var(--orc-cor, var(--ds-t-500)); font-weight: 600; }
+
+tr.linha-orcamento { cursor: pointer; }
+tr.linha-orcamento > td:first-child { box-shadow: inset 4px 0 0 var(--orc-cor, transparent); padding-left: 1.1rem; }
+tr.linha-orcamento:hover > td { background: color-mix(in srgb, var(--orc-cor, var(--ds-accent)) 6%, transparent); }
+tr.linha-orcamento .linha-orcamento-link { color: inherit; text-decoration: none; }
+tr.linha-orcamento .linha-orcamento-link strong { color: var(--orc-cor, inherit); }
+tr.linha-orcamento .linha-orcamento-link:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- Minha empresa: seções como cartões, sem caixa por fora ---------- */
+.empresa-pagina form { display: grid; gap: 1.25rem; }
+.empresa-secoes { border: 0; padding: 0; margin: 0; display: grid; gap: 1.25rem; min-width: 0; }
+.empresa-secao {
+  padding: clamp(1.1rem, 2.5vw, 1.6rem);
+  border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.1));
+  border-radius: var(--ds-radius-lg, 1rem);
+  background: var(--ds-surface, #fff);
+}
+.empresa-secao-titulo {
+  margin: 0 0 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+}
+.empresa-pagina .inline-actions-end { justify-content: flex-end; }

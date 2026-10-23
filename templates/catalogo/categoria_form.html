@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load catalogo_icones %}
 
 {% block title %}{{ titulo }}{% endblock %}
 
@@ -51,6 +52,24 @@
                     <label class="ds-label" for="{{ form.cor.id_for_label }}">Cor{% if form.cor.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                     {% if form.cor.errors %}<div class="ds-help ds-help--error">{{ form.cor.errors.0 }}</div>{% endif %}
                     {{ form.cor }}
+                </div>
+
+                <div class="ds-field">
+                    <span class="ds-label" id="rotulo-icone">Ícone</span>
+                    {% if form.icone.errors %}<div class="ds-help ds-help--error">{{ form.icone.errors.0 }}</div>{% endif %}
+                    <div class="icone-escolha" role="radiogroup" aria-labelledby="rotulo-icone">
+                        <label class="icone-opcao" title="Automático pelo nome">
+                            <input type="radio" name="icone" value=""{% if not form.icone.value %} checked{% endif %}>
+                            <span class="icone-opcao-auto">Auto</span>
+                        </label>
+                        {% for valor, rotulo in form.fields.icone.choices %}{% if valor %}
+                            <label class="icone-opcao" title="{{ rotulo }}">
+                                <input type="radio" name="icone" value="{{ valor }}"{% if form.icone.value == valor %} checked{% endif %}>
+                                {% icone_por_chave valor rotulo %}
+                            </label>
+                        {% endif %}{% endfor %}
+                    </div>
+                    <p class="ds-help">{{ form.icone.help_text }}</p>
                 </div>
             </fieldset>
 

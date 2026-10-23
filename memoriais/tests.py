@@ -409,7 +409,7 @@ class PermissoesTests(BaseMemorialTests):
     def test_com_chave_o_botao_aparece_na_edicao(self):
         editar = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
         self.assertContains(editar, self.url_importar)
-        self.assertContains(editar, "Importar memorial com IA")
+        self.assertContains(editar, "Importar memorial")
 
 
 class TelasTests(BaseMemorialTests):

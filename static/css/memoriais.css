@@ -11,10 +11,16 @@
   .memorial-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
 }
 
-.memorial-form .ds-field + .ds-field { margin-top: var(--ds-space-4); }
+/* Espaço uniforme entre todos os blocos do formulário (campos, "Prefiro
+   colar o texto", "Mais opções"): a regra antiga `.ds-field + .ds-field`
+   não valia para o campo que vem depois de um <details>. */
+.memorial-form { display: grid; gap: var(--ds-space-5, 1.25rem); }
+.memorial-form > * { margin: 0; }
+.memorial-form .ds-field { display: grid; gap: var(--ds-space-2, 0.5rem); }
+.memorial-form .ds-field > .ds-help { margin: 0; }
 .memorial-form .ds-check { margin-top: var(--ds-space-3); align-items: flex-start; }
 .memorial-form .ds-check input { margin-top: 0.15rem; }
-.memorial-acoes { display: flex; gap: var(--ds-space-3); justify-content: flex-end; flex-wrap: wrap; margin-top: var(--ds-space-6); }
+.memorial-acoes { display: flex; gap: var(--ds-space-3); justify-content: flex-end; flex-wrap: wrap; margin-top: var(--ds-space-2); }
 
 .memorial-divisor {
   display: flex;
@@ -75,13 +81,20 @@
 @media (min-width: 60rem) {
   .novo-caminhos { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
 }
-.novo-caminho h3 { margin-bottom: var(--ds-space-2); }
-.novo-caminho > .ds-help { margin-bottom: var(--ds-space-4); }
+.novo-caminho { padding: clamp(1.25rem, 3vw, 2rem); }
+.novo-caminho h3 { margin: 0 0 var(--ds-space-2); }
+.novo-caminho > .ds-help { margin: 0 0 var(--ds-space-6); max-width: 60ch; line-height: 1.55; }
 .novo-caminho--destaque { border-color: var(--ds-accent-fg); }
 
-.memorial-colar { margin-top: var(--ds-space-4); }
+.memorial-colar {
+  border: 1px dashed var(--ds-line-strong, var(--ds-line));
+  border-radius: var(--ds-radius-md, 0.6rem);
+  padding: var(--ds-space-3) var(--ds-space-4);
+}
 .memorial-colar > summary { cursor: pointer; color: var(--ds-t-500); font-size: 0.9rem; }
 .memorial-colar[open] > summary { margin-bottom: var(--ds-space-3); }
+.memorial-colar .ds-field + .ds-check,
+.memorial-colar .ds-check + .ds-check { margin-top: var(--ds-space-3); }
 
 .memorial-categoria-nova { margin-top: var(--ds-space-2); }
 .memorial-catalogo-form .ds-select,

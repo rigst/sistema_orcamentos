@@ -14,7 +14,9 @@ from .models import CategoriaItem, ItemCatalogo
 class CategoriaItemForm(OptimisticLockModelFormMixin, forms.ModelForm):
     class Meta:
         model = CategoriaItem
-        fields = ["nome", "descricao", "cor", "ativo"]
+        fields = ["nome", "descricao", "cor", "icone", "ativo"]
+        labels = {"icone": "Ícone"}
+        help_texts = {"icone": "Em branco, o ícone é escolhido pelo nome da categoria."}
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)

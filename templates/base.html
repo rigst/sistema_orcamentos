@@ -20,6 +20,7 @@
     <!-- Customizações específicas do app (sobre os tokens do DS) -->
     <link rel="stylesheet" href="{% static 'css/app-overrides.css' %}">
     <link rel="stylesheet" href="{% static 'css/fluxo.css' %}">
+    <link rel="stylesheet" href="{% static 'css/inicio.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body class="ds-root {% block body_class %}{% endblock %}">
@@ -64,24 +65,16 @@
                         </ul>
                     </div>
                     <div id="header-user-meta" class="header-user-meta">
-                        <div class="header-user-info">
-                            <span class="header-user-greeting">Olá, {{ user }}</span>
-                            <span class="header-sep" aria-hidden="true">·</span>
-                            <div class="header-user-company">
-                                <span>{% if user.eh_visitante %}Empresa Visitante{% else %}{{ user.nome_empresa }}{% endif %}</span>
-                            </div>
-                            <span class="user-role">{{ user.get_perfil_display }}</span>
-                        </div>
+                        <span class="header-user-nome" title="{% if user.eh_visitante %}Empresa Visitante{% else %}{{ user.nome_empresa }}{% endif %} · {{ user.get_perfil_display }}">{{ user }}</span>
                         <div class="header-user-actions">
                             {% if user.pode_visualizar_relatorios %}
-                                <a class="ds-icon-btn header-config" href="{% url 'relatorios:minha_empresa' %}" title="Minha empresa" aria-label="Minha empresa"{% if request.resolver_match.url_name == 'minha_empresa' %} aria-current="page"{% endif %}>
+                                <a class="header-acao" href="{% url 'relatorios:minha_empresa' %}" title="Minha empresa" aria-label="Minha empresa"{% if request.resolver_match.url_name == 'minha_empresa' %} aria-current="page"{% endif %}>
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
-                                    <span class="visually-hidden">Minha empresa</span>
                                 </a>
                             {% endif %}
                             <form action="{% url 'logout' %}" method="post">
                                 {% csrf_token %}
-                                <button class="nav-logout" type="submit">Sair</button>
+                                <button class="header-acao header-sair" type="submit">Sair</button>
                             </form>
                         </div>
                     </div>

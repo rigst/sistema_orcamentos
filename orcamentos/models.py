@@ -317,6 +317,25 @@ class Orcamento(models.Model):
             alterados.append(campo)
         return alterados
 
+    # Cor de identificação na lista e nos cards: fixa por orçamento (vem do
+    # id), sem campo no banco. Tons médios que funcionam como faixa e ponto.
+    PALETA_IDENTIFICACAO = (
+        "#2563EB",
+        "#0D9488",
+        "#D97706",
+        "#7C3AED",
+        "#DB2777",
+        "#0891B2",
+        "#65A30D",
+        "#DC2626",
+        "#4F46E5",
+        "#C2410C",
+    )
+
+    @property
+    def cor_identificacao(self) -> str:
+        return self.PALETA_IDENTIFICACAO[(self.pk or 0) % len(self.PALETA_IDENTIFICACAO)]
+
     @property
     def cliente_exibicao(self) -> str:
         return str(self.cliente) if self.cliente_id else self.SEM_CLIENTE
@@ -425,10 +444,10 @@ class Orcamento(models.Model):
             catalogo = item.item_catalogo if item.item_catalogo_id else None
             categoria = catalogo.categoria if catalogo and catalogo.categoria_id else None
             if categoria is not None:
-                return categoria.pk, categoria.nome, categoria.cor
+                return categoria.pk, categoria.nome, categoria.cor, categoria.icone_efetivo
             if catalogo is None and rotulo_sem_catalogo:
-                return None, rotulo_sem_catalogo, "#94A3B8"
-            return None, "Sem categoria", "#CBD5E1"
+                return None, rotulo_sem_catalogo, "#94A3B8", "caixa"
+            return None, "Sem categoria", "#CBD5E1", "caixa"
 
         # Grupos com categoria primeiro (por nome); os sem categoria no fim.
         itens.sort(
@@ -445,6 +464,7 @@ class Orcamento(models.Model):
                     "categoria_id": chave[0],
                     "categoria_nome": chave[1],
                     "categoria_cor": chave[2],
+                    "categoria_icone": chave[3],
                     "subtotal": subtotal,
                     "quantidade_itens": len(itens_lista),
                     "percentual": arredondar(subtotal * 100 / total) if total else Decimal("0.00"),
