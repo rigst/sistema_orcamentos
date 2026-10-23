@@ -1,21 +1,35 @@
-/* Edição do orçamento: salvamento automático, ordem dos itens e fechamento. */
+/* Edição do orçamento: barra das abas com salvamento, tabela de itens com
+   ícone por categoria, botão de adicionar e fechamento. */
 
-/* ---------- salvamento automático ---------- */
+/* ---------- abas + salvamento na mesma linha ---------- */
+.editor-shell:has([data-orc-abas]) { gap: var(--ds-space-4, 1rem); }
+/* Com a aba Itens aberta, o fieldset dos outros painéis fica vazio e somava
+   o espaçamento da grade duas vezes. */
+.orc-paineis-form:not(:has(.orc-painel:not([hidden]))) { display: none; }
+
+.orc-abas-barra {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ds-line, rgba(0, 0, 0, 0.12));
+}
+.orc-abas-barra .orc-abas { border-bottom: 0; margin: 0; }
+.orc-abas-barra .autosave { margin-bottom: 0.4rem; }
+
 .autosave {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.2rem 0.35rem 0.2rem 0.25rem;
-  border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.12));
-  border-radius: 999px;
-  background: var(--ds-surface, #fff);
+  gap: 0.15rem;
 }
-.autosave-btn { width: 2rem; height: 2rem; }
+.autosave-btn { width: 2rem; height: 2rem; border-color: transparent; background: transparent; }
+.autosave-btn:not(:disabled):hover { background: var(--ds-bg-soft, rgba(0, 0, 0, 0.06)); }
 .autosave-btn svg { width: 1rem; height: 1rem; }
-.autosave-btn:disabled { opacity: 0.35; cursor: default; }
+.autosave-btn:disabled { opacity: 0.3; cursor: default; }
 .autosave-status {
   min-width: 8.5rem;
-  padding: 0 0.4rem;
+  padding: 0 0.25rem 0 0.5rem;
   font-size: 0.82rem;
   color: var(--ds-t-500);
   white-space: nowrap;
@@ -39,58 +53,89 @@
 }
 @keyframes autosave-pulso { 50% { opacity: 0.3; } }
 
-/* O shell do editor espaça os blocos em --ds-space-6; entre abas e itens é
-   demais. */
-.editor-shell:has([data-orc-abas]) { gap: var(--ds-space-4, 1rem); }
-
-/* Com a aba Itens aberta, os outros painéis ficam ocultos e o fieldset que os
-   embrulha vira um item vazio da grade, que somava o espaçamento duas vezes. */
-.orc-paineis-form:not(:has(.orc-painel:not([hidden]))) { display: none; }
-.orc-abas { margin-bottom: 0.25rem; }
-
-/* ---------- seção de itens: ações coladas nos filtros ---------- */
-/* Botões e filtros na mesma faixa: filtros à esquerda, ações à direita. */
-#painel-itens .table-section {
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
-  align-items: center;
-}
-#painel-itens .table-section > .itens-acoes { grid-column: 2; grid-row: 1; }
-#painel-itens .table-section > .filters-form { grid-column: 1; grid-row: 1; margin: 0; }
-#painel-itens .table-section > #itens-tabela-region { grid-column: 1 / -1; }
-.itens-acoes { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 0.5rem; }
-@media (max-width: 860px) {
-  #painel-itens .table-section { grid-template-columns: minmax(0, 1fr); }
-  #painel-itens .table-section > .itens-acoes,
-  #painel-itens .table-section > .filters-form { grid-column: 1; grid-row: auto; }
-  .itens-acoes { justify-content: stretch; }
-  .itens-acoes .inline-actions { width: 100%; }
-  /* Os filtros já se aplicam sozinhos (data-autosubmit): o botão sobra. */
-  #painel-itens .filters-form > button[type="submit"] { display: none; }
-}
-.itens-acoes:empty { display: none; }
+/* ---------- busca e filtros dos itens ---------- */
+#painel-itens .table-section { gap: 0.9rem; }
 #item-feedback-region:empty { display: none; }
+.itens-filtros {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.itens-filtros .itens-busca { flex: 1 1 18rem; min-width: 0; }
+.itens-filtros .itens-busca .ds-input { width: 100%; }
+.itens-filtros select { flex: 0 1 auto; min-width: 11rem; width: auto; }
+
+/* ---------- adicionar item: em destaque, separado da busca ---------- */
+.itens-adicionar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 1rem;
+  border: 2px dashed color-mix(in srgb, var(--ds-accent) 45%, transparent);
+  border-radius: var(--ds-radius-lg, 1rem);
+  background: color-mix(in srgb, var(--ds-accent) 6%, transparent);
+  color: var(--ds-accent-dark, var(--ds-accent));
+  font: inherit;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.itens-adicionar svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 2.2; }
+.itens-adicionar:hover { background: color-mix(in srgb, var(--ds-accent) 12%, transparent); border-color: var(--ds-accent); }
+.itens-adicionar:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; }
+
+/* ---------- tabela de itens: espaçamento das linhas ---------- */
+#itens-tabela-region .ds-table th,
+#itens-tabela-region .ds-table td { padding: 0.8rem 0.75rem; vertical-align: middle; }
+#itens-tabela-region .ds-table th:first-child,
+#itens-tabela-region .ds-table td:first-child { padding-left: 1.1rem; }
+#itens-tabela-region .ds-table th:last-child,
+#itens-tabela-region .ds-table td:last-child { padding-right: 1.1rem; }
+#itens-tabela-region .item-col strong { display: block; line-height: 1.3; }
+#itens-tabela-region .item-col .table-subline { margin-top: 0.2rem; }
+#itens-tabela-region td[data-linha-subtotal] { text-align: right; white-space: nowrap; font-weight: 600; }
+
+/* ---------- ícone da categoria ---------- */
+.icone-col { width: 3rem; text-align: center; }
+.item-icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  color: var(--category-color, var(--ds-t-500));
+  background: color-mix(in srgb, var(--category-color, #94a3b8) 13%, transparent);
+}
+.item-icone--sm { width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; }
+.item-icone--sem { --category-color: #94a3b8; }
+.categoria-icone { width: 60%; height: 60%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------- ordem: setas discretas em volta do número ---------- */
-.ordem-col { width: 2.75rem; text-align: center; }
+.ordem-col { width: 3.25rem; text-align: center; }
 .ordem-controle {
   display: inline-grid;
   justify-items: center;
-  gap: 0;
   line-height: 1;
 }
 .ordem-controle form { margin: 0; }
 .ordem-numero {
+  display: block;
+  min-width: 1.6rem;
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: var(--ds-t-700, inherit);
-  padding: 0.05rem 0;
+  padding: 0.1rem 0;
 }
 .ordem-seta {
   display: grid;
   place-items: center;
-  width: 1.5rem;
-  height: 1rem;
+  width: 1.6rem;
+  height: 1.05rem;
   padding: 0;
   border: 0;
   border-radius: 0.3rem;
@@ -107,7 +152,6 @@ tr:focus-within .ordem-seta:not(:disabled),
 .ordem-seta:hover { background: var(--ds-bg-soft, rgba(0, 0, 0, 0.06)); color: var(--ds-accent); }
 .ordem-seta:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 1px; }
 .ordem-seta:disabled { visibility: hidden; }
-/* Sem mouse (toque), as setas ficam sempre à vista, só que apagadas. */
 @media (hover: none) {
   .ordem-seta:not(:disabled) { opacity: 0.55; }
 }
@@ -115,98 +159,10 @@ tr:focus-within .ordem-seta:not(:disabled),
 .item-nao-registrado { font-size: 0.72rem; }
 .ajuste-vazio { color: var(--ds-t-500); }
 
-/* ---------- fechamento: categorias + conta ---------- */
-.fechamento {
-  display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(16rem, 1fr);
-  gap: 1rem;
-  align-items: start;
-}
-.fechamento > section {
-  border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.12));
-  border-radius: var(--ds-radius-md, 0.75rem);
-  background: var(--ds-surface, #fff);
-  padding: 1rem 1.15rem;
-}
-.fechamento-titulo {
-  margin: 0 0 0.6rem;
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ds-t-500);
-}
-.fechamento-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; }
-.fechamento-categoria {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(3rem, 1fr) 2.6rem auto;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--ds-line, rgba(0, 0, 0, 0.08));
-}
-.fechamento-categoria:last-child { border-bottom: 0; }
-.fechamento-categoria-nome {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  min-width: 0;
-  font-weight: 600;
-}
-.fechamento-categoria-nome .category-chip-dot {
-  flex: none;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  background: var(--category-color, var(--ds-accent));
-}
-.fechamento-categoria-conta { font-weight: 400; font-size: 0.8rem; color: var(--ds-t-500); white-space: nowrap; }
-.fechamento-barra {
-  height: 0.4rem;
-  border-radius: 999px;
-  background: var(--ds-bg-soft, rgba(0, 0, 0, 0.06));
-  overflow: hidden;
-}
-.fechamento-barra > span {
-  display: block;
-  height: 100%;
-  min-width: 2px;
-  border-radius: inherit;
-  background: var(--category-color, var(--ds-accent));
-}
-.fechamento-percentual { font-size: 0.8rem; color: var(--ds-t-500); text-align: right; font-variant-numeric: tabular-nums; }
-.fechamento-valor { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-.fechamento-conta dl { margin: 0; display: grid; }
-.fechamento-linha {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-  padding: 0.45rem 0;
-}
-.fechamento-linha dt { color: var(--ds-t-500); }
-.fechamento-linha dd { margin: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.fechamento-linha--menos dd { color: var(--ds-success, #15803d); }
-.fechamento-linha--mais dd { color: var(--ds-danger, #b91c1c); }
-.fechamento-total {
-  margin-top: 0.35rem;
-  padding-top: 0.75rem;
-  border-top: 2px solid var(--ds-ink, #0f1115);
-}
-.fechamento-total dt { color: var(--ds-t-900, inherit); font-weight: 700; font-size: 1rem; }
-.fechamento-total strong { font-size: 1.6rem; letter-spacing: -0.02em; color: var(--ds-text-strong, inherit); }
-
-@media (max-width: 860px) {
-  .fechamento { grid-template-columns: minmax(0, 1fr); }
-}
-
-/* ---------- itens no celular: um card por item ----------
-   O modo cards global foi pensado para listas e empilha cada célula com o
-   rótulo ao lado. Aqui o card é desenhado de propósito:
-     [#]  nome, código, categoria         [subtotal]
-          [qtd] un × [valor]                 [ações]                      */
+/* ---------- itens no celular: um card por item ---------- */
 @media (max-width: 760px) {
+  .orc-abas-barra { align-items: stretch; }
+  .orc-abas-barra .autosave { margin: 0 0 0.4rem; }
   #itens-tabela-region .ds-table-wrap { overflow: visible; border: 0; background: transparent; box-shadow: none; }
   #itens-tabela-region table,
   #itens-tabela-region tbody { display: block; width: 100%; }
@@ -214,48 +170,52 @@ tr:focus-within .ordem-seta:not(:disabled),
   #itens-tabela-region tbody { display: grid; gap: 0.6rem; }
   #itens-tabela-region tr.item-row-summary {
     display: grid;
-    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    grid-template-columns: 2rem 2.25rem minmax(0, 1fr) auto;
     grid-template-areas:
-      "ordem item  subtotal"
-      "ordem base  base"
-      "ordem ajuste acoes";
-    gap: 0.35rem 0.6rem;
-    padding: 0.75rem 0.75rem 0.6rem 0.4rem;
+      "ordem icone item   subtotal"
+      "ordem base  base   base"
+      "ordem ajuste ajuste acoes";
+    gap: 0.4rem 0.6rem;
+    padding: 0.75rem 0.75rem 0.6rem 0.5rem;
     border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.12));
     border-radius: var(--ds-radius-md, 0.75rem);
     background: var(--ds-surface, #fff);
   }
+  html.cards-mode #itens-tabela-region tr.item-row-summary > td,
   #itens-tabela-region tr.item-row-summary > td {
     display: block;
     padding: 0;
     border: 0;
     width: auto;
+    min-width: 0;
+    max-width: none;
     background: transparent;
   }
   #itens-tabela-region tr.item-row-summary > td::before { content: none; }
   #itens-tabela-region td.ordem-col { grid-area: ordem; align-self: center; }
-  #itens-tabela-region tr.item-row-summary > td:nth-child(2) { grid-area: item; }
-  #itens-tabela-region td.linha-rapida,
-  #itens-tabela-region tr.item-row-summary > td:nth-child(3) { grid-area: base; }
-  #itens-tabela-region tr.item-row-summary > td:nth-child(4) { grid-area: ajuste; align-self: center; }
-  #itens-tabela-region td[data-linha-subtotal] { grid-area: subtotal; text-align: right; font-weight: 700; white-space: nowrap; }
-  #itens-tabela-region td.actions-col { grid-area: acoes; justify-self: end; }
+  #itens-tabela-region td.icone-col { grid-area: icone; align-self: start; }
+  #itens-tabela-region td.item-col { grid-area: item; }
+  #itens-tabela-region td.item-col strong { overflow-wrap: anywhere; }
+  #itens-tabela-region td.linha-rapida { grid-area: base; }
+  #itens-tabela-region td.ajustes-col { grid-area: ajuste; align-self: center; }
+  #itens-tabela-region td[data-linha-subtotal] { grid-area: subtotal; font-weight: 700; }
+  #itens-tabela-region td.actions-col { grid-area: acoes; justify-self: end; align-self: center; }
   #itens-tabela-region td.actions-col .actions-stack { display: flex; gap: 0.35rem; }
   #itens-tabela-region .linha-rapida-campos { justify-content: flex-start; flex-wrap: nowrap; }
   #itens-tabela-region .linha-rapida-qtd { width: 4.75rem; }
   #itens-tabela-region .linha-rapida-valor { flex: 1 1 auto; width: auto; min-width: 0; max-width: 9rem; }
   #itens-tabela-region .table-subline { display: block; }
-  #itens-tabela-region tr.item-row-summary > td { min-width: 0 !important; max-width: none; }
-  #itens-tabela-region tr.item-row-summary > td:nth-child(2) strong { display: block; overflow-wrap: anywhere; }
-  /* Código e "4,00 Unidade" repetem o que os campos já mostram. */
-  #itens-tabela-region tr.item-row-summary > td:nth-child(2) .table-subline:nth-of-type(1),
-  #itens-tabela-region tr.item-row-summary > td:nth-child(2) .table-subline:nth-of-type(2) { display: none; }
-  #itens-tabela-region td.actions-col { align-self: center; }
   .ajuste-vazio { display: none; }
+  .itens-filtros select { flex: 1 1 45%; min-width: 0; }
 }
 @media (max-width: 520px) {
-  .fechamento-categoria { grid-template-columns: minmax(0, 1fr) auto; row-gap: 0.35rem; }
-  .fechamento-barra { grid-column: 1 / -1; grid-row: 2; }
+  .fechamento-conta-itens { display: none; }
+  .fechamento-tabela .fc-nome { width: auto; }
+  .fechamento-tabela .fc-itens,
+  .fechamento-tabela .fc-pct { width: 0; }
+  .fechamento-tabela .fc-barra { width: 3.5rem; }
+  .fechamento-tabela .fc-valor { width: 7rem; }
   .fechamento-percentual { display: none; }
+  .fechamento-valor { width: 7rem; }
   .autosave-status { min-width: 0; }
 }

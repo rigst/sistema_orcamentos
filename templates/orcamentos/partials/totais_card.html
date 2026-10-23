@@ -1,27 +1,36 @@
-{% load br_format %}
+{% load br_format catalogo_icones %}
 {% comment %}
-  Fechamento do orçamento. Em cima, uma linha por categoria com a fatia do
-  total (barra proporcional). Embaixo, a conta de fechamento: subtotal, só os
-  ajustes que existem e o total em destaque.
+  Fechamento do orçamento. Em cima, uma linha por categoria (colunas de largura
+  fixa: ícone, nome, barra, percentual e valor alinhados em todas as linhas).
+  Embaixo, a conta: subtotal, descontos e acréscimos (inclusive zerados, para
+  mostrar que existem) e o total.
 {% endcomment %}
 <div class="fechamento">
     {% if subtotais_categoria %}
         <section class="fechamento-categorias" aria-label="Subtotais por categoria">
             <h3 class="fechamento-titulo">Por categoria</h3>
-            <ul class="fechamento-lista">
-                {% for grupo in subtotais_categoria %}
-                    <li class="fechamento-categoria" style="--category-color: {{ grupo.categoria_cor }};">
-                        <span class="fechamento-categoria-nome">
-                            <span class="category-chip-dot" aria-hidden="true"></span>
-                            {{ grupo.categoria_nome }}
-                            <span class="fechamento-categoria-conta">{{ grupo.quantidade_itens }} ite{{ grupo.quantidade_itens|pluralize:"m,ns" }}</span>
-                        </span>
-                        <span class="fechamento-barra" aria-hidden="true"><span style="width: {{ grupo.percentual|stringformat:'s' }}%;"></span></span>
-                        <span class="fechamento-percentual">{{ grupo.percentual|floatformat:0 }}%</span>
-                        <strong class="fechamento-valor money">{{ grupo.subtotal|brl }}</strong>
-                    </li>
-                {% endfor %}
-            </ul>
+            <table class="fechamento-tabela">
+                <colgroup>
+                    <col class="fc-nome"><col class="fc-itens"><col class="fc-barra"><col class="fc-pct"><col class="fc-valor">
+                </colgroup>
+                <thead class="visually-hidden">
+                    <tr><th>Categoria</th><th>Itens</th><th>Participação</th><th>%</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody>
+                    {% for grupo in subtotais_categoria %}
+                        <tr style="--category-color: {{ grupo.categoria_cor }};">
+                            <th scope="row" class="fechamento-categoria-nome">
+                                <span class="item-icone item-icone--sm">{% if grupo.categoria_id %}{% icone_por_chave grupo.categoria_icone %}{% else %}{% icone_por_chave "caixa" %}{% endif %}</span>
+                                <span class="fechamento-categoria-texto">{{ grupo.categoria_nome }}</span>
+                            </th>
+                            <td class="fechamento-conta-itens">{{ grupo.quantidade_itens }} ite{{ grupo.quantidade_itens|pluralize:"m,ns" }}</td>
+                            <td class="fechamento-barra-col"><span class="fechamento-barra" aria-hidden="true"><span style="width: {{ grupo.percentual|stringformat:'s' }}%;"></span></span></td>
+                            <td class="fechamento-percentual">{{ grupo.percentual|floatformat:0 }}%</td>
+                            <td class="fechamento-valor money">{{ grupo.subtotal|brl }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </section>
     {% endif %}
 
@@ -31,30 +40,22 @@
                 <dt>Subtotal dos itens</dt>
                 <dd class="money">{{ orcamento.subtotal_itens|brl }}</dd>
             </div>
-            {% if orcamento.desconto_global_valor %}
-                <div class="fechamento-linha fechamento-linha--menos">
-                    <dt>Desconto</dt>
-                    <dd class="money">− {{ orcamento.desconto_global_valor|brl }}</dd>
-                </div>
-            {% endif %}
-            {% if orcamento.desconto_global_percentual %}
-                <div class="fechamento-linha fechamento-linha--menos">
-                    <dt>Desconto de {{ orcamento.desconto_global_percentual|percentual_br }}</dt>
-                    <dd class="money">− {{ orcamento.valor_desconto_percentual_global|brl }}</dd>
-                </div>
-            {% endif %}
-            {% if orcamento.acrescimo_global_valor %}
-                <div class="fechamento-linha fechamento-linha--mais">
-                    <dt>Acréscimo</dt>
-                    <dd class="money">+ {{ orcamento.acrescimo_global_valor|brl }}</dd>
-                </div>
-            {% endif %}
-            {% if orcamento.acrescimo_global_percentual %}
-                <div class="fechamento-linha fechamento-linha--mais">
-                    <dt>Acréscimo de {{ orcamento.acrescimo_global_percentual|percentual_br }}</dt>
-                    <dd class="money">+ {{ orcamento.valor_acrescimo_percentual_global|brl }}</dd>
-                </div>
-            {% endif %}
+            <div class="fechamento-linha fechamento-linha--menos{% if not orcamento.desconto_global_valor %} fechamento-linha--zero{% endif %}">
+                <dt>Desconto em valor</dt>
+                <dd class="money">− {{ orcamento.desconto_global_valor|brl }}</dd>
+            </div>
+            <div class="fechamento-linha fechamento-linha--menos{% if not orcamento.desconto_global_percentual %} fechamento-linha--zero{% endif %}">
+                <dt>Desconto de {{ orcamento.desconto_global_percentual|percentual_br }}</dt>
+                <dd class="money">− {{ orcamento.valor_desconto_percentual_global|brl }}</dd>
+            </div>
+            <div class="fechamento-linha fechamento-linha--mais{% if not orcamento.acrescimo_global_valor %} fechamento-linha--zero{% endif %}">
+                <dt>Acréscimo em valor</dt>
+                <dd class="money">+ {{ orcamento.acrescimo_global_valor|brl }}</dd>
+            </div>
+            <div class="fechamento-linha fechamento-linha--mais{% if not orcamento.acrescimo_global_percentual %} fechamento-linha--zero{% endif %}">
+                <dt>Acréscimo de {{ orcamento.acrescimo_global_percentual|percentual_br }}</dt>
+                <dd class="money">+ {{ orcamento.valor_acrescimo_percentual_global|brl }}</dd>
+            </div>
             <div class="fechamento-linha fechamento-total">
                 <dt>Total</dt>
                 <dd><strong class="money" data-total-final>{{ orcamento.total_final|brl }}</strong></dd>

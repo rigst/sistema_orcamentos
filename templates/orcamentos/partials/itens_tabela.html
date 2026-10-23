@@ -1,10 +1,11 @@
-{% load br_format querystring %}
+{% load br_format querystring catalogo_icones %}
 {% if itens %}
     <div class="ds-table-wrap">
         <table class="ds-table">
             <thead>
                 <tr>
                     <th class="ordem-col"><span class="visually-hidden">Ordem</span>#</th>
+                    <th class="icone-col"><span class="visually-hidden">Categoria</span></th>
                     <th>Item</th>
                     <th>Base</th>
                     <th>Ajustes</th>
@@ -44,21 +45,24 @@
                                 <span class="ordem-numero">{{ item.ordem }}</span>
                             {% endif %}
                         </td>
-                        <td>
+                        {% with categoria=item.item_catalogo.categoria %}
+                        <td class="icone-col">
+                            {% if categoria %}
+                                <span class="item-icone" style="--category-color: {{ categoria.cor }};">{% icone_categoria categoria %}</span>
+                            {% elif item.item_catalogo %}
+                                <span class="item-icone item-icone--sem">{% icone_por_chave "caixa" "Sem categoria" %}</span>
+                            {% else %}
+                                <span class="item-icone item-icone--sem">{% icone_categoria None %}</span>
+                            {% endif %}
+                        </td>
+                        {% endwith %}
+                        <td class="item-col">
                             <strong>{{ item.nome }}</strong>
-                            <small class="table-subline">{{ item.codigo_item|default:"Sem código" }}</small>
-                            <small class="table-subline">{{ item.quantidade|decimal_br }} {{ item.get_unidade_medida_display }}</small>
+                            {% if item.codigo_item %}<small class="table-subline">{{ item.codigo_item }}</small>{% endif %}
                             {% if item.descricao %}
                                 <small class="table-subline">{{ item.descricao }}</small>
                             {% endif %}
-                            {% if item.item_catalogo and item.item_catalogo.categoria %}
-                                <small class="table-subline">
-                                    <span class="category-chip category-chip-inline" style="--category-color: {{ item.item_catalogo.categoria.cor }};">
-                                        <span class="category-chip-dot"></span>
-                                        {{ item.item_catalogo.categoria.nome }}
-                                    </span>
-                                </small>
-                            {% elif not item.item_catalogo %}
+                            {% if not item.item_catalogo %}
                                 <small class="table-subline">
                                     <span class="ds-badge ds-badge--neutral item-nao-registrado" title="Este item ainda não está no catálogo da empresa">Não registrado</span>
                                 </small>
@@ -81,7 +85,7 @@
                         {% else %}
                             <td class="money">{{ item.quantidade|decimal_br }} x {{ item.valor_unitario|brl }}</td>
                         {% endif %}
-                        <td>
+                        <td class="ajustes-col">
                             <div class="adjustment-badges">
                                 {% if item.desconto_valor > 0 or item.desconto_percentual > 0 %}
                                     <span class="ds-badge ds-badge--success">Desconto</span>

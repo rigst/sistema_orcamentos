@@ -1,29 +1,39 @@
 {% extends "base.html" %}
-{% load br_format querystring %}
+{% load static br_format querystring %}
 
 {% block title %}Início · Orçamentos{% endblock %}
+{% block extra_head %}<script src="{% static 'js/lista-orcamentos.js' %}" defer></script>{% endblock %}
 
 {% block content %}
 <section>
-    <div class="lista-cabecalho">
-        <div>
-            <h1 class="ds-h1 lista-titulo">{% if empresa_ativa %}{{ empresa_ativa.nome }}{% else %}Início{% endif %}</h1>
-            <p class="lista-subtitulo">{{ resumo_inicio.total }} proposta{{ resumo_inicio.total|pluralize }}{% if resumo_inicio.rascunhos %} · {{ resumo_inicio.rascunhos }} em rascunho{% endif %}{% if resumo_inicio.enviados %} · {{ resumo_inicio.enviados }} aguardando resposta{% endif %}</p>
+    <header class="inicio-hero">
+        <picture class="inicio-hero-fundo">
+            <source media="(max-width: 760px)" srcset="{% static 'img/inicio-fundo-1200.webp' %}">
+            <img src="{% static 'img/inicio-fundo.webp' %}" alt="" width="2400" height="800" fetchpriority="high">
+        </picture>
+        <div class="inicio-hero-conteudo">
+            <h1 class="inicio-saudacao">{{ saudacao }}{% if user.primeiro_nome %}, {{ user.primeiro_nome }}{% endif %}.</h1>
+            <figure class="inicio-frase">
+                <blockquote>{{ frase.texto }}</blockquote>
+                {% if frase.autor %}<figcaption>{{ frase.autor }}</figcaption>{% endif %}
+            </figure>
+            <p class="inicio-resumo">{{ resumo_inicio.total }} proposta{{ resumo_inicio.total|pluralize }}{% if resumo_inicio.rascunhos %} · {{ resumo_inicio.rascunhos }} em rascunho{% endif %}{% if resumo_inicio.enviados %} · {{ resumo_inicio.enviados }} aguardando resposta{% endif %}</p>
         </div>
         {% if user.pode_gerenciar_orcamentos %}
-            <a class="ds-btn ds-btn--solid" href="{% url 'orcamentos:novo' %}">
+            <a class="ds-btn ds-btn--solid inicio-novo" href="{% url 'orcamentos:novo' %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Novo orçamento
             </a>
         {% endif %}
-    </div>
+        <p class="inicio-credito">Foto: Alex Blăjan (CC0)</p>
+    </header>
 
     {% if recentes %}
         <section class="recentes" aria-labelledby="recentes-titulo">
             <h2 class="ds-h3" id="recentes-titulo">Continuar de onde parou</h2>
             <div class="recentes-grade">
                 {% for recente in recentes %}
-                    <a class="ds-card recente" href="{% if user.pode_gerenciar_orcamentos and recente.status == 'rascunho' %}{% url 'orcamentos:editar' recente.pk %}{% else %}{% url 'orcamentos:visualizar' recente.pk %}{% endif %}">
+                    <a class="ds-card recente" style="--orc-cor: {{ recente.cor_identificacao }};" href="{% if user.pode_gerenciar_orcamentos and recente.status == 'rascunho' %}{% url 'orcamentos:editar' recente.pk %}{% else %}{% url 'orcamentos:visualizar' recente.pk %}{% endif %}">
                         <span class="recente-topo">
                             <span class="recente-numero">{{ recente.numero }}</span>
                             <span class="badge status-{{ recente.status }}">{{ recente.get_status_display }}</span>
@@ -82,9 +92,9 @@
                 </thead>
                 <tbody>
                     {% for orcamento in orcamentos %}
-                        <tr>
+                        <tr class="linha-orcamento" style="--orc-cor: {{ orcamento.cor_identificacao }};" data-href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}">
                             <td class="budget-main-cell">
-                                <strong>{{ orcamento.numero }}</strong>
+                                <a class="linha-orcamento-link" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}"><strong>{{ orcamento.numero }}</strong></a>
                                 <span class="table-subline">Emissão: {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
                                 <span class="table-subline table-subline-muted">Validade: {% if orcamento.validade_em %}{{ orcamento.validade_em|date:"d/m/Y" }}{% else %}-{% endif %}</span>
                             </td>

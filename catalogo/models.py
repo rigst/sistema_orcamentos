@@ -8,6 +8,9 @@ from django.db.models import Max
 
 from core.tenancy import obter_grupo_empresa_padrao
 
+from .icones import ESCOLHAS as ESCOLHAS_ICONE
+from .icones import icone_sugerido
+
 
 class CategoriaItem(models.Model):
     COLOR_CHOICES = [
@@ -41,6 +44,9 @@ class CategoriaItem(models.Model):
     nome = models.CharField(max_length=100)
     descricao = models.TextField(blank=True)
     cor = models.CharField(max_length=7, choices=COLOR_CHOICES, default="#17795A")
+    # Ícone de traço desenhado na cor da categoria (catalogo.icones). Vazio =
+    # escolhido pelo nome da categoria.
+    icone = models.CharField(max_length=20, choices=ESCOLHAS_ICONE, blank=True, default="")
     ativo = models.BooleanField(default=True)
     empresa = models.ForeignKey(
         "auth.Group",
@@ -70,6 +76,10 @@ class CategoriaItem(models.Model):
         if self.empresa_id is None:
             self.empresa = obter_grupo_empresa_padrao()
         super().save(*args, **kwargs)
+
+    @property
+    def icone_efetivo(self) -> str:
+        return self.icone or icone_sugerido(self.nome)
 
 
 class ItemCatalogo(models.Model):

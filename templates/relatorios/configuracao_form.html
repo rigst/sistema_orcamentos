@@ -11,7 +11,7 @@
         </div>
     </div>
 
-    <div class="form-panel">
+    <div class="empresa-pagina">
         <form method="post" enctype="multipart/form-data" data-unsaved-warning="{% if not somente_leitura %}1{% else %}0{% endif %}">
             {% csrf_token %}
             {{ form.ativo }}
@@ -34,9 +34,10 @@
                 </div>
             {% endif %}
 
-            <fieldset {% if somente_leitura %}disabled{% endif %}>
-                <div class="form-grid">
-                    <div class="form-subhead">Dados da empresa</div>
+            <fieldset class="empresa-secoes" {% if somente_leitura %}disabled{% endif %}>
+                <section class="empresa-secao">
+                    <h3 class="empresa-secao-titulo">Dados da empresa</h3>
+                    <div class="form-grid">
                     <div>
                         <label for="{{ form.nome_empresa.id_for_label }}">Nome da empresa{% if form.nome_empresa.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.nome_empresa }}
@@ -70,7 +71,11 @@
                         {{ form.site.errors }}
                     </div>
 
-                    <div class="form-subhead">Endereço</div>
+                    </div>
+                </section>
+                <section class="empresa-secao">
+                    <h3 class="empresa-secao-titulo">Endereço</h3>
+                    <div class="form-grid">
                     <div>
                         <label for="{{ form.cep.id_for_label }}">CEP{% if form.cep.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.cep }}
@@ -124,7 +129,11 @@
                         {{ form.rodape_relatorio.errors }}
                     </div>
 
-                    <div class="form-subhead">Configurações institucionais</div>
+                    </div>
+                </section>
+                <section class="empresa-secao">
+                    <h3 class="empresa-secao-titulo">Configurações institucionais</h3>
+                    <div class="form-grid">
 
                     <div class="full">
                         <label for="{{ form.dados_bancarios.id_for_label }}">Dados bancários{% if form.dados_bancarios.field.required %}<span class="ds-req">*</span>{% endif %}</label>
@@ -160,7 +169,11 @@
                         {{ form.assinatura_contato.errors }}
                     </div>
 
-                    <div class="form-subhead">Padrões dos orçamentos novos</div>
+                    </div>
+                </section>
+                <section class="empresa-secao">
+                    <h3 class="empresa-secao-titulo">Padrões dos orçamentos novos</h3>
+                    <div class="form-grid">
                     <div class="full">
                         <label for="{{ form.condicoes_pagamento_padrao.id_for_label }}">{{ form.condicoes_pagamento_padrao.label }}</label>
                         {{ form.condicoes_pagamento_padrao }}
@@ -177,7 +190,8 @@
                         {{ form.texto_institucional_memorial }}
                         {{ form.texto_institucional_memorial.errors }}
                     </div>
-                </div>
+                    </div>
+                </section>
             </fieldset>
 
             {% if not somente_leitura %}
