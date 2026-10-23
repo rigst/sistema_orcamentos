@@ -51,18 +51,16 @@ ITEM_SORT_MAP = {
 
 # Para onde cada status pode ir, com o rótulo do botão. Antes vivia em vários
 # `{% if %}` repetidos na lista; agora lista e cabeçalho leem daqui.
+_ENVIAR = ("enviado", "Enviar")
+_CANCELAR = ("cancelado", "Cancelar")
+_REABRIR = ("rascunho", "Voltar a rascunho")
 TRANSICOES_STATUS = {
-    "rascunho": [("enviado", "Enviar"), ("cancelado", "Cancelar")],
-    "em_elaboracao": [("enviado", "Enviar"), ("cancelado", "Cancelar")],
-    "enviado": [
-        ("aprovado", "Aprovar"),
-        ("rejeitado", "Rejeitar"),
-        ("rascunho", "Voltar a rascunho"),
-        ("cancelado", "Cancelar"),
-    ],
-    "aprovado": [("rascunho", "Voltar a rascunho")],
-    "rejeitado": [("rascunho", "Voltar a rascunho")],
-    "cancelado": [("rascunho", "Voltar a rascunho")],
+    "rascunho": [_ENVIAR, _CANCELAR],
+    "em_elaboracao": [_ENVIAR, _CANCELAR],
+    "enviado": [("aprovado", "Aprovar"), ("rejeitado", "Rejeitar"), _REABRIR, _CANCELAR],
+    "aprovado": [_REABRIR],
+    "rejeitado": [_REABRIR],
+    "cancelado": [_REABRIR],
 }
 
 

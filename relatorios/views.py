@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_safe
 
 from core.permissions import require_capability
 from core.tenancy import (
@@ -81,6 +82,7 @@ def minha_empresa(request):
     )
 
 
+@require_safe
 def para_minha_empresa(request, *args, **kwargs):
     """Rotas antigas da lista de configurações. Agora há um cadastro só."""
     return redirect("relatorios:minha_empresa")

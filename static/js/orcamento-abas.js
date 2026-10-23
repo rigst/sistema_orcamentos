@@ -53,7 +53,7 @@
 
   const comErro = nomes.find((nome) => {
     const alvo = painel(nome);
-    return alvo && alvo.querySelector(".errorlist, .ds-help--error, [aria-invalid='true']");
+    return alvo?.querySelector(".errorlist, .ds-help--error, [aria-invalid='true']");
   });
   ativar(comErro || location.hash.slice(1) || "itens", { historico: Boolean(comErro) });
 })();

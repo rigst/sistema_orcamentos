@@ -6,6 +6,7 @@ de erro aberta sozinha e o menu de status só existem aqui. Rodam no job `e2e`.
 
 import pytest
 
+from core.testing import SENHA_TESTE
 from orcamentos.conftest import entrar
 
 PAINEIS = ("itens", "evento", "comercial", "contrato")
@@ -110,7 +111,7 @@ def test_catalogo_filtra_pela_categoria_e_cria_categoria_no_modal(
 
     _, orcamento = cenario
     admin = get_user_model().objects.create_user(
-        username="admin_e2e", password="x-Senha-Forte-1", perfil="admin"
+        username="admin_e2e", password=SENHA_TESTE, perfil="admin"
     )
     admin.groups.add(orcamento.empresa)
     luz = CategoriaItem.objects.create(nome="Iluminação", empresa=orcamento.empresa)

@@ -9,6 +9,7 @@ from django.contrib.auth.models import Group
 from django.urls import reverse
 
 from clientes.models import Cliente
+from core.testing import SENHA_TESTE
 from relatorios.models import ConfiguracaoEmpresa
 
 from .models import Orcamento
@@ -108,7 +109,7 @@ class StatusNoCabecalhoTests(BaseFluxoTests):
     def test_quem_so_visualiza_ve_o_selo_sem_menu(self):
         orcamento = self.novo_orcamento()
         leitor = self.user.__class__.objects.create_user(
-            username="leitor", password="x-Senha-Forte-1", perfil="visualizador"
+            username="leitor", password=SENHA_TESTE, perfil="visualizador"
         )
         leitor.groups.add(self.grupo)
         self.client.force_login(leitor)

@@ -3,6 +3,7 @@ from django.db.models import Count, F, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.views.decorators.http import require_safe
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
@@ -49,6 +50,7 @@ def obter_queryset_itens_catalogo(request):
     return itens, busca, categoria_id, ativo, ordenar
 
 
+@require_safe
 def categoria_lista(request):
     """Endereço antigo: as categorias agora ficam no topo do catálogo."""
     return redirect("catalogo:item_lista")
