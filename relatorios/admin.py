@@ -9,7 +9,8 @@ from .models import ConfiguracaoEmpresa
 @admin.register(ConfiguracaoEmpresa)
 class ConfiguracaoEmpresaAdmin(PerfilAdminPermissionMixin, ModelAdmin):
     capability_view = "pode_visualizar_relatorios"
-    capability_add = "pode_gerenciar_relatorios"
+    # Um cadastro por empresa, criado em "Minha empresa": o admin não cria outro.
+    capability_add = None
     capability_change = "pode_gerenciar_relatorios"
     capability_delete = "pode_gerenciar_relatorios"
     list_display = ("nome_empresa", "email", "telefone", "cidade", "estado", "atualizado_em")

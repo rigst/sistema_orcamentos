@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load br_format querystring %}
 
-{% block title %}Itens do catálogo{% endblock %}
+{% block title %}Catálogo{% endblock %}
 
 {% block content %}
 <section>
     <div class="section-heading page-head">
         <div>
-            <h2 class="ds-h2">Itens do catálogo</h2>
-            <p>Defina serviços e materiais com código, unidade e valor padrão.</p>
+            <h2 class="ds-h2">Catálogo</h2>
+            <p>Categorias e itens que tu usa nos orçamentos, com unidade e valor padrão.</p>
         </div>
         <div class="inline-actions">
             {% if user.pode_gerenciar_catalogo %}
@@ -30,15 +30,40 @@
         </div>
     </div>
 
+    <nav class="catalogo-categorias" aria-label="Categorias">
+        <a class="catalogo-categoria{% if not categoria %} is-ativa{% endif %}" href="?q={{ busca|urlencode }}&sort={{ sort|urlencode }}"{% if not categoria %} aria-current="true"{% endif %}>
+            Todas <span class="catalogo-categoria-conta">{{ total_itens_ativos }}</span>
+        </a>
+        {% for categoria_obj in categorias %}
+            <span class="catalogo-categoria-grupo">
+                <a class="catalogo-categoria{% if categoria_atual.pk == categoria_obj.pk %} is-ativa{% endif %}" href="?categoria={{ categoria_obj.pk }}&q={{ busca|urlencode }}&sort={{ sort|urlencode }}" style="--category-color: {{ categoria_obj.cor }};"{% if categoria_atual.pk == categoria_obj.pk %} aria-current="true"{% endif %}>
+                    <span class="category-chip-dot" aria-hidden="true"></span>
+                    {{ categoria_obj.nome }} <span class="catalogo-categoria-conta">{{ categoria_obj.itens_count }}</span>
+                </a>
+                {% if user.pode_gerenciar_catalogo %}
+                    <a class="catalogo-categoria-editar" href="{% url 'catalogo:categoria_editar' categoria_obj.pk %}" data-open-panel-modal="1" data-panel-url="{% url 'catalogo:categoria_editar' categoria_obj.pk %}" title="Editar categoria {{ categoria_obj.nome }}" aria-label="Editar categoria {{ categoria_obj.nome }}">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.5-1 9.2-9.2a1.8 1.8 0 0 0 0-2.6l-.9-.9a1.8 1.8 0 0 0-2.6 0L5 15.5 4 20Z"/></svg>
+                    </a>
+                {% endif %}
+            </span>
+        {% endfor %}
+        {% if user.pode_gerenciar_catalogo %}
+            <a class="catalogo-categoria catalogo-categoria--nova" href="{% url 'catalogo:categoria_criar' %}" data-open-panel-modal="1" data-panel-url="{% url 'catalogo:categoria_criar' %}">+ Categoria</a>
+        {% endif %}
+    </nav>
+
+    {% if categoria_atual %}
+        <div class="catalogo-categoria-info">
+            <p>{% if categoria_atual.descricao %}{{ categoria_atual.descricao }}{% else %}Itens da categoria {{ categoria_atual.nome }}.{% endif %}</p>
+            {% if user.pode_gerenciar_catalogo %}
+                <a class="ds-btn ds-btn--ghost ds-btn--sm" href="{% url 'catalogo:categoria_excluir' categoria_atual.pk %}">Inativar categoria</a>
+            {% endif %}
+        </div>
+    {% endif %}
+
     <form method="get" class="ds-toolbar">
         <input aria-label="Buscar itens do catálogo" class="ds-input" type="text" name="q" placeholder="Buscar por código, nome ou categoria" value="{{ busca }}">
-        <label class="visually-hidden" for="filtro-categoria">Categoria</label>
-        <select id="filtro-categoria" name="categoria">
-            <option value="">Todas as categorias</option>
-            {% for categoria_obj in categorias %}
-                <option value="{{ categoria_obj.pk }}" {% if categoria == categoria_obj.pk|stringformat:'s' %}selected{% endif %}>{{ categoria_obj.nome }}</option>
-            {% endfor %}
-        </select>
+        <input type="hidden" name="categoria" value="{{ categoria }}">
         <select aria-label="Ordenar itens" name="sort">
             <option value="nome" {% if sort == "nome" %}selected{% endif %}>Ordenar por nome</option>
             <option value="codigo" {% if sort == "codigo" %}selected{% endif %}>Ordenar por código</option>
@@ -118,6 +143,16 @@
     {% endif %}
 
     {% include "partials/pagination.html" with page_obj=page_obj %}
+    {% if categorias_inativas %}
+        <details class="catalogo-inativas">
+            <summary>Categorias inativas ({{ categorias_inativas|length }})</summary>
+            <ul>
+                {% for inativa in categorias_inativas %}
+                    <li>{{ inativa.nome }}{% if user.pode_gerenciar_catalogo %} · <a href="{% url 'catalogo:categoria_excluir' inativa.pk %}">Reativar</a>{% endif %}</li>
+                {% endfor %}
+            </ul>
+        </details>
+    {% endif %}
     <div class="list-footer-toggle">
         {% if ativo == "inativos" %}
             <a href="?q={{ busca|urlencode }}&categoria={{ categoria|urlencode }}&sort={{ sort|urlencode }}">Exibir ativos</a>

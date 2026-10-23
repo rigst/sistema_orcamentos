@@ -1,5 +1,3 @@
-import re
-from datetime import timedelta
 from typing import cast
 
 from django import forms
@@ -14,17 +12,35 @@ from core.validators import validar_cep_basico, validar_cpf_cnpj_basico, validar
 
 from .models import ItemOrcamento, Orcamento
 
-
-def calcular_validade_inicial_configuracao(configuracao, data_emissao):
-    texto = str(getattr(configuracao, "validade_padrao_proposta", "") or "").strip()
-    correspondencia = re.search(r"\d+", texto)
-    if not correspondencia or not data_emissao:
-        return None
-    try:
-        dias = int(correspondencia.group())
-    except (TypeError, ValueError):
-        return None
-    return data_emissao + timedelta(days=dias)
+CAMPOS_EVENTO = (
+    "evento_nome",
+    "evento_periodo",
+    "evento_local",
+    "evento_estande",
+    "evento_area",
+    "evento_contato",
+    "evento_telefone",
+    "evento_email",
+)
+CAMPOS_CONTRATO = (
+    "contrato_razao_social",
+    "contrato_cnpj",
+    "contrato_endereco",
+    "contrato_cidade",
+    "contrato_cep",
+    "contrato_responsavel_nome",
+    "contrato_responsavel_documento",
+    "contrato_cargo_funcao",
+    "contrato_inscricao_estadual",
+    "contrato_telefone",
+    "contrato_email",
+)
+CAMPOS_AJUSTE_GLOBAL = (
+    "desconto_global_valor",
+    "desconto_global_percentual",
+    "acrescimo_global_valor",
+    "acrescimo_global_percentual",
+)
 
 
 class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
@@ -32,12 +48,10 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
         model = Orcamento
         fields = [
             "numero",
-            "configuracao_empresa",
             "cliente",
             "titulo",
             "descricao_inicial",
             "observacoes_gerais",
-            "status",
             "data_emissao",
             "validade_em",
             "evento_nome",
@@ -68,6 +82,31 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             "contrato_email",
             "contrato_inscricao_estadual",
         ]
+        labels = {
+            "desconto_global_valor": "Desconto (R$)",
+            "desconto_global_percentual": "Desconto (%)",
+            "acrescimo_global_valor": "Acréscimo (R$)",
+            "acrescimo_global_percentual": "Acréscimo (%)",
+            "evento_nome": "Evento ou projeto",
+            "evento_periodo": "Período",
+            "evento_local": "Local",
+            "evento_estande": "Estande",
+            "evento_area": "Área",
+            "evento_contato": "Contato",
+            "evento_telefone": "Telefone do contato",
+            "evento_email": "E-mail do contato",
+            "contrato_razao_social": "Razão social",
+            "contrato_cnpj": "CPF/CNPJ",
+            "contrato_endereco": "Endereço",
+            "contrato_cidade": "Cidade/UF",
+            "contrato_cep": "CEP",
+            "contrato_responsavel_nome": "Responsável",
+            "contrato_responsavel_documento": "Documento do responsável",
+            "contrato_cargo_funcao": "Cargo ou função",
+            "contrato_inscricao_estadual": "Inscrição estadual",
+            "contrato_telefone": "Telefone",
+            "contrato_email": "E-mail",
+        }
         widgets = {
             "data_emissao": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "validade_em": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
@@ -165,41 +204,35 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             self.fields[nome].widget.attrs["rows"] = 3
         if not self.instance.pk and not self.is_bound:
             self.fields["data_emissao"].initial = localdate()
+        self._configuracao = self._configuracao_da_empresa(user)
         if user is not None:
-            from django.db.models import Q
-
             from clientes.models import Cliente
             from core.tenancy import queryset_da_empresa
-            from relatorios.models import ConfiguracaoEmpresa
 
             cast(forms.ModelChoiceField, self.fields["cliente"]).queryset = queryset_da_empresa(
                 Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user
             )
-            configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
-            if self.instance.pk and self.instance.configuracao_empresa_id:
-                configuracoes = configuracoes.filter(
-                    Q(ativo=True) | Q(pk=self.instance.configuracao_empresa_id)
-                )
-            else:
-                configuracoes = configuracoes.filter(ativo=True)
-            configuracoes = configuracoes.order_by("nome_empresa", "-atualizado_em")
-            cast(
-                "forms.ModelChoiceField", self.fields["configuracao_empresa"]
-            ).queryset = configuracoes
-            self.fields["configuracao_empresa"].required = False
+        if not self.instance.pk and not self.is_bound and self._configuracao is not None:
+            data_inicial = self.fields["data_emissao"].initial or localdate()
+            validade = self._configuracao.validade_a_partir(data_inicial)
+            if validade and not self.initial.get("validade_em"):
+                self.initial["validade_em"] = validade
+                self.fields["validade_em"].initial = validade
+        # Ajustes globais ficam ao lado dos totais, fora do <form> principal na
+        # página: o atributo `form` os amarra a ele mesmo assim.
+        for nome in CAMPOS_AJUSTE_GLOBAL:
+            self.fields[nome].widget.attrs["form"] = "orcamento-main-form"
 
-            if not self.instance.pk and not self.is_bound:
-                configuracao_inicial = configuracoes.first()
-                if configuracao_inicial:
-                    self.initial.setdefault("configuracao_empresa", configuracao_inicial.pk)
-                    self.fields["configuracao_empresa"].initial = configuracao_inicial.pk
-                    data_emissao_inicial = self.fields["data_emissao"].initial or localdate()
-                    validade_inicial = calcular_validade_inicial_configuracao(
-                        configuracao_inicial, data_emissao_inicial
-                    )
-                    if validade_inicial and not self.initial.get("validade_em"):
-                        self.initial["validade_em"] = validade_inicial
-                        self.fields["validade_em"].initial = validade_inicial
+    def _configuracao_da_empresa(self, user):
+        """O cadastro único da empresa (não há mais escolha no orçamento)."""
+        if self.instance.pk and self.instance.configuracao_empresa_id:
+            return self.instance.configuracao_empresa
+        if user is None:
+            return None
+        from core.tenancy import obter_grupo_empresa_usuario
+        from relatorios.models import ConfiguracaoEmpresa
+
+        return ConfiguracaoEmpresa.da_empresa(obter_grupo_empresa_usuario(user))
 
     def clean_evento_telefone(self):
         valor = (self.cleaned_data.get("evento_telefone") or "").strip()
@@ -213,12 +246,12 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
-        configuracao = cleaned_data.get("configuracao_empresa")
+        configuracao = self._configuracao
         validade_em = cleaned_data.get("validade_em")
         data_emissao = cleaned_data.get("data_emissao") or localdate()
         cleaned_data["data_emissao"] = data_emissao
         if configuracao and not validade_em:
-            validade_calculada = calcular_validade_inicial_configuracao(configuracao, data_emissao)
+            validade_calculada = configuracao.validade_a_partir(data_emissao)
             if validade_calculada:
                 cleaned_data["validade_em"] = validade_calculada
         return cleaned_data

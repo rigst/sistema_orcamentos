@@ -1,0 +1,24 @@
+{% comment %}
+  Status do orçamento como menu no cabeçalho: o selo atual e, para quem pode,
+  as transições permitidas (vêm de orcamentos.views.transicoes_permitidas).
+  Espera `orcamento` e `transicoes_status` no contexto.
+{% endcomment %}
+{% if transicoes_status %}
+    <details class="status-menu">
+        <summary class="badge status-{{ orcamento.status }}" aria-label="Status: {{ orcamento.get_status_display }}. Alterar status">
+            {{ orcamento.get_status_display }}
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </summary>
+        <div class="status-menu-opcoes">
+            {% for status, rotulo in transicoes_status %}
+                <form method="post" action="{% url 'orcamentos:alterar_status' orcamento.pk status %}" data-confirm="Confirmar: {{ rotulo|lower }}?">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" class="status-menu-opcao status-menu-opcao--{{ status }}">{{ rotulo }}</button>
+                </form>
+            {% endfor %}
+        </div>
+    </details>
+{% else %}
+    <span class="badge status-{{ orcamento.status }}">{{ orcamento.get_status_display }}</span>
+{% endif %}

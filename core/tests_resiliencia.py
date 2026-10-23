@@ -316,7 +316,13 @@ class AdminDeUsuarioTests(TestCase):
 
         campo = form.base_fields["groups"]
         self.assertEqual(campo.label, "Empresa")
-        self.assertIn("apenas à empresa permitida", campo.help_text)
+        self.assertIn("única empresa", campo.help_text)
+        self.assertFalse(
+            form(
+                instance=raiz,
+                data={"groups": [self.empresa.pk, Group.objects.create(name="Z").pk]},
+            ).is_valid()
+        )
         self.assertNotIn(
             f"{VISITOR_GROUP_PREFIX}temporario",
             list(campo.queryset.values_list("name", flat=True)),

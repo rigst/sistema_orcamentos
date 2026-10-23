@@ -3,329 +3,181 @@
 
 {% block title %}{{ titulo }}{% endblock %}
 
-{% block extra_head %}{% if orcamento and not modo_somente_leitura %}<link rel="stylesheet" href="{% static 'css/orcamento-linhas.css' %}"><script src="{% static 'js/orcamento-linhas.js' %}" defer></script>{% endif %}{% endblock %}
+{% block extra_head %}{% if orcamento %}<script src="{% static 'js/orcamento-abas.js' %}" defer></script>{% endif %}{% if orcamento and not modo_somente_leitura %}<link rel="stylesheet" href="{% static 'css/orcamento-linhas.css' %}"><script src="{% static 'js/orcamento-linhas.js' %}" defer></script>{% endif %}{% endblock %}
 
 {% block content %}
+{% comment %}
+  Tela do orçamento em abas. A aba Itens é a padrão e a de trabalho; Evento,
+  Comercial e Contrato guardam o resto dos dados. Todos os campos continuam
+  num formulário só (#orcamento-main-form), então salvar em qualquer aba
+  salva tudo. Os ajustes globais ficam junto dos totais, ligados ao mesmo
+  formulário pelo atributo `form`.
+{% endcomment %}
 <section>
-    <div class="section-heading page-head">
-        <div>
+    <div class="section-heading page-head orc-cabecalho">
+        <div class="orc-cabecalho-texto">
             <a class="page-back" href="{% url 'orcamentos:lista' %}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
                 Voltar para orçamentos
             </a>
-            <h2 class="ds-h2">{{ titulo }}</h2>
             {% if orcamento %}
                 <div class="page-head-meta">
                     <span class="page-head-num">{{ orcamento.numero }}</span>
-                    <span class="badge status-{{ orcamento.status }}">{{ orcamento.get_status_display }}</span>
-                    <span class="page-head-cliente">{{ orcamento.cliente_exibicao }}</span>
+                    {% include "orcamentos/partials/status_seletor.html" %}
                     <span class="page-head-emissao">Emissão {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
                 </div>
-                {% if somente_visualizacao %}
-                    <p>Consulte os dados gerais e os itens do orçamento em modo estritamente visual.</p>
-                {% endif %}
             {% else %}
-                <p>Preencha os dados abaixo para criar o orçamento. Os itens são adicionados na sequência.</p>
+                <h2 class="ds-h2">{{ titulo }}</h2>
+                <p>Preencha o que já souber. Nada é obrigatório e tudo pode ser editado depois.</p>
             {% endif %}
         </div>
         <div class="inline-actions">
             {% if orcamento %}
-                <a class="ds-btn ds-btn--ghost" href="{% url 'relatorios:orcamento_central' orcamento.pk %}" title="Relatórios" aria-label="Relatórios">
+                <a class="ds-btn ds-btn--ghost" href="{% url 'relatorios:orcamento_central' orcamento.pk %}">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h7l4 4V20a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 20V5A1.5 1.5 0 0 1 7.5 3.5Z"/><path d="M14 3.5V8h4"/><path d="M9 12h6M9 16h6"/></svg>
                     <span>Relatórios</span>
                 </a>
             {% endif %}
             {% if not modo_somente_leitura %}
-                <button class="ds-btn ds-btn--solid" type="submit" form="orcamento-main-form" title="Salvar orçamento" aria-label="Salvar orçamento">
+                <button class="ds-btn ds-btn--solid" type="submit" form="orcamento-main-form">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
-                    <span>Salvar orçamento</span>
+                    <span>Salvar</span>
                 </button>
             {% endif %}
         </div>
     </div>
 
     <div class="editor-shell">
-        <div class="form-panel">
-            <div class="section-heading section-heading-compact">
-                <div>
-                    <div class="section-heading-title-row">
-                        <h3 class="ds-h3">Dados do orçamento</h3>
-                        <div id="orcamento-draft-status" class="inline-feedback inline-feedback-inline"></div>
-                    </div>
-                    {% if somente_visualizacao %}
-                        <p class="muted">Esta tela é exclusiva para consulta e não permite alterações.</p>
-                    {% elif bloqueio_status %}
-                        <p class="muted">Somente orçamentos em rascunho podem ser editados nesta página.</p>
-                    {% elif modo_somente_leitura %}
-                        <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>
-                    {% endif %}
+        <form method="post" id="orcamento-main-form" class="orc-form" novalidate data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
+            {% csrf_token %}
+            {{ form.concorrencia_atualizado_em }}
+            {% if form.non_field_errors %}
+                <div class="ds-alert ds-alert--danger" role="alert">
+                    <div>{% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}</div>
                 </div>
-            </div>
-            <form method="post" id="orcamento-main-form" novalidate data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
-                {% csrf_token %}
-                {{ form.concorrencia_atualizado_em }}
-                {% if not orcamento %}
-                    {{ form.status.as_hidden }}
-                {% endif %}
-                {% if form.non_field_errors %}
-                    <div class="ds-alert ds-alert--danger">
-                        {% for error in form.non_field_errors %}
-                            <p>{{ error }}</p>
-                        {% endfor %}
+            {% endif %}
+            {% if somente_visualizacao %}
+                <p class="muted">Orçamento em modo estritamente visual. Esta tela é exclusiva para consulta e não permite alterações.</p>
+            {% elif bloqueio_status %}
+                <p class="muted">Somente orçamentos em rascunho podem ser editados nesta página. Volte o status para Rascunho para alterar.</p>
+            {% elif modo_somente_leitura %}
+                <p class="muted">Este orçamento está em modo somente leitura para o seu perfil.</p>
+            {% endif %}
+
+            <fieldset class="orc-essencial" {% if modo_somente_leitura %}disabled{% endif %}>
+                <legend class="visually-hidden">Dados principais</legend>
+                <div class="orc-essencial-grid">
+                    <div class="orc-campo-titulo">
+                        <label for="{{ form.titulo.id_for_label }}">Título</label>
+                        {{ form.titulo }}
+                        {{ form.titulo.errors }}
                     </div>
-                {% endif %}
-                <fieldset {% if modo_somente_leitura %}disabled{% endif %}>
+                    <div>
+                        <label for="{{ form.cliente.id_for_label }}">Cliente</label>
+                        {{ form.cliente }}
+                        {{ form.cliente.errors }}
+                    </div>
+                </div>
+                <span id="orcamento-draft-status" class="inline-feedback inline-feedback-inline"></span>
+            </fieldset>
+
+            {% if orcamento %}
+                <div class="orc-abas" role="tablist" aria-label="Seções do orçamento" data-orc-abas>
+                    <button type="button" role="tab" id="aba-itens" aria-controls="painel-itens" aria-selected="true" data-aba="itens">Itens <span class="orc-aba-conta">{{ orcamento.itens.count }}</span></button>
+                    <button type="button" role="tab" id="aba-evento" aria-controls="painel-evento" aria-selected="false" tabindex="-1" data-aba="evento">Evento</button>
+                    <button type="button" role="tab" id="aba-comercial" aria-controls="painel-comercial" aria-selected="false" tabindex="-1" data-aba="comercial">Comercial</button>
+                    <button type="button" role="tab" id="aba-contrato" aria-controls="painel-contrato" aria-selected="false" tabindex="-1" data-aba="contrato">Contrato</button>
+                </div>
+            {% endif %}
+
+            <fieldset {% if modo_somente_leitura %}disabled{% endif %} class="orc-paineis-form">
+                <legend class="visually-hidden">Demais dados</legend>
+                <div class="orc-painel" role="tabpanel" id="painel-evento" aria-labelledby="aba-evento" {% if orcamento %}hidden{% endif %} data-painel="evento">
+                    <h3 class="ds-h3 orc-painel-titulo">Evento ou projeto</h3>
                     <div class="form-grid">
-                        {% if orcamento %}
-                            <div>
-                                <label for="{{ form.numero.id_for_label }}">Número</label>
-                                {% if form.numero.field.required %}<span class="ds-req">*</span>{% endif %}
-                                {{ form.numero }}
-                                {{ form.numero.errors }}
+                        {% for campo in form %}{% if campo.name in campos_evento %}
+                            <div{% if campo.name == "evento_nome" %} class="full"{% endif %}>
+                                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                                {{ campo }}
+                                {{ campo.errors }}
                             </div>
-                        {% endif %}
-                        <div>
-                            <label for="{{ form.configuracao_empresa.id_for_label }}">Empresa do orçamento{% if form.configuracao_empresa.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.configuracao_empresa }}
-                            {{ form.configuracao_empresa.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.cliente.id_for_label }}">Cliente{% if form.cliente.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.cliente }}
-                            {{ form.cliente.errors }}
-                        </div>
-
+                        {% endif %}{% endfor %}
                         <div class="full">
-                            <p class="muted">A empresa selecionada define automaticamente logo, cabeçalho, rodapé, dados bancários, validade padrão e assinatura usados nos relatórios. Você pode trocar essa seleção depois, se necessário.</p>
-                        </div>
-
-                        <div class="full">
-                            <label for="{{ form.titulo.id_for_label }}">Título{% if form.titulo.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.titulo }}
-                            {{ form.titulo.errors }}
-                        </div>
-
-                        <div class="full">
-                            <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial{% if form.descricao_inicial.field.required %}<span class="ds-req">*</span>{% endif %}</label>
+                            <label for="{{ form.descricao_inicial.id_for_label }}">Descrição inicial</label>
                             {{ form.descricao_inicial }}
                             {{ form.descricao_inicial.errors }}
                         </div>
-
-                        <div class="full">
-                            <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais{% if form.observacoes_gerais.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.observacoes_gerais }}
-                            {{ form.observacoes_gerais.errors }}
-                        </div>
                     </div>
+                </div>
 
-                    <details class="form-submenu">
-                        <summary>Dados do evento/projeto</summary>
-                        <div class="form-submenu-body form-grid">
-
-                        <div>
-                            <label for="{{ form.evento_nome.id_for_label }}">Evento ou projeto{% if form.evento_nome.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_nome }}
-                            {{ form.evento_nome.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.evento_periodo.id_for_label }}">Período{% if form.evento_periodo.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_periodo }}
-                            {{ form.evento_periodo.errors }}
-                        </div>
-
-                        <div>
-                            <label for="{{ form.evento_local.id_for_label }}">Local{% if form.evento_local.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_local }}
-                            {{ form.evento_local.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.evento_estande.id_for_label }}">Estande{% if form.evento_estande.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_estande }}
-                            {{ form.evento_estande.errors }}
-                        </div>
-
-                        <div>
-                            <label for="{{ form.evento_area.id_for_label }}">Área{% if form.evento_area.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_area }}
-                            {{ form.evento_area.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.evento_contato.id_for_label }}">Contato{% if form.evento_contato.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_contato }}
-                            {{ form.evento_contato.errors }}
-                        </div>
-
-                        <div>
-                            <label for="{{ form.evento_telefone.id_for_label }}">Telefone do contato{% if form.evento_telefone.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_telefone }}
-                            {{ form.evento_telefone.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.evento_email.id_for_label }}">E-mail do contato{% if form.evento_email.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.evento_email }}
-                            {{ form.evento_email.errors }}
-                        </div>
-                        </div>
-                    </details>
-
-                    <details class="form-submenu">
-                        <summary>Dados principais e ajustes globais</summary>
-                        <div class="form-submenu-body form-grid">
-                        {% if orcamento %}
-                            <div>
-                                <label for="{{ form.status.id_for_label }}">Status</label>
-                                {{ form.status }}
-                                {{ form.status.errors }}
-                            </div>
-                        {% endif %}
+                <div class="orc-painel" role="tabpanel" id="painel-comercial" aria-labelledby="aba-comercial" {% if orcamento %}hidden{% endif %} data-painel="comercial">
+                    <h3 class="ds-h3 orc-painel-titulo">Condições comerciais</h3>
+                    <div class="form-grid">
                         <div>
                             <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
                             {{ form.data_emissao }}
                             {{ form.data_emissao.errors }}
                         </div>
-
                         <div>
-                            <label for="{{ form.validade_em.id_for_label }}">Validade{% if form.validade_em.field.required %}<span class="ds-req">*</span>{% endif %}</label>
+                            <label for="{{ form.validade_em.id_for_label }}">Validade</label>
                             {{ form.validade_em }}
                             {{ form.validade_em.errors }}
                         </div>
-                        {% if orcamento %}
-                            <div></div>
-                        {% endif %}
-
-                        <div>
-                            <label for="{{ form.desconto_global_valor.id_for_label }}">Desconto global em valor{% if form.desconto_global_valor.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.desconto_global_valor }}
-                            {{ form.desconto_global_valor.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.desconto_global_percentual.id_for_label }}">Desconto global em %{% if form.desconto_global_percentual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.desconto_global_percentual }}
-                            {{ form.desconto_global_percentual.errors }}
-                        </div>
-
-                        <div>
-                            <label for="{{ form.acrescimo_global_valor.id_for_label }}">Acréscimo global em valor{% if form.acrescimo_global_valor.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.acrescimo_global_valor }}
-                            {{ form.acrescimo_global_valor.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.acrescimo_global_percentual.id_for_label }}">Acréscimo global em %{% if form.acrescimo_global_percentual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.acrescimo_global_percentual }}
-                            {{ form.acrescimo_global_percentual.errors }}
-                        </div>
-                        </div>
-                    </details>
-
-                    <details class="form-submenu">
-                        <summary>Condições comerciais</summary>
-                        <div class="form-submenu-body form-grid">
-                            <div class="full">
-                                <label for="{{ form.condicoes_pagamento.id_for_label }}">Condições de pagamento{% if form.condicoes_pagamento.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                                {{ form.condicoes_pagamento }}
-                                {{ form.condicoes_pagamento.errors }}
-                            </div>
-
-                            <div>
-                                <label for="{{ form.valor_locacao.id_for_label }}">Valor de locação{% if form.valor_locacao.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                                {{ form.valor_locacao }}
-                                {{ form.valor_locacao.errors }}
-                            </div>
-                            <div>
-                                <label for="{{ form.valor_servico.id_for_label }}">Valor de serviço{% if form.valor_servico.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                                {{ form.valor_servico }}
-                                {{ form.valor_servico.errors }}
-                            </div>
-
-                            <div class="full">
-                                <label for="{{ form.servicos_taxas_inclusos.id_for_label }}">Serviços e taxas inclusos{% if form.servicos_taxas_inclusos.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                                {{ form.servicos_taxas_inclusos }}
-                                {{ form.servicos_taxas_inclusos.errors }}
-                            </div>
-                        </div>
-                    </details>
-
-                    <details class="form-submenu">
-                        <summary>Dados contratuais</summary>
-                        <div class="form-submenu-body form-grid">
-
-                        <div>
-                            <label for="{{ form.contrato_razao_social.id_for_label }}">Razão social{% if form.contrato_razao_social.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_razao_social }}
-                            {{ form.contrato_razao_social.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.contrato_cnpj.id_for_label }}">CNPJ{% if form.contrato_cnpj.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_cnpj }}
-                            {{ form.contrato_cnpj.errors }}
-                        </div>
-
                         <div class="full">
-                            <label for="{{ form.contrato_endereco.id_for_label }}">Endereço{% if form.contrato_endereco.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_endereco }}
-                            {{ form.contrato_endereco.errors }}
+                            <label for="{{ form.condicoes_pagamento.id_for_label }}">Condições de pagamento</label>
+                            {{ form.condicoes_pagamento }}
+                            {{ form.condicoes_pagamento.errors }}
                         </div>
-
-                        <div>
-                            <label for="{{ form.contrato_cidade.id_for_label }}">Cidade{% if form.contrato_cidade.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_cidade }}
-                            {{ form.contrato_cidade.errors }}
-                        </div>
-                        <div>
-                            <label for="{{ form.contrato_cep.id_for_label }}">CEP{% if form.contrato_cep.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_cep }}
-                            {{ form.contrato_cep.errors }}
-                        </div>
-
-                        <div>
-                            <label for="{{ form.contrato_responsavel_nome.id_for_label }}">Responsável{% if form.contrato_responsavel_nome.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_responsavel_nome }}
-                            {{ form.contrato_responsavel_nome.errors }}
+                        <div class="full">
+                            <label for="{{ form.servicos_taxas_inclusos.id_for_label }}">Serviços e taxas inclusos</label>
+                            {{ form.servicos_taxas_inclusos }}
+                            {{ form.servicos_taxas_inclusos.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.contrato_responsavel_documento.id_for_label }}">Documento do responsável{% if form.contrato_responsavel_documento.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_responsavel_documento }}
-                            {{ form.contrato_responsavel_documento.errors }}
-                        </div>
-
-                        <div>
-                            <label for="{{ form.contrato_cargo_funcao.id_for_label }}">Cargo ou função{% if form.contrato_cargo_funcao.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_cargo_funcao }}
-                            {{ form.contrato_cargo_funcao.errors }}
+                            <label for="{{ form.valor_locacao.id_for_label }}">Valor de locação</label>
+                            {{ form.valor_locacao }}
+                            {{ form.valor_locacao.errors }}
                         </div>
                         <div>
-                            <label for="{{ form.contrato_inscricao_estadual.id_for_label }}">Inscrição estadual{% if form.contrato_inscricao_estadual.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_inscricao_estadual }}
-                            {{ form.contrato_inscricao_estadual.errors }}
+                            <label for="{{ form.valor_servico.id_for_label }}">Valor de serviço</label>
+                            {{ form.valor_servico }}
+                            {{ form.valor_servico.errors }}
                         </div>
-
-                        <div>
-                            <label for="{{ form.contrato_telefone.id_for_label }}">Telefone contratual{% if form.contrato_telefone.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_telefone }}
-                            {{ form.contrato_telefone.errors }}
+                        <div class="full">
+                            <label for="{{ form.observacoes_gerais.id_for_label }}">Observações gerais</label>
+                            {{ form.observacoes_gerais }}
+                            {{ form.observacoes_gerais.errors }}
                         </div>
-                        <div>
-                            <label for="{{ form.contrato_email.id_for_label }}">E-mail contratual{% if form.contrato_email.field.required %}<span class="ds-req">*</span>{% endif %}</label>
-                            {{ form.contrato_email }}
-                            {{ form.contrato_email.errors }}
-                        </div>
-                        </div>
-                    </details>
-
-                </fieldset>
-
-                {% if not modo_somente_leitura %}
-                    <div class="inline-actions inline-actions-end" style="margin-top: 1rem;">
-                        <button class="ds-btn ds-btn--solid" type="submit" title="Salvar orçamento" aria-label="Salvar orçamento">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
-                            <span>Salvar orçamento</span>
-                        </button>
                     </div>
-                {% endif %}
-            </form>
-        </div>
+                    <p class="ds-help">Validade e condições vêm de <a href="{% url 'relatorios:minha_empresa' %}">Minha empresa</a> em todo orçamento novo.</p>
+                </div>
+
+                <div class="orc-painel" role="tabpanel" id="painel-contrato" aria-labelledby="aba-contrato" {% if orcamento %}hidden{% endif %} data-painel="contrato">
+                    <div class="orc-painel-cabeca">
+                        <h3 class="ds-h3 orc-painel-titulo">Dados contratuais</h3>
+                        {% if orcamento.cliente_id and not modo_somente_leitura %}
+                            <button class="ds-btn ds-btn--ghost ds-btn--sm" type="submit" form="form-contrato-do-cliente" title="Substitui os campos abaixo pelos dados atuais do cadastro do cliente">Copiar do cadastro do cliente</button>
+                        {% endif %}
+                    </div>
+                    <p class="ds-help">Preenchidos a partir do cliente ao escolher o cliente. Edite só se o contrato for diferente do cadastro.</p>
+                    <div class="form-grid">
+                        {% for campo in form %}{% if campo.name in campos_contrato %}
+                            <div{% if campo.name == "contrato_endereco" %} class="full"{% endif %}>
+                                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                                {{ campo }}
+                                {{ campo.errors }}
+                            </div>
+                        {% endif %}{% endfor %}
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+        {% if orcamento.cliente_id and not modo_somente_leitura %}
+            <form method="post" id="form-contrato-do-cliente" action="{% url 'orcamentos:contrato_do_cliente' orcamento.pk %}" data-confirm="Substituir os dados contratuais pelos do cadastro do cliente?">{% csrf_token %}</form>
+        {% endif %}
 
         {% if orcamento %}
+          <div class="orc-painel" role="tabpanel" id="painel-itens" aria-labelledby="aba-itens" data-painel="itens">
             <div id="item-feedback-region" aria-live="polite"></div>
 
             <div class="table-section">
@@ -381,9 +233,28 @@
                 </div>
             </div>
 
-            <div id="totais-card-region">
-                {% include "orcamentos/partials/totais_card.html" %}
+            <div class="orc-totais">
+                <div id="totais-card-region">
+                    {% include "orcamentos/partials/totais_card.html" %}
+                </div>
+                <details class="orc-ajustes"{% if orcamento.desconto_global_valor or orcamento.desconto_global_percentual or orcamento.acrescimo_global_valor or orcamento.acrescimo_global_percentual %} open{% endif %}>
+                    <summary>Desconto ou acréscimo no total</summary>
+                    <fieldset class="form-grid" {% if modo_somente_leitura %}disabled{% endif %}>
+                        <legend class="visually-hidden">Ajustes globais</legend>
+                        {% for campo in form %}{% if campo.name in campos_ajuste %}
+                            <div>
+                                <label for="{{ campo.id_for_label }}">{{ campo.label }}</label>
+                                {{ campo }}
+                                {{ campo.errors }}
+                            </div>
+                        {% endif %}{% endfor %}
+                    </fieldset>
+                    {% if not modo_somente_leitura %}
+                        <button class="ds-btn ds-btn--ghost ds-btn--sm" type="submit" form="orcamento-main-form">Aplicar ao total</button>
+                    {% endif %}
+                </details>
             </div>
+          </div>
 
             <div class="ledger-bar" id="ledger-bar" role="status" aria-label="Resumo do orçamento">
                 <div class="ledger-bar-group">
@@ -397,7 +268,7 @@
                 {% if not modo_somente_leitura %}
                     <button class="ds-btn ds-btn--solid ds-btn--sm" type="submit" form="orcamento-main-form">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
-                        <span>Salvar orçamento</span>
+                        <span>Salvar</span>
                     </button>
                 {% endif %}
             </div>

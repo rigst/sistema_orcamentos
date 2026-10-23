@@ -6,20 +6,9 @@
 <section>
     <div class="section-heading page-head">
         <div>
-            <a class="page-back" href="{% url 'relatorios:configuracao_lista' %}">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
-                Voltar para empresas
-            </a>
             <h2 class="ds-h2">{{ titulo }}</h2>
+            <p>Os dados que aparecem nos teus relatórios e propostas, e os padrões que todo orçamento novo já recebe preenchidos.</p>
         </div>
-        {% if configuracao and not somente_leitura and user.pode_gerenciar_relatorios %}
-            <div class="inline-actions">
-                <a class="ds-icon-btn" href="{% url 'relatorios:configuracao_visualizar' configuracao.pk %}" title="Ver empresa" aria-label="Ver empresa">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span class="visually-hidden">Ver empresa</span>
-                </a>
-            </div>
-        {% endif %}
     </div>
 
     <div class="form-panel">
@@ -35,9 +24,13 @@
                 </div>
             {% endif %}
 
-            {% if configuracao and not somente_leitura %}
+            {% if not configuracao and not somente_leitura %}
                 <div class="ds-alert ds-alert--info">
-                    <strong>Aviso:</strong> alterações nos dados da empresa passam a valer nos relatórios e nos orçamentos ainda não enviados.
+                    <p>Tua empresa ainda não tem cadastro. Preencha ao menos o nome para os relatórios saírem com teus dados.</p>
+                </div>
+            {% elif configuracao and not somente_leitura %}
+                <div class="ds-alert ds-alert--info">
+                    <p>Alterações aqui passam a valer nos relatórios e nos orçamentos ainda não enviados.</p>
                 </div>
             {% endif %}
 
@@ -118,6 +111,9 @@
                     </div>
                     <div>
                         <label for="{{ form.logo.id_for_label }}">Logo{% if form.logo.field.required %}<span class="ds-req">*</span>{% endif %}</label>
+                        {% if configuracao and configuracao.logo %}
+                            <img class="empresa-logo-atual" src="{% url 'relatorios:configuracao_logo' configuracao.pk %}" alt="Logo atual de {{ configuracao.nome_empresa }}">
+                        {% endif %}
                         {{ form.logo }}
                         {{ form.logo.errors }}
                     </div>
@@ -162,6 +158,18 @@
                         <label for="{{ form.assinatura_contato.id_for_label }}">Contato da assinatura{% if form.assinatura_contato.field.required %}<span class="ds-req">*</span>{% endif %}</label>
                         {{ form.assinatura_contato }}
                         {{ form.assinatura_contato.errors }}
+                    </div>
+
+                    <div class="form-subhead">Padrões dos orçamentos novos</div>
+                    <div class="full">
+                        <label for="{{ form.condicoes_pagamento_padrao.id_for_label }}">{{ form.condicoes_pagamento_padrao.label }}</label>
+                        {{ form.condicoes_pagamento_padrao }}
+                        {{ form.condicoes_pagamento_padrao.errors }}
+                    </div>
+                    <div class="full">
+                        <label for="{{ form.servicos_taxas_inclusos_padrao.id_for_label }}">{{ form.servicos_taxas_inclusos_padrao.label }}</label>
+                        {{ form.servicos_taxas_inclusos_padrao }}
+                        {{ form.servicos_taxas_inclusos_padrao.errors }}
                     </div>
 
                     <div class="full">

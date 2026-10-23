@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from core.tenancy import obter_grupo_empresa_padrao
 from core.testing import SENHA_TESTE
 
 from .models import CategoriaItem, ItemCatalogo
@@ -142,7 +143,7 @@ class CatalogoValidacaoTests(TestCase):
         item_response = self.client.get(reverse("catalogo:item_criar"))
 
         self.assertEqual(categoria_response.status_code, 200)
-        self.assertContains(categoria_response, "Voltar para categorias")
+        self.assertContains(categoria_response, "Voltar para o catálogo")
         self.assertContains(categoria_response, "Salvar categoria")
 
         self.assertEqual(item_response.status_code, 200)
@@ -257,21 +258,40 @@ class CatalogoListaTests(TestCase):
         self.assertIn("Novo item", conteudo)
         self.assertLess(conteudo.index("Importar Excel"), conteudo.index("Exportar Excel"))
 
-    def test_lista_de_categorias_exibe_botao_principal_com_texto(self):
+    def test_categorias_ficam_no_topo_do_catalogo_e_filtram_os_itens(self):
+        empresa = obter_grupo_empresa_padrao()
+        luz = CategoriaItem.objects.create(nome="Iluminação", empresa=empresa)
+        som = CategoriaItem.objects.create(nome="Sonorização", empresa=empresa)
+        ItemCatalogo.objects.create(
+            categoria=luz, nome="Refletor LED", unidade_medida="un", valor_unitario_padrao=10
+        )
+        ItemCatalogo.objects.create(
+            categoria=som, nome="Caixa de som", unidade_medida="un", valor_unitario_padrao=10
+        )
+
+        todos = self.client.get(reverse("catalogo:item_lista"))
+        filtrado = self.client.get(reverse("catalogo:item_lista"), {"categoria": luz.pk})
+
+        self.assertContains(todos, "Iluminação")
+        self.assertContains(todos, "Sonorização")
+        self.assertContains(todos, "+ Categoria")
+        self.assertContains(filtrado, "Refletor LED")
+        self.assertNotContains(filtrado, "Caixa de som")
+        self.assertEqual(filtrado.context["categoria_atual"], luz)
+
+    def test_endereco_antigo_de_categorias_leva_ao_catalogo(self):
         response = self.client.get(reverse("catalogo:categoria_lista"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Nova categoria")
+        self.assertRedirects(response, reverse("catalogo:item_lista"))
 
-    def test_lista_de_categorias_exibe_botoes_de_importacao_e_exportacao(self):
-        response = self.client.get(reverse("catalogo:categoria_lista"))
+    def test_criar_categoria_volta_ao_catalogo_filtrado_por_ela(self):
+        response = self.client.post(
+            reverse("catalogo:categoria_criar"),
+            {"nome": "Mobiliário", "cor": "#2563EB", "ativo": "on"},
+        )
 
-        self.assertEqual(response.status_code, 200)
-        conteudo = response.content.decode("utf-8")
-        self.assertIn("Importar Excel", conteudo)
-        self.assertIn("Exportar Excel", conteudo)
-        self.assertIn("Nova categoria", conteudo)
-        self.assertLess(conteudo.index("Importar Excel"), conteudo.index("Exportar Excel"))
+        categoria = CategoriaItem.objects.get(nome="Mobiliário")
+        self.assertRedirects(response, f"{reverse('catalogo:item_lista')}?categoria={categoria.pk}")
 
     def test_exportacao_excel_do_catalogo_usa_colunas_do_importador(self):
         categoria = CategoriaItem.objects.create(nome="Exportacao")

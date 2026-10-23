@@ -97,7 +97,9 @@ class AdminPermissaoPerfilTests(TestCase):
         response_usuarios = self.client.get(reverse("admin:usuarios_usuario_add"))
         response_categoria = self.client.get(reverse("admin:catalogo_categoriaitem_add"))
         response_item = self.client.get(reverse("admin:catalogo_itemcatalogo_add"))
-        response_empresa = self.client.get(reverse("admin:relatorios_configuracaoempresa_add"))
+        response_empresa = self.client.get(
+            reverse("admin:relatorios_configuracaoempresa_changelist")
+        )
 
         self.assertEqual(response_usuarios.status_code, 200)
         self.assertEqual(response_categoria.status_code, 200)
@@ -203,8 +205,8 @@ class UsuarioVisitanteTests(TestCase):
         self.client.post(reverse("login"), {"entrar_visitante": "1", "aceite_legal": "on"})
 
         response_clientes = self.client.get(reverse("clientes:lista"))
-        response_dashboard = self.client.get(reverse("dashboard"))
-        response_relatorios = self.client.get(reverse("relatorios:configuracao_lista"))
+        response_dashboard = self.client.get(reverse("orcamentos:lista"))
+        response_relatorios = self.client.get(reverse("relatorios:minha_empresa"))
         response_cliente_direto = self.client.get(reverse("clientes:visualizar", args=[cliente.pk]))
 
         self.assertEqual(response_clientes.status_code, 200)

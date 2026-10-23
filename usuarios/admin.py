@@ -12,12 +12,23 @@ from core.tenancy import VISITOR_GROUP_PREFIX, obter_grupo_empresa_usuario
 from .models import Usuario
 
 
+class UsuarioChangeForm(UserChangeForm):
+    """Recusa marcar duas empresas no admin, com mensagem no próprio campo
+    (o sinal do modelo também recusa, mas com erro 500 em vez de aviso)."""
+
+    def clean_groups(self):
+        grupos = self.cleaned_data.get("groups")
+        if grupos is not None and len(grupos) > 1:
+            raise forms.ValidationError("Escolha uma empresa só para o usuário.")
+        return grupos
+
+
 @admin.register(Usuario)
 class UsuarioAdmin(UserAdmin, ModelAdmin):
     # Os formulários do unfold existem porque as telas de troca de senha e de
     # criação de usuário do admin nativo trazem markup próprio e ficariam fora
     # do tema.
-    form = UserChangeForm
+    form = UsuarioChangeForm
     add_form = UserCreationForm
     change_password_form = AdminPasswordChangeForm
 
@@ -47,22 +58,17 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
     def get_form(self, request, obj=None, change=False, **kwargs):
         form = super().get_form(request, obj, change=change, **kwargs)
         if "groups" in form.base_fields:
-            cast(
-                "forms.ModelChoiceField", form.base_fields["groups"]
-            ).queryset = self.grupos_empresa_queryset(request)
-            form.base_fields["groups"].label = "Empresa"
-            form.base_fields[
-                "groups"
-            ].help_text = (
-                "Cada usuário deve ficar vinculado apenas à empresa permitida para este acesso."
-            )
+            campo = cast("forms.ModelMultipleChoiceField", form.base_fields["groups"])
+            campo.queryset = self.grupos_empresa_queryset(request)
+            campo.label = "Empresa"
+            campo.help_text = "Cada usuário pertence a uma única empresa: marque só uma."
         return form
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         if request.user.is_superuser:
             return queryset
-        grupo = request.user.groups.order_by("name", "id").first()
+        grupo = obter_grupo_empresa_usuario(request.user)
         if grupo is None:
             return queryset.none()
         return queryset.filter(groups=grupo)
@@ -86,10 +92,13 @@ class UsuarioAdmin(UserAdmin, ModelAdmin):
 
     def save_related(self, request, form, formsets, change):
         super().save_related(request, form, formsets, change)
-        if request.user.is_superuser or form.instance.eh_visitante:
+        if form.instance.eh_visitante:
             return
-
-        grupo = obter_grupo_empresa_usuario(request.user)
+        if request.user.is_superuser:
+            # O superusuário escolhe a empresa (o form já barra mais de uma).
+            grupo = form.instance.groups.order_by("id").first()
+        else:
+            grupo = obter_grupo_empresa_usuario(request.user)
         if grupo is not None:
             form.instance.groups.set([grupo])
 

@@ -122,7 +122,7 @@ class AceiteVisitanteTests(TestCase):
             HTTP_USER_AGENT="Mozilla/5.0 (Teste)",
         )
 
-        self.assertRedirects(resposta, reverse("dashboard"))
+        self.assertRedirects(resposta, reverse("orcamentos:lista"), fetch_redirect_response=False)
         visitante = Usuario.objects.get(username__startswith="visitante_")
 
         aceites = AceiteLegal.objects.filter(usuario=visitante)
@@ -173,7 +173,7 @@ class ReaceiteMiddlewareTests(TestCase):
 
     def test_aceitar_libera_a_navegacao(self):
         self.client.post(reverse("legal:reaceite"), {"aceite_legal": "on"})
-        self.assertEqual(self.client.get(reverse("dashboard")).status_code, 200)
+        self.assertEqual(self.client.get(reverse("orcamentos:lista")).status_code, 200)
         self.assertTrue(AceiteLegal.objects.filter(usuario=self.usuario).exists())
 
     def test_recusar_mantem_bloqueio(self):

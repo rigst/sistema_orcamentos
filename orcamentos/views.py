@@ -9,6 +9,7 @@ from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.decorators.http import require_http_methods, require_POST
 
 from catalogo.models import CategoriaItem
@@ -18,7 +19,14 @@ from core.query import paginate_queryset
 from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 
-from .forms import ItemOrcamentoForm, OrcamentoForm, OrcamentoRapidoForm
+from .forms import (
+    CAMPOS_AJUSTE_GLOBAL,
+    CAMPOS_CONTRATO,
+    CAMPOS_EVENTO,
+    ItemOrcamentoForm,
+    OrcamentoForm,
+    OrcamentoRapidoForm,
+)
 from .models import ItemOrcamento, Orcamento
 
 STATUS_PERMITIDOS = {
@@ -39,6 +47,40 @@ ITEM_SORT_MAP = {
     "subtotal_maior": ("-subtotal", "nome", "id"),
     "subtotal_menor": ("subtotal", "nome", "id"),
 }
+
+
+# Para onde cada status pode ir, com o rótulo do botão. Antes vivia em vários
+# `{% if %}` repetidos na lista; agora lista e cabeçalho leem daqui.
+TRANSICOES_STATUS = {
+    "rascunho": [("enviado", "Enviar"), ("cancelado", "Cancelar")],
+    "em_elaboracao": [("enviado", "Enviar"), ("cancelado", "Cancelar")],
+    "enviado": [
+        ("aprovado", "Aprovar"),
+        ("rejeitado", "Rejeitar"),
+        ("rascunho", "Voltar a rascunho"),
+        ("cancelado", "Cancelar"),
+    ],
+    "aprovado": [("rascunho", "Voltar a rascunho")],
+    "rejeitado": [("rascunho", "Voltar a rascunho")],
+    "cancelado": [("rascunho", "Voltar a rascunho")],
+}
+
+
+def transicoes_permitidas(user, orcamento):
+    """[(status, rótulo)] que este usuário pode aplicar agora."""
+    if not user.pode_gerenciar_orcamentos or not orcamento.ativo:
+        return []
+    opcoes = TRANSICOES_STATUS.get(orcamento.status, [])
+    if orcamento.status == "aprovado" and not user.eh_admin_perfil:
+        return []
+    return opcoes
+
+
+def _destino_seguro(request, padrao):
+    destino = request.POST.get("next") or ""
+    if destino and url_has_allowed_host_and_scheme(destino, allowed_hosts={request.get_host()}):
+        return destino
+    return padrao
 
 
 def orcamento_bloqueado_para_edicao(orcamento):
@@ -143,6 +185,10 @@ def renderizar_editor_orcamento(
         "bloqueio_status": orcamento_bloqueado_para_edicao(orcamento),
         "subtotais_categoria": orcamento.subtotais_por_categoria(),
         "memorial_ia_disponivel": bool(getattr(settings, "ANTHROPIC_API_KEY", "")),
+        "campos_evento": CAMPOS_EVENTO,
+        "campos_contrato": CAMPOS_CONTRATO,
+        "campos_ajuste": CAMPOS_AJUSTE_GLOBAL,
+        "transicoes_status": transicoes_permitidas(request.user, orcamento),
     }
     context.update(obter_estado_itens(request, orcamento))
     return render(request, "orcamentos/form.html", context)
@@ -228,10 +274,23 @@ def orcamento_lista(request):
             ("numero", "cliente__nome_razao_social", "titulo"),
         )
     page_obj = paginate_queryset(request, orcamentos, per_page=12)
+    for orcamento in page_obj:
+        orcamento.transicoes = transicoes_permitidas(request.user, orcamento)
+
+    filtrando = bool(busca or status or ativo == "inativos") or page_obj.number > 1
+    recentes = []
+    if not filtrando:
+        recentes = list(
+            queryset_da_empresa(Orcamento.objects.select_related("cliente"), request.user)
+            .filter(ativo=True)
+            .exclude(status__in=["rejeitado", "cancelado"])
+            .order_by("-atualizado_em")[:4]
+        )
 
     context = {
         "orcamentos": page_obj,
         "page_obj": page_obj,
+        "recentes": recentes,
         "busca": busca,
         "status": status,
         "ativo": ativo,
@@ -303,7 +362,13 @@ def orcamento_criar(request):
     return render(
         request,
         "orcamentos/form.html",
-        {"form": form, "titulo": "Novo orçamento"},
+        {
+            "form": form,
+            "titulo": "Novo orçamento",
+            "campos_evento": CAMPOS_EVENTO,
+            "campos_contrato": CAMPOS_CONTRATO,
+            "campos_ajuste": CAMPOS_AJUSTE_GLOBAL,
+        },
     )
 
 
@@ -376,6 +441,8 @@ def orcamento_excluir(request, pk):
 def orcamento_alterar_status(request, pk, novo_status):
     orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
 
+    destino = _destino_seguro(request, reverse("orcamentos:lista"))
+
     if (
         orcamento.status == "aprovado"
         and novo_status == "rascunho"
@@ -385,7 +452,7 @@ def orcamento_alterar_status(request, pk, novo_status):
             request,
             "Orçamentos aprovados só podem ser reabertos ou alterados por administradores.",
         )
-        return redirect("orcamentos:lista")
+        return redirect(destino)
 
     if novo_status in STATUS_PERMITIDOS:
         orcamento.status = novo_status
@@ -395,7 +462,24 @@ def orcamento_alterar_status(request, pk, novo_status):
     else:
         messages.error(request, "Status solicitado é inválido.")
 
-    return redirect("orcamentos:lista")
+    return redirect(destino)
+
+
+@require_capability("pode_gerenciar_orcamentos")
+@require_POST
+def orcamento_contrato_do_cliente(request, pk):
+    """Botão "Copiar do cadastro do cliente": sobrescreve os campos contratuais
+    com os dados atuais do cliente (o automático só preenche os vazios)."""
+    orcamento = get_object_or_404(queryset_da_empresa(Orcamento.objects.all(), request.user), pk=pk)
+    exigir_orcamento_editavel(request.user, orcamento)
+    alterados = orcamento.preencher_contrato_do_cliente(sobrescrever=True)
+    if alterados:
+        orcamento.atualizado_por = request.user
+        orcamento.save(update_fields=[*alterados, "atualizado_por", "atualizado_em"])
+        messages.success(request, "Dados contratuais atualizados a partir do cadastro do cliente.")
+    else:
+        messages.info(request, "Os dados contratuais já estão iguais ao cadastro do cliente.")
+    return redirect(f"{reverse('orcamentos:editar', kwargs={'pk': orcamento.pk})}#contrato")
 
 
 @require_capability("pode_gerenciar_orcamentos")

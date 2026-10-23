@@ -40,6 +40,8 @@ class ConfiguracaoEmpresaForm(OptimisticLockModelFormMixin, forms.ModelForm):
             "dados_bancarios",
             "chave_pix",
             "validade_padrao_proposta",
+            "condicoes_pagamento_padrao",
+            "servicos_taxas_inclusos_padrao",
             "assinatura_nome",
             "assinatura_cargo",
             "assinatura_contato",
@@ -63,6 +65,10 @@ class ConfiguracaoEmpresaForm(OptimisticLockModelFormMixin, forms.ModelForm):
         self.fields["rodape_relatorio"].widget.attrs["rows"] = 3
         self.fields["dados_bancarios"].widget.attrs["rows"] = 3
         self.fields["texto_institucional_memorial"].widget.attrs["rows"] = 4
+        for nome in ("condicoes_pagamento_padrao", "servicos_taxas_inclusos_padrao"):
+            self.fields[nome].widget.attrs["rows"] = 3
+        self.fields["condicoes_pagamento_padrao"].label = "Condições de pagamento padrão"
+        self.fields["servicos_taxas_inclusos_padrao"].label = "Serviços e taxas inclusos (padrão)"
 
     def clean_nome_empresa(self):
         valor = (self.cleaned_data.get("nome_empresa") or "").strip()

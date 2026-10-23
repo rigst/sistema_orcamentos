@@ -232,11 +232,12 @@ class Orcamento(models.Model):
         if self.configuracao_empresa_id is None and self.empresa_id:
             from relatorios.models import ConfiguracaoEmpresa
 
-            self.configuracao_empresa = (
-                ConfiguracaoEmpresa.objects.filter(empresa=self.empresa, ativo=True)
-                .order_by("-atualizado_em", "nome_empresa")
-                .first()
-            )
+            self.configuracao_empresa = ConfiguracaoEmpresa.da_empresa(self.empresa)
+        if self.pk is None:
+            self.aplicar_padroes_da_empresa()
+        if self._cliente_mudou():
+            # Só preenche campo contratual vazio: o que foi digitado fica.
+            self.preencher_contrato_do_cliente()
         max_tentativas = 5 if not self.pk else 1
         for tentativa in range(max_tentativas):
             type(self)._empresa_numero_context = self.empresa
@@ -254,6 +255,62 @@ class Orcamento(models.Model):
                     raise
             finally:
                 type(self)._empresa_numero_context = None
+
+    def _cliente_mudou(self) -> bool:
+        if not self.cliente_id:
+            return False
+        if self.pk is None:
+            return True
+        anterior = (
+            type(self).objects.filter(pk=self.pk).values_list("cliente_id", flat=True).first()
+        )
+        return anterior != self.cliente_id
+
+    def aplicar_padroes_da_empresa(self):
+        """Orçamento novo herda validade e condições comerciais do cadastro da
+        empresa. Só preenche o que veio vazio."""
+        configuracao = self.configuracao_empresa if self.configuracao_empresa_id else None
+        if configuracao is None:
+            return
+        if self.validade_em is None:
+            self.validade_em = configuracao.validade_a_partir(self.data_emissao)
+        if not (self.condicoes_pagamento or "").strip():
+            self.condicoes_pagamento = configuracao.condicoes_pagamento_padrao
+        if not (self.servicos_taxas_inclusos or "").strip():
+            self.servicos_taxas_inclusos = configuracao.servicos_taxas_inclusos_padrao
+
+    def dados_contratuais_do_cliente(self) -> dict:
+        """Os campos contratuais como o cadastro do cliente os preencheria."""
+        cliente = self.cliente if self.cliente_id else None
+        if cliente is None:
+            return {}
+        partes = (cliente.logradouro, cliente.numero, cliente.complemento, cliente.bairro)
+        cidade = (cliente.cidade, cliente.estado)
+        return {
+            "contrato_razao_social": cliente.nome_razao_social,
+            "contrato_cnpj": cliente.cpf_cnpj,
+            "contrato_endereco": ", ".join(p.strip() for p in partes if (p or "").strip()),
+            "contrato_cidade": "/".join(p.strip() for p in cidade if (p or "").strip()),
+            "contrato_cep": cliente.cep,
+            "contrato_responsavel_nome": cliente.contato_responsavel,
+            "contrato_telefone": cliente.telefone or cliente.celular,
+            "contrato_email": cliente.email,
+        }
+
+    def preencher_contrato_do_cliente(self, *, sobrescrever=False) -> list[str]:
+        """Copia os dados do cliente para os campos contratuais. Por padrão só
+        preenche os vazios, o que nunca perde algo digitado. Devolve os campos
+        alterados (sem salvar)."""
+        alterados = []
+        for campo, valor in self.dados_contratuais_do_cliente().items():
+            limite = getattr(self._meta.get_field(campo), "max_length", None)
+            valor = (valor or "").strip()[:limite]
+            atual = (getattr(self, campo) or "").strip()
+            if not valor or valor == atual or (atual and not sobrescrever):
+                continue
+            setattr(self, campo, valor)
+            alterados.append(campo)
+        return alterados
 
     @property
     def cliente_exibicao(self) -> str:
