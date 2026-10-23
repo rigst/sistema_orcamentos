@@ -10,6 +10,7 @@ from .views import (
     item_orcamento_mover,
     item_orcamento_preview,
     orcamento_alterar_status,
+    orcamento_contrato_do_cliente,
     orcamento_criar,
     orcamento_criar_rapido,
     orcamento_duplicar,
@@ -32,6 +33,9 @@ urlpatterns = [
     path("<int:pk>/duplicar/", orcamento_duplicar, name="duplicar"),
     path("<int:pk>/excluir/", orcamento_excluir, name="excluir"),
     path("<int:pk>/status/<str:novo_status>/", orcamento_alterar_status, name="alterar_status"),
+    path(
+        "<int:pk>/contrato-do-cliente/", orcamento_contrato_do_cliente, name="contrato_do_cliente"
+    ),
     path("<int:orcamento_pk>/itens/novo/", item_orcamento_criar, name="item_criar"),
     path(
         "<int:orcamento_pk>/itens/<int:item_pk>/editar/", item_orcamento_editar, name="item_editar"

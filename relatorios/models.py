@@ -1,3 +1,6 @@
+import re
+from datetime import timedelta
+
 from django.db import models
 
 from core.tenancy import obter_grupo_empresa_padrao
@@ -23,6 +26,10 @@ class ConfiguracaoEmpresa(models.Model):
     dados_bancarios = models.TextField(blank=True)
     chave_pix = models.CharField(max_length=255, blank=True)
     validade_padrao_proposta = models.CharField(max_length=100, blank=True)
+    # Padrões comerciais: cada orçamento novo nasce com eles, e o usuário
+    # ajusta no orçamento quando aquele caso for diferente.
+    condicoes_pagamento_padrao = models.TextField(blank=True)
+    servicos_taxas_inclusos_padrao = models.TextField(blank=True)
     assinatura_nome = models.CharField(max_length=255, blank=True)
     assinatura_cargo = models.CharField(max_length=255, blank=True)
     assinatura_contato = models.CharField(max_length=255, blank=True)
@@ -52,3 +59,22 @@ class ConfiguracaoEmpresa(models.Model):
         if self.empresa_id is None:
             self.empresa = obter_grupo_empresa_padrao()
         super().save(*args, **kwargs)
+
+    @classmethod
+    def da_empresa(cls, empresa):
+        """O cadastro da empresa: um só por empresa. Se houver mais de um
+        (legado de quando o app deixava cadastrar vários), vale o ativo mais
+        recente."""
+        if empresa is None:
+            return None
+        return (
+            cls.objects.filter(empresa=empresa).order_by("-ativo", "-atualizado_em", "-pk").first()
+        )
+
+    def validade_a_partir(self, data_emissao):
+        """Data de validade pela regra "N dias" do cadastro, ou None."""
+        texto = str(self.validade_padrao_proposta or "").strip()
+        correspondencia = re.search(r"\d+", texto)
+        if not correspondencia or not data_emissao:
+            return None
+        return data_emissao + timedelta(days=int(correspondencia.group()))

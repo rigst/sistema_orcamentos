@@ -10,7 +10,7 @@
             <p>Revise a operação antes de confirmar a alteração do status.</p>
         </div>
         <div class="inline-actions">
-            <a class="ds-icon-btn" href="{% url 'catalogo:categoria_lista' %}" title="Voltar" aria-label="Voltar">
+            <a class="ds-icon-btn" href="{% url 'catalogo:item_lista' %}" title="Voltar" aria-label="Voltar">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
                 <span class="visually-hidden">Voltar</span>
             </a>
@@ -27,7 +27,7 @@
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7 9 18l-5-5"/></svg>
                     <span class="visually-hidden">Confirmar {{ acao }}</span>
                 </button>
-                <a class="ds-icon-btn" href="{% url 'catalogo:categoria_lista' %}" title="Cancelar" aria-label="Cancelar">
+                <a class="ds-icon-btn" href="{% url 'catalogo:item_lista' %}" title="Cancelar" aria-label="Cancelar">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                     <span class="visually-hidden">Cancelar</span>
                 </a>

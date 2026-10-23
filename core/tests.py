@@ -1,99 +1,74 @@
-from datetime import timedelta
 from decimal import Decimal
 from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
 from django.test import SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from clientes.models import Cliente
-from core.models import Empresa
 from core.testing import SENHA_TESTE
 from orcamentos.models import Orcamento
 
 
-class DashboardTests(TestCase):
+class PaginaInicialTests(TestCase):
+    """A raiz é a lista de orçamentos, com os mexidos por último em cima."""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="dashboard_user",
+            username="inicio_user",
             password=SENHA_TESTE,
         )
         self.client.force_login(self.user)
-        self.cliente = Cliente.objects.create(nome_razao_social="Cliente Dashboard")
+        self.cliente = Cliente.objects.create(nome_razao_social="Cliente Inicio")
 
-        Orcamento.objects.create(
-            numero="ORC-DASH-1",
+    def _orcamento(self, titulo, **extra):
+        return Orcamento.objects.create(
             cliente=self.cliente,
-            titulo="Aprovado recente",
-            status="aprovado",
+            titulo=titulo,
             data_emissao=timezone.localdate(),
-            total_final=Decimal("1200.00"),
+            total_final=Decimal("100.00"),
             criado_por=self.user,
             atualizado_por=self.user,
-        )
-        Orcamento.objects.create(
-            numero="ORC-DASH-2",
-            cliente=self.cliente,
-            titulo="Rascunho antigo",
-            status="rascunho",
-            data_emissao=timezone.localdate() - timedelta(days=45),
-            total_final=Decimal("800.00"),
-            criado_por=self.user,
-            atualizado_por=self.user,
+            **extra,
         )
 
-    def test_dashboard_filtra_periodo_e_exibe_indicadores(self):
-        response = self.client.get(reverse("dashboard"), {"periodo": "30"})
+    def test_raiz_leva_para_a_lista_de_orcamentos(self):
+        self.assertRedirects(self.client.get("/"), reverse("orcamentos:lista"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "R$ 1.200,00")
-        self.assertContains(response, "Últimos 30 dias")
-        self.assertNotContains(response, "Rascunho antigo")
-
-    def test_dashboard_oculta_cancelados_rejeitados_e_inativos_dos_ultimos_orcamentos(self):
-        Orcamento.objects.create(
-            numero="ORC-DASH-3",
-            cliente=self.cliente,
-            titulo="Rejeitado recente",
-            status="rejeitado",
-            data_emissao=timezone.localdate(),
-            total_final=Decimal("300.00"),
-            criado_por=self.user,
-            atualizado_por=self.user,
+    def test_login_cai_na_lista_de_orcamentos(self):
+        self.client.logout()
+        response = self.client.post(
+            reverse("login"), {"username": "inicio_user", "password": SENHA_TESTE}
         )
-        Orcamento.objects.create(
-            numero="ORC-DASH-4",
-            cliente=self.cliente,
-            titulo="Cancelado recente",
-            status="cancelado",
-            data_emissao=timezone.localdate(),
-            total_final=Decimal("400.00"),
-            criado_por=self.user,
-            atualizado_por=self.user,
-        )
-        Orcamento.objects.create(
-            numero="ORC-DASH-5",
-            cliente=self.cliente,
-            titulo="Inativo recente",
-            status="aprovado",
-            ativo=False,
-            data_emissao=timezone.localdate(),
-            total_final=Decimal("500.00"),
-            criado_por=self.user,
-            atualizado_por=self.user,
-        )
+        self.assertRedirects(response, reverse("orcamentos:lista"), fetch_redirect_response=False)
 
-        response = self.client.get(reverse("dashboard"), {"periodo": "todos"})
+    def test_recentes_ignoram_cancelados_rejeitados_e_inativos(self):
+        self._orcamento("Aprovado recente", status="aprovado")
+        self._orcamento("Rejeitado recente", status="rejeitado")
+        self._orcamento("Cancelado recente", status="cancelado")
+        self._orcamento("Inativo recente", status="aprovado", ativo=False)
 
-        self.assertEqual(response.status_code, 200)
-        titulos = [orcamento.titulo for orcamento in response.context["ultimos_orcamentos"]]
-        self.assertIn("Aprovado recente", titulos)
-        self.assertNotIn("Rejeitado recente", titulos)
-        self.assertNotIn("Cancelado recente", titulos)
-        self.assertNotIn("Inativo recente", titulos)
+        response = self.client.get(reverse("orcamentos:lista"))
+
+        titulos = [o.titulo for o in response.context["recentes"]]
+        self.assertEqual(titulos, ["Aprovado recente"])
+        self.assertContains(response, "Mexidos por último")
+
+    def test_recentes_somem_ao_buscar_ou_filtrar(self):
+        self._orcamento("Qualquer")
+        response = self.client.get(reverse("orcamentos:lista"), {"q": "Qualquer"})
+        self.assertEqual(response.context["recentes"], [])
+        self.assertNotContains(response, "Mexidos por último")
+
+    def test_recentes_mostram_no_maximo_quatro(self):
+        for indice in range(6):
+            self._orcamento(f"Orc {indice}")
+        response = self.client.get(reverse("orcamentos:lista"))
+        self.assertEqual(len(response.context["recentes"]), 4)
 
 
 class InfraestruturaTests(TestCase):
@@ -141,46 +116,50 @@ class InfraestruturaTests(TestCase):
         self.assertJSONEqual(response_token_valido.content, {"status": "ok"})
 
 
-class MultiEmpresaAtivaTests(TestCase):
+class UmaEmpresaPorUsuarioTests(TestCase):
     def setUp(self):
         self.empresa_a = Group.objects.create(name="Empresa A")
         self.empresa_b = Group.objects.create(name="Empresa B")
         self.user = get_user_model().objects.create_user(
-            username="usuario_multiempresa",
+            username="usuario_empresa_unica",
             password=SENHA_TESTE,
             perfil="admin",
         )
-        self.user.groups.set([self.empresa_a, self.empresa_b])
-        self.client.force_login(self.user)
 
+    def _empresas(self):
+        return set(self.user.groups.values_list("name", flat=True))
+
+    def test_entrar_numa_empresa_tira_da_anterior(self):
+        self.user.groups.add(self.empresa_a)
+        self.user.groups.add(self.empresa_b)
+
+        self.assertEqual(self._empresas(), {"Empresa B"})
+
+    def test_adicionar_pelo_lado_da_empresa_tambem_move(self):
+        self.user.groups.add(self.empresa_a)
+        self.empresa_b.user_set.add(self.user)
+
+        self.assertEqual(self._empresas(), {"Empresa B"})
+
+    def test_duas_empresas_de_uma_vez_e_recusado(self):
+        with self.assertRaises(ValidationError):
+            self.user.groups.set([self.empresa_a, self.empresa_b])
+
+    def test_header_mostra_a_empresa_sem_seletor(self):
+        self.user.groups.set([self.empresa_a])
         Cliente.objects.create(nome_razao_social="Cliente A", empresa=self.empresa_a)
         Cliente.objects.create(nome_razao_social="Cliente B", empresa=self.empresa_b)
+        self.client.force_login(self.user)
 
-    def test_header_exibe_seletor_quando_usuario_tem_varias_empresas(self):
-        response = self.client.get(reverse("dashboard"))
+        response = self.client.get(reverse("clientes:lista"))
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'name="empresa_id"', html=False)
-        self.assertContains(response, "Empresa A")
-        self.assertContains(response, "Empresa B")
+        self.assertNotContains(response, 'name="empresa_id"', html=False)
+        self.assertContains(response, "Cliente A")
+        self.assertNotContains(response, "Cliente B")
 
-    def test_trocar_empresa_ativa_altera_isolamento_dos_dados(self):
-        response_inicial = self.client.get(reverse("clientes:lista"))
-        self.assertContains(response_inicial, "Cliente A")
-        self.assertNotContains(response_inicial, "Cliente B")
-
-        self.client.post(
-            reverse("alternar_empresa"),
-            {
-                "empresa_id": Empresa.objects.get(grupo=self.empresa_b).pk,
-                "next": reverse("clientes:lista"),
-            },
-            follow=True,
-        )
-
-        response_trocado = self.client.get(reverse("clientes:lista"))
-        self.assertContains(response_trocado, "Cliente B")
-        self.assertNotContains(response_trocado, "Cliente A")
+    def test_rota_de_troca_de_empresa_nao_existe_mais(self):
+        self.client.force_login(self.user)
+        self.assertEqual(self.client.post("/empresa/alternar/").status_code, 404)
 
 
 class GuardaDeTesteTests(SimpleTestCase):

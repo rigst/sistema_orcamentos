@@ -826,12 +826,15 @@ class OrcamentoViewsTests(TestCase):
     def test_orcamento_em_rascunho_exibe_fluxo_inicial_de_status(self):
         response = self.client.get(reverse("orcamentos:lista"))
 
+        def url(status):
+            return reverse("orcamentos:alterar_status", args=[self.orcamento.pk, status])
+
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'title="Enviar para análise"')
-        self.assertContains(response, 'title="Cancelar orçamento"')
-        self.assertNotContains(response, 'title="Retornar a Rascunho"')
-        self.assertNotContains(response, 'title="Aprovar orçamento"')
-        self.assertNotContains(response, 'title="Rejeitar orçamento"')
+        self.assertContains(response, url("enviado"))
+        self.assertContains(response, url("cancelado"))
+        self.assertNotContains(response, url("rascunho"))
+        self.assertNotContains(response, url("aprovado"))
+        self.assertNotContains(response, url("rejeitado"))
 
     def test_orcamento_aprovado_nao_exibe_retorno_para_rascunho_para_nao_admin(self):
         self.orcamento.status = "aprovado"
@@ -840,10 +843,10 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, 'title="Retornar a Rascunho"')
-        self.assertNotContains(response, 'title="Aprovar orçamento"')
-        self.assertNotContains(response, 'title="Rejeitar orçamento"')
-        self.assertNotContains(response, 'title="Cancelar orçamento"')
+        for status in ("rascunho", "aprovado", "rejeitado", "cancelado"):
+            self.assertNotContains(
+                response, reverse("orcamentos:alterar_status", args=[self.orcamento.pk, status])
+            )
 
     def test_admin_exibe_retorno_para_rascunho_em_orcamento_aprovado(self):
         admin = get_user_model().objects.create_user(
@@ -858,7 +861,10 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'title="Retornar a Rascunho"')
+        self.assertContains(
+            response, reverse("orcamentos:alterar_status", args=[self.orcamento.pk, "rascunho"])
+        )
+        self.assertContains(response, "Voltar a rascunho")
 
     def test_duplicar_orcamento_cria_novo_rascunho_com_itens(self):
         ItemOrcamento.objects.create(
@@ -1233,10 +1239,9 @@ class DashboardTests(TestCase):
             atualizado_por=self.user,
         )
 
-    def test_dashboard_nao_lista_orcamentos_inativos(self):
-        response = self.client.get(reverse("dashboard"))
+    def test_recentes_da_pagina_inicial_nao_trazem_inativos(self):
+        response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        ultimos = list(response.context["ultimos_orcamentos"])
-        self.assertEqual(len(ultimos), 1)
-        self.assertEqual(ultimos[0].titulo, "Ativo")
+        recentes = list(response.context["recentes"])
+        self.assertEqual([o.titulo for o in recentes], ["Ativo"])

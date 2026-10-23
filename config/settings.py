@@ -92,11 +92,9 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    # Depois do Authentication (precisa de request.user) e antes do
-    # EmpresaAtivaMiddleware: nova versão dos termos bloqueia o uso antes de
-    # qualquer resolução de empresa ativa.
+    # Depois do Authentication (precisa de request.user): nova versão dos
+    # termos bloqueia o uso antes de qualquer tela.
     "legal.middleware.AceiteObrigatorioMiddleware",
-    "core.middleware.EmpresaAtivaMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -220,7 +218,7 @@ UNFOLD = {
 }
 
 # Destino após o aceite nas telas do app `legal`.
-LEGAL_REDIRECT_URL = "dashboard"
+LEGAL_REDIRECT_URL = "orcamentos:lista"
 
 # Para onde a tela de aceite de visitante posta, e o que aquela view espera.
 # Aqui a criação do visitante vive no ramo `entrar_visitante` do LoginView.
@@ -228,7 +226,7 @@ LEGAL_VISITOR_ACTION = "login"
 LEGAL_VISITOR_EXTRA = {"entrar_visitante": "1"}
 
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "dashboard"
+LOGIN_REDIRECT_URL = "orcamentos:lista"
 LOGOUT_REDIRECT_URL = "login"
 HEALTHZ_TOKEN = os.getenv("DJANGO_HEALTHZ_TOKEN", "").strip()
 

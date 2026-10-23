@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <!-- Customizações específicas do app (sobre os tokens do DS) -->
     <link rel="stylesheet" href="{% static 'css/app-overrides.css' %}">
+    <link rel="stylesheet" href="{% static 'css/fluxo.css' %}">
     {% block extra_head %}{% endblock %}
 </head>
 <body class="ds-root {% block body_class %}{% endblock %}">
@@ -33,7 +34,7 @@
         <div class="container">
             <nav class="nav">
                 <div class="nav-top">
-                    <a href="{% url 'dashboard' %}" class="brand">Orçamentos</a>
+                    <a href="{% url 'orcamentos:lista' %}" class="brand">Orçamentos</a>
 
                     {% if user.is_authenticated %}
                         <button class="nav-toggle js-nav-toggle" type="button" aria-expanded="false" aria-controls="header-user-meta header-main-links">
@@ -48,19 +49,14 @@
                 {% if user.is_authenticated %}
                     <div id="header-main-links" class="nav-bottom">
                         <ul class="nav-links">
-                            <li><a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Dashboard</a></li>
                             {% if user.pode_visualizar_orcamentos %}
-                                <li><a href="{% url 'orcamentos:lista' %}" {% if request.resolver_match.namespace == 'orcamentos' %}class="active"{% endif %}>Orçamentos</a></li>
+                                <li><a href="{% url 'orcamentos:lista' %}" {% if request.resolver_match.namespace == 'orcamentos' or request.resolver_match.namespace == 'memoriais' %}class="active" aria-current="page"{% endif %}>Orçamentos</a></li>
                             {% endif %}
                             {% if user.pode_visualizar_catalogo %}
-                                <li><a href="{% url 'catalogo:categoria_lista' %}" {% if request.resolver_match.namespace == 'catalogo' and request.resolver_match.url_name == 'categoria_lista' %}class="active"{% endif %}>Categorias</a></li>
-                                <li><a href="{% url 'catalogo:item_lista' %}" {% if request.resolver_match.namespace == 'catalogo' and request.resolver_match.url_name == 'item_lista' %}class="active"{% endif %}>Itens</a></li>
+                                <li><a href="{% url 'catalogo:item_lista' %}" {% if request.resolver_match.namespace == 'catalogo' %}class="active" aria-current="page"{% endif %}>Catálogo</a></li>
                             {% endif %}
                             {% if user.pode_visualizar_clientes %}
-                                <li><a href="{% url 'clientes:lista' %}" {% if request.resolver_match.namespace == 'clientes' %}class="active"{% endif %}>Clientes</a></li>
-                            {% endif %}
-                            {% if user.pode_visualizar_relatorios %}
-                                <li><a href="{% url 'relatorios:configuracao_lista' %}" {% if request.resolver_match.namespace == 'relatorios' %}class="active"{% endif %}>Empresa</a></li>
+                                <li><a href="{% url 'clientes:lista' %}" {% if request.resolver_match.namespace == 'clientes' %}class="active" aria-current="page"{% endif %}>Clientes</a></li>
                             {% endif %}
                         </ul>
                     </div>
@@ -69,30 +65,17 @@
                             <span class="header-user-greeting">Olá, {{ user }}</span>
                             <span class="header-sep" aria-hidden="true">·</span>
                             <div class="header-user-company">
-                                {% if empresas_usuario|length > 1 %}
-                                    <form action="{% url 'alternar_empresa' %}" method="post" class="header-company-switch">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                                        <label for="empresa-ativa-select" style="display:none;">Empresa ativa</label>
-                                        <select id="empresa-ativa-select" name="empresa_id" class="header-company-select js-auto-submit">
-                                            {% for empresa_item in empresas_usuario %}
-                                                <option value="{{ empresa_item.pk }}" {% if empresa_ativa and empresa_item.pk == empresa_ativa.pk %}selected{% endif %}>
-                                                    {{ empresa_item.nome }}
-                                                </option>
-                                            {% endfor %}
-                                        </select>
-                                    </form>
-                                {% elif user.eh_visitante %}
-                                    <span>Empresa Visitante</span>
-                                {% elif empresa_ativa %}
-                                    <span>{{ empresa_ativa.nome }}</span>
-                                {% else %}
-                                    <span>{{ user.nome_empresa }}</span>
-                                {% endif %}
+                                <span>{% if user.eh_visitante %}Empresa Visitante{% else %}{{ user.nome_empresa }}{% endif %}</span>
                             </div>
                             <span class="user-role">{{ user.get_perfil_display }}</span>
                         </div>
                         <div class="header-user-actions">
+                            {% if user.pode_visualizar_relatorios %}
+                                <a class="ds-icon-btn header-config" href="{% url 'relatorios:minha_empresa' %}" title="Minha empresa" aria-label="Minha empresa"{% if request.resolver_match.url_name == 'minha_empresa' %} aria-current="page"{% endif %}>
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+                                    <span class="visually-hidden">Minha empresa</span>
+                                </a>
+                            {% endif %}
                             <form action="{% url 'logout' %}" method="post">
                                 {% csrf_token %}
                                 <button class="nav-logout" type="submit">Sair</button>

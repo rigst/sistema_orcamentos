@@ -79,7 +79,7 @@ class UsuarioLoginView(LoginView):
             origem=OrigemAceite.VISITANTE,
             e_visitante=True,
         )
-        return redirect(reverse("dashboard"))
+        return redirect(reverse("orcamentos:lista"))
 
 
 class UsuarioLogoutView(LogoutView):

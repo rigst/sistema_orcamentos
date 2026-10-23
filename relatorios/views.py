@@ -2,13 +2,16 @@ from mimetypes import guess_type
 
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
 from django.http import FileResponse, Http404, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_safe
 
 from core.permissions import require_capability
-from core.query import paginate_queryset
-from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
+from core.tenancy import (
+    obter_grupo_empresa_ou_erro,
+    obter_grupo_empresa_usuario,
+    queryset_da_empresa,
+)
 from orcamentos.models import Orcamento
 
 from .exporters import (
@@ -22,104 +25,73 @@ from .forms import ConfiguracaoEmpresaForm
 from .models import ConfiguracaoEmpresa
 
 
-@require_capability("pode_visualizar_relatorios")
-def configuracao_lista(request):
-    busca = request.GET.get("q", "").strip()
-    ativo = request.GET.get("ativo", "ativos").strip()
-    ordenar = request.GET.get("sort", "recentes")
-    configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user)
-    if busca:
-        configuracoes = configuracoes.filter(
-            Q(nome_empresa__icontains=busca)
-            | Q(nome_fantasia__icontains=busca)
-            | Q(email__icontains=busca)
-            | Q(cidade__icontains=busca)
-        )
-    if ativo != "inativos":
-        configuracoes = configuracoes.filter(ativo=True)
-    else:
-        configuracoes = configuracoes.filter(ativo=False)
-    ordenacoes = {
-        "nome": "nome_empresa",
-        "cidade": "cidade",
-        "recentes": "-atualizado_em",
-    }
-    configuracoes = configuracoes.order_by(ordenacoes.get(ordenar, "-atualizado_em"))
-    page_obj = paginate_queryset(request, configuracoes, per_page=10)
-    return render(
-        request,
-        "relatorios/configuracao_lista.html",
-        {
-            "configuracoes": page_obj,
-            "page_obj": page_obj,
-            "busca": busca,
-            "ativo": ativo,
-            "sort": ordenar,
-        },
-    )
-
-
-def obter_configuracao_ativa(user):
-    return (
-        queryset_da_empresa(ConfiguracaoEmpresa.objects.filter(ativo=True), user)
-        .order_by("-atualizado_em")
-        .first()
-    )
-
-
 def obter_configuracao_do_orcamento(orcamento, user):
+    """O cadastro que vale para o orçamento: o vinculado a ele (se for da
+    empresa do usuário) ou, na falta, o cadastro único da empresa."""
     if getattr(orcamento, "configuracao_empresa_id", None):
-        configuracao_vinculada = (
+        vinculada = (
             queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
             .filter(pk=orcamento.configuracao_empresa_id)
             .first()
         )
-        if configuracao_vinculada:
-            return configuracao_vinculada
-    return obter_configuracao_ativa(user)
-
-
-@require_capability("pode_gerenciar_relatorios")
-def configuracao_criar(request):
-    if request.method == "POST":
-        form = ConfiguracaoEmpresaForm(request.POST, request.FILES)
-        if form.is_valid():
-            configuracao = form.save(commit=False)
-            configuracao.empresa = obter_grupo_empresa_ou_erro(request.user)
-            configuracao.save()
-            return redirect("relatorios:configuracao_lista")
-    else:
-        form = ConfiguracaoEmpresaForm()
-
-    return render(
-        request,
-        "relatorios/configuracao_form.html",
-        {"form": form, "titulo": "Nova configuração da empresa"},
-    )
+        if vinculada:
+            return vinculada
+    return ConfiguracaoEmpresa.da_empresa(obter_grupo_empresa_usuario(user))
 
 
 @require_capability("pode_visualizar_relatorios")
-def configuracao_visualizar(request, pk):
-    configuracao = get_object_or_404(
-        queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk
-    )
-    form = ConfiguracaoEmpresaForm(instance=configuracao)
+def minha_empresa(request):
+    """Cadastro único da empresa do usuário: cria na primeira vez, edita nas
+    seguintes. Quem só visualiza vê o formulário travado."""
+    empresa = obter_grupo_empresa_ou_erro(request.user)
+    configuracao = ConfiguracaoEmpresa.da_empresa(empresa)
+    pode_editar = request.user.pode_gerenciar_relatorios
+
+    if request.method == "POST":
+        if not pode_editar:
+            raise PermissionDenied
+        form = ConfiguracaoEmpresaForm(request.POST, request.FILES, instance=configuracao)
+        if form.is_valid():
+            nova = form.save(commit=False)
+            nova.empresa = empresa
+            nova.ativo = True
+            nova.save()
+            if configuracao is None:
+                # Orçamentos criados antes do cadastro passam a usá-lo.
+                Orcamento.objects.filter(empresa=empresa, configuracao_empresa__isnull=True).update(
+                    configuracao_empresa=nova
+                )
+            messages.success(
+                request,
+                "Dados da empresa salvos. Os relatórios e os orçamentos ainda não enviados "
+                "passam a usar essas informações.",
+            )
+            return redirect("relatorios:minha_empresa")
+    else:
+        form = ConfiguracaoEmpresaForm(instance=configuracao)
+
     return render(
         request,
         "relatorios/configuracao_form.html",
         {
             "form": form,
-            "titulo": "Configuração da empresa",
+            "titulo": "Minha empresa",
             "configuracao": configuracao,
-            "somente_leitura": True,
+            "somente_leitura": not pode_editar,
         },
     )
+
+
+@require_safe
+def para_minha_empresa(request, *args, **kwargs):
+    """Rotas antigas da lista de configurações. Agora há um cadastro só."""
+    return redirect("relatorios:minha_empresa")
 
 
 @require_capability("pode_visualizar_relatorios")
 def configuracao_logo(request, pk):
     configuracao = get_object_or_404(
-        queryset_da_empresa(ConfiguracaoEmpresa.objects.filter(ativo=True), request.user),
+        queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user),
         pk=pk,
     )
     if not configuracao.logo:
@@ -133,54 +105,6 @@ def configuracao_logo(request, pk):
     response = FileResponse(arquivo, content_type=tipo_conteudo or "application/octet-stream")
     response["Cache-Control"] = "private, max-age=300"
     return response
-
-
-@require_capability("pode_gerenciar_relatorios")
-def configuracao_editar(request, pk):
-    configuracao = get_object_or_404(
-        queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk
-    )
-
-    if request.method == "POST":
-        form = ConfiguracaoEmpresaForm(request.POST, request.FILES, instance=configuracao)
-        if form.is_valid():
-            form.save()
-            messages.success(
-                request,
-                "Dados da empresa atualizados. Os relatórios e os orçamentos ainda não enviados passam a usar essas informações.",
-            )
-            return redirect("relatorios:configuracao_lista")
-    else:
-        form = ConfiguracaoEmpresaForm(instance=configuracao)
-
-    return render(
-        request,
-        "relatorios/configuracao_form.html",
-        {"form": form, "titulo": "Editar configuração da empresa", "configuracao": configuracao},
-    )
-
-
-@require_capability("pode_gerenciar_relatorios")
-def configuracao_excluir(request, pk):
-    configuracao = get_object_or_404(
-        queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), request.user), pk=pk
-    )
-    acao = "reativar" if not configuracao.ativo else "inativar"
-
-    if request.method == "POST":
-        configuracao.ativo = not configuracao.ativo
-        configuracao.save(update_fields=["ativo", "atualizado_em"])
-        if configuracao.ativo:
-            messages.success(request, "Configuração reativada com sucesso.")
-        else:
-            messages.success(request, "Configuração inativada com sucesso.")
-        return redirect("relatorios:configuracao_lista")
-
-    return render(
-        request,
-        "relatorios/configuracao_excluir.html",
-        {"configuracao": configuracao, "acao": acao},
-    )
 
 
 @require_capability("pode_visualizar_orcamentos")

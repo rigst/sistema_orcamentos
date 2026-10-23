@@ -22,7 +22,7 @@ class RelatoriosPermissaoTests(TestCase):
         Image.new("RGB", (180, 60), color=(80, 140, 220)).save(buffer, format="PNG")
         return SimpleUploadedFile("logo.png", buffer.getvalue(), content_type="image/png")
 
-    def test_orcamentista_nao_pode_criar_configuracao_empresa(self):
+    def test_orcamentista_nao_pode_alterar_dados_da_empresa(self):
         user = get_user_model().objects.create_user(
             username="orcamentista",
             password=SENHA_TESTE,
@@ -30,22 +30,21 @@ class RelatoriosPermissaoTests(TestCase):
         )
         self.client.force_login(user)
 
-        response = self.client.get(reverse("relatorios:configuracao_criar"))
+        response = self.client.post(reverse("relatorios:minha_empresa"), {"nome_empresa": "X"})
 
-        self.assertEqual(response.status_code, 403)
+        self.assertIn(response.status_code, (302, 403))
+        self.assertFalse(ConfiguracaoEmpresa.objects.filter(nome_empresa="X").exists())
 
-    def test_visualizador_pode_visualizar_configuracao(self):
+    def test_visualizador_ve_os_dados_da_propria_empresa(self):
         user = get_user_model().objects.create_user(
             username="visualizador_empresa",
             password=SENHA_TESTE,
             perfil="visualizador",
         )
-        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Visivel")
+        ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Visivel")
         self.client.force_login(user)
 
-        response = self.client.get(
-            reverse("relatorios:configuracao_visualizar", args=[configuracao.pk])
-        )
+        response = self.client.get(reverse("relatorios:minha_empresa"))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Empresa Visivel")
@@ -421,7 +420,7 @@ class RelatoriosValidacaoTests(TestCase):
 
     def test_configuracao_empresa_invalida_exibe_erros(self):
         response = self.client.post(
-            reverse("relatorios:configuracao_criar"),
+            reverse("relatorios:minha_empresa"),
             {
                 "nome_empresa": "",
                 "cpf_cnpj": "123",
@@ -440,7 +439,7 @@ class RelatoriosValidacaoTests(TestCase):
 
     def test_configuracao_empresa_aceita_campos_com_mascara(self):
         response = self.client.post(
-            reverse("relatorios:configuracao_criar"),
+            reverse("relatorios:minha_empresa"),
             {
                 "nome_empresa": "Empresa Formatada",
                 "cpf_cnpj": "12.345.678/0001-90",
@@ -466,68 +465,65 @@ class RelatoriosValidacaoTests(TestCase):
         self.assertEqual(configuracao.validade_padrao_proposta, "15 dias")
 
 
-class RelatoriosListaTests(TestCase):
+class MinhaEmpresaTests(TestCase):
+    """Um cadastro só por empresa, sem lista nem seletor."""
+
     def setUp(self):
         self.user = get_user_model().objects.create_user(
-            username="admin_lista_rel",
-            password=SENHA_TESTE,
-            perfil="admin",
-        )
-        self.client.force_login(self.user)
-        ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa B", cidade="Rio de Janeiro")
-        ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa A", cidade="Campinas")
-
-    def test_lista_filtra_por_nome(self):
-        response = self.client.get(reverse("relatorios:configuracao_lista"), {"q": "Empresa B"})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Empresa B")
-        self.assertNotContains(response, "Empresa A")
-
-    def test_lista_ordena_por_nome(self):
-        response = self.client.get(reverse("relatorios:configuracao_lista"), {"sort": "nome"})
-
-        self.assertEqual(response.status_code, 200)
-        configuracoes = list(response.context["configuracoes"])
-        self.assertEqual(configuracoes[0].nome_empresa, "Empresa A")
-
-    def test_lista_exibe_botao_principal_com_texto(self):
-        response = self.client.get(reverse("relatorios:configuracao_lista"))
-
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Nova configuração")
-
-    def test_lista_de_configuracoes_e_paginada(self):
-        for indice in range(11):
-            ConfiguracaoEmpresa.objects.create(nome_empresa=f"Empresa Extra {indice:02d}")
-
-        response = self.client.get(reverse("relatorios:configuracao_lista"), {"page": 2})
-
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.context["page_obj"].has_previous())
-        self.assertContains(response, "Empresa Extra 00")
-
-
-class RelatoriosInativacaoTests(TestCase):
-    def setUp(self):
-        self.user = get_user_model().objects.create_user(
-            username="admin_toggle_empresa",
+            username="admin_minha_empresa",
             password=SENHA_TESTE,
             perfil="admin",
         )
         self.client.force_login(self.user)
 
-    def test_configuracao_pode_ser_inativada(self):
-        configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Toggle")
+    def _dados(self, **extra):
+        return {"nome_empresa": "Empresa Unica", **extra}
 
-        response = self.client.post(
-            reverse("relatorios:configuracao_excluir", args=[configuracao.pk]), follow=True
+    def test_primeiro_salvamento_cria_e_os_seguintes_editam_o_mesmo_cadastro(self):
+        url = reverse("relatorios:minha_empresa")
+        self.client.post(url, self._dados())
+        self.client.post(url, self._dados(nome_empresa="Empresa Renomeada"))
+
+        self.assertEqual(ConfiguracaoEmpresa.objects.count(), 1)
+        self.assertEqual(ConfiguracaoEmpresa.objects.get().nome_empresa, "Empresa Renomeada")
+
+    def test_cadastro_novo_passa_a_valer_para_orcamentos_que_estavam_sem(self):
+        cliente = Cliente.objects.create(nome_razao_social="Cliente X")
+        orcamento = Orcamento.objects.create(
+            cliente=cliente, titulo="Sem cadastro", criado_por=self.user, atualizado_por=self.user
+        )
+        Orcamento.objects.filter(pk=orcamento.pk).update(configuracao_empresa=None)
+
+        self.client.post(reverse("relatorios:minha_empresa"), self._dados())
+
+        orcamento.refresh_from_db()
+        self.assertEqual(orcamento.configuracao_empresa.nome_empresa, "Empresa Unica")
+
+    def test_padroes_comerciais_entram_no_orcamento_novo(self):
+        self.client.post(
+            reverse("relatorios:minha_empresa"),
+            self._dados(
+                condicoes_pagamento_padrao="50% na assinatura",
+                servicos_taxas_inclusos_padrao="Montagem e frete",
+            ),
+        )
+        orcamento = Orcamento.objects.create(
+            titulo="Novo", criado_por=self.user, atualizado_por=self.user
         )
 
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Configuração inativada com sucesso.")
-        configuracao.refresh_from_db()
-        self.assertFalse(configuracao.ativo)
+        self.assertEqual(orcamento.condicoes_pagamento, "50% na assinatura")
+        self.assertEqual(orcamento.servicos_taxas_inclusos, "Montagem e frete")
+
+    def test_rotas_antigas_de_configuracao_levam_para_minha_empresa(self):
+        destino = reverse("relatorios:minha_empresa")
+        for rota in ("/relatorios/configuracoes/", "/relatorios/configuracoes/nova/"):
+            self.assertRedirects(self.client.get(rota), destino)
+
+    def test_admin_nao_permite_criar_segundo_cadastro(self):
+        self.user.is_staff = True
+        self.user.save()
+        response = self.client.get(reverse("admin:relatorios_configuracaoempresa_add"))
+        self.assertEqual(response.status_code, 403)
 
 
 class RelatoriosAtualizacaoTests(TestCase):
@@ -542,20 +538,18 @@ class RelatoriosAtualizacaoTests(TestCase):
     def test_formulario_de_edicao_exibe_aviso_sobre_orcamentos_nao_enviados(self):
         configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Base")
 
-        response = self.client.get(
-            reverse("relatorios:configuracao_editar", args=[configuracao.pk])
-        )
+        response = self.client.get(reverse("relatorios:minha_empresa"))
 
         self.assertEqual(response.status_code, 200)
+        self.assertContains(response, configuracao.nome_empresa)
         self.assertContains(response, "orçamentos ainda não enviados")
-        self.assertContains(response, "Voltar para empresas")
         self.assertContains(response, "Salvar empresa")
 
     def test_edicao_de_configuracao_exibe_mensagem_de_propagacao(self):
         configuracao = ConfiguracaoEmpresa.objects.create(nome_empresa="Empresa Base")
 
         response = self.client.post(
-            reverse("relatorios:configuracao_editar", args=[configuracao.pk]),
+            reverse("relatorios:minha_empresa"),
             {
                 "nome_empresa": "Empresa Atualizada",
                 "nome_fantasia": configuracao.nome_fantasia,

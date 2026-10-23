@@ -1,7 +1,9 @@
 from django.contrib import messages
-from django.db.models import Count
+from django.db.models import Count, F, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.views.decorators.http import require_safe
 
 from core.permissions import require_capability
 from core.query import paginate_queryset
@@ -48,39 +50,15 @@ def obter_queryset_itens_catalogo(request):
     return itens, busca, categoria_id, ativo, ordenar
 
 
-@require_capability("pode_visualizar_catalogo")
+@require_safe
 def categoria_lista(request):
-    busca = request.GET.get("q", "").strip()
-    ativo = request.GET.get("ativo", "ativas").strip()
-    ordenar = request.GET.get("sort", "nome")
+    """Endereço antigo: as categorias agora ficam no topo do catálogo."""
+    return redirect("catalogo:item_lista")
 
-    categorias = queryset_da_empresa(
-        CategoriaItem.objects.annotate(itens_count=Count("itens")),
-        request.user,
-    )
 
-    if ativo != "inativas":
-        categorias = categorias.filter(ativo=True)
-    else:
-        categorias = categorias.filter(ativo=False)
-
-    ordenacoes = {
-        "nome": "nome",
-        "recentes": "-atualizado_em",
-    }
-    categorias = categorias.order_by(ordenacoes.get(ordenar, "nome"))
-    if busca:
-        categorias = filter_ranked_search(categorias, busca, ("nome",))
-    page_obj = paginate_queryset(request, categorias, per_page=12)
-
-    context = {
-        "categorias": page_obj,
-        "page_obj": page_obj,
-        "busca": busca,
-        "ativo": ativo,
-        "sort": ordenar,
-    }
-    return render(request, "catalogo/categoria_lista.html", context)
+def _voltar_ao_catalogo(categoria=None):
+    destino = reverse("catalogo:item_lista")
+    return redirect(f"{destino}?categoria={categoria.pk}" if categoria else destino)
 
 
 @require_capability("pode_gerenciar_catalogo")
@@ -91,7 +69,8 @@ def categoria_criar(request):
             categoria = form.save(commit=False)
             categoria.empresa = obter_grupo_empresa_ou_erro(request.user)
             categoria.save()
-            return redirect("catalogo:categoria_lista")
+            messages.success(request, f"Categoria {categoria.nome} criada.")
+            return _voltar_ao_catalogo(categoria)
     else:
         form = CategoriaItemForm(user=request.user)
 
@@ -136,7 +115,7 @@ def categoria_editar(request, pk):
                     request,
                     "Categoria atualizada. Os itens do catálogo e os orçamentos ainda não enviados passam a usar os dados mais recentes desta categoria.",
                 )
-            return redirect("catalogo:categoria_lista")
+            return _voltar_ao_catalogo(categoria)
     else:
         form = CategoriaItemForm(instance=categoria, user=request.user)
 
@@ -161,7 +140,7 @@ def categoria_excluir(request, pk):
             messages.success(request, "Categoria reativada com sucesso.")
         else:
             messages.success(request, "Categoria inativada com sucesso.")
-        return redirect("catalogo:categoria_lista")
+        return _voltar_ao_catalogo()
 
     return render(
         request,
@@ -172,18 +151,32 @@ def categoria_excluir(request, pk):
 
 @require_capability("pode_visualizar_catalogo")
 def item_lista(request):
+    """O catálogo numa página só: as categorias em cima (com contagem, e
+    clicar filtra) e os itens embaixo."""
     itens, busca, categoria_id, ativo, ordenar = obter_queryset_itens_catalogo(request)
     page_obj = paginate_queryset(request, itens, per_page=25)
+    categorias = queryset_da_empresa(
+        CategoriaItem.objects.filter(ativo=True)
+        .annotate(
+            itens_count=Count("itens", filter=Q(itens__ativo=True, itens__empresa=F("empresa")))
+        )
+        .order_by("nome"),
+        request.user,
+    )
+    categoria_atual = next((c for c in categorias if str(c.pk) == categoria_id), None)
 
     context = {
         "itens": page_obj,
         "page_obj": page_obj,
         "busca": busca,
         "categoria": categoria_id,
+        "categoria_atual": categoria_atual,
         "ativo": ativo,
         "sort": ordenar,
-        "categorias": queryset_da_empresa(
-            CategoriaItem.objects.filter(ativo=True).order_by("nome"), request.user
+        "categorias": categorias,
+        "total_itens_ativos": sum(c.itens_count for c in categorias),
+        "categorias_inativas": queryset_da_empresa(
+            CategoriaItem.objects.filter(ativo=False).order_by("nome"), request.user
         ),
     }
     return render(request, "catalogo/item_lista.html", context)
