@@ -5,7 +5,7 @@ As frases são curtas, sobre trabalho bem feito e clareza, sem autoajuda.
 Autoria só quando é conhecida e de domínio público.
 """
 
-import random
+import math
 from datetime import datetime
 
 from django.utils import timezone
@@ -39,5 +39,12 @@ def saudacao(agora: datetime | None = None) -> str:
 
 
 def frase_do_momento(semente: int | None = None) -> dict:
-    escolha = random.Random(semente).choice(FRASES)
+    """Frase da vez. Sem semente, troca a cada minuto (pelo relógio), o que
+    basta para variar entre visitas sem gerador aleatório."""
+    if semente is None:
+        semente = int(timezone.now().timestamp() // 60)
+    # Passo coprimo com o tamanho da lista: sementes seguidas caem em frases
+    # diferentes e todas aparecem.
+    passo = next(p for p in (5, 7, 11, 13, 3) if math.gcd(p, len(FRASES)) == 1)
+    escolha = FRASES[(semente * passo) % len(FRASES)]
     return {"texto": escolha[0], "autor": escolha[1]}

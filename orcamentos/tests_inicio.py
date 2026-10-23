@@ -26,8 +26,10 @@ class SaudacaoTests(BaseFluxoTests):
         self.assertEqual(saudacao(datetime(2026, 10, 23, 3, tzinfo=SP)), "Boa noite")
 
     def test_frase_vem_da_lista_e_varia(self):
-        textos = {frase_do_momento(semente)["texto"] for semente in range(40)}
-        self.assertGreater(len(textos), 5)
+        textos = {frase_do_momento(semente)["texto"] for semente in range(len(FRASES))}
+        # Todas aparecem e sementes seguidas trocam a frase.
+        self.assertEqual(len(textos), len(FRASES))
+        self.assertNotEqual(frase_do_momento(1)["texto"], frase_do_momento(2)["texto"])
         self.assertTrue(textos <= {t for t, _ in FRASES})
 
     def test_inicio_saluda_pelo_primeiro_nome_com_frase_e_foto(self):
