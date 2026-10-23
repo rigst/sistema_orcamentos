@@ -66,8 +66,12 @@ def test_campo_preenchido_em_outra_aba_e_salvo_junto(
     page.get_by_label("Evento ou projeto").fill("Feira do Livro")
     page.get_by_role("tab", name="Comercial").click()
     page.get_by_label("Condições de pagamento").fill("50% na assinatura")
-    page.get_by_role("button", name="Salvar").first.click()
-    page.wait_for_load_state()
+    page.get_by_label("Condições de pagamento").press("Tab")
+    # Sem botão Salvar: o salvamento automático grava os dois campos.
+    page.wait_for_function(
+        "() => document.querySelector('[data-autosave-status]').textContent.includes('Tudo salvo')"
+        " && !document.querySelector('[data-desfazer]').disabled"
+    )
 
     orcamento = Orcamento.objects.get(pk=orcamento.pk)
     assert orcamento.evento_nome == "Feira do Livro"

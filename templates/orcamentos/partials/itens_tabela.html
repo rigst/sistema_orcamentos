@@ -4,7 +4,7 @@
         <table class="ds-table">
             <thead>
                 <tr>
-                    <th>Ordem</th>
+                    <th class="ordem-col"><span class="visually-hidden">Ordem</span>#</th>
                     <th>Item</th>
                     <th>Base</th>
                     <th>Ajustes</th>
@@ -17,7 +17,33 @@
             <tbody>
                 {% for item in itens %}
                     <tr class="item-row-summary"{% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %} data-linha-rapida="{% url 'orcamentos:item_edicao_rapida' orcamento.pk item.pk %}" data-desc-valor="{{ item.desconto_valor|stringformat:'s' }}" data-desc-pct="{{ item.desconto_percentual|stringformat:'s' }}" data-acr-valor="{{ item.acrescimo_valor|stringformat:'s' }}" data-acr-pct="{{ item.acrescimo_percentual|stringformat:'s' }}"{% endif %}>
-                        <td>{{ item.ordem }}</td>
+                        <td class="ordem-col">
+                            {% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %}
+                                <div class="ordem-controle">
+                                    <form method="post" action="{% url 'orcamentos:item_mover' orcamento.pk item.pk 'cima' %}" data-async-item-action="1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="item_q" value="{{ item_q }}">
+                                        <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
+                                        <input type="hidden" name="item_sort" value="{{ item_sort }}">
+                                        <button class="ordem-seta" type="submit" title="Subir item" aria-label="Subir {{ item.nome }}"{% if forloop.first %} disabled{% endif %}>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 14 5-5 5 5"/></svg>
+                                        </button>
+                                    </form>
+                                    <span class="ordem-numero">{{ item.ordem }}</span>
+                                    <form method="post" action="{% url 'orcamentos:item_mover' orcamento.pk item.pk 'baixo' %}" data-async-item-action="1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="item_q" value="{{ item_q }}">
+                                        <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
+                                        <input type="hidden" name="item_sort" value="{{ item_sort }}">
+                                        <button class="ordem-seta" type="submit" title="Descer item" aria-label="Descer {{ item.nome }}"{% if forloop.last %} disabled{% endif %}>
+                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+                                        </button>
+                                    </form>
+                                </div>
+                            {% else %}
+                                <span class="ordem-numero">{{ item.ordem }}</span>
+                            {% endif %}
+                        </td>
                         <td>
                             <strong>{{ item.nome }}</strong>
                             <small class="table-subline">{{ item.codigo_item|default:"Sem código" }}</small>
@@ -31,6 +57,10 @@
                                         <span class="category-chip-dot"></span>
                                         {{ item.item_catalogo.categoria.nome }}
                                     </span>
+                                </small>
+                            {% elif not item.item_catalogo %}
+                                <small class="table-subline">
+                                    <span class="ds-badge ds-badge--neutral item-nao-registrado" title="Este item ainda não está no catálogo da empresa">Não registrado</span>
                                 </small>
                             {% endif %}
                             {% if item.diverge_catalogo %}
@@ -60,7 +90,7 @@
                                     <span class="ds-badge ds-badge--danger">Acréscimo</span>
                                 {% endif %}
                                 {% if item.desconto_valor == 0 and item.desconto_percentual == 0 and item.acrescimo_valor == 0 and item.acrescimo_percentual == 0 %}
-                                    <span class="ds-badge ds-badge--neutral">Sem ajuste</span>
+                                    <span class="ajuste-vazio" aria-label="Sem desconto ou acréscimo">—</span>
                                 {% endif %}
                             </div>
                         </td>
@@ -68,26 +98,6 @@
                         {% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %}
                             <td class="actions-col">
                                 <div class="actions-stack">
-                                    <form method="post" action="{% url 'orcamentos:item_mover' orcamento.pk item.pk 'cima' %}" data-async-item-action="1">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="item_q" value="{{ item_q }}">
-                                        <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
-                                        <input type="hidden" name="item_sort" value="{{ item_sort }}">
-                                        <button class="ds-icon-btn" type="submit" title="Subir item" aria-label="Subir item">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 6-5 5"/><path d="m12 6 5 5"/><path d="M12 6v12"/></svg>
-                                            <span class="visually-hidden">Subir item</span>
-                                        </button>
-                                    </form>
-                                    <form method="post" action="{% url 'orcamentos:item_mover' orcamento.pk item.pk 'baixo' %}" data-async-item-action="1">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="item_q" value="{{ item_q }}">
-                                        <input type="hidden" name="item_categoria" value="{{ item_categoria }}">
-                                        <input type="hidden" name="item_sort" value="{{ item_sort }}">
-                                        <button class="ds-icon-btn" type="submit" title="Descer item" aria-label="Descer item">
-                                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 18-5-5"/><path d="m12 18 5-5"/><path d="M12 6v12"/></svg>
-                                            <span class="visually-hidden">Descer item</span>
-                                        </button>
-                                    </form>
                                     <a class="ds-icon-btn" href="{% url 'orcamentos:item_editar' orcamento.pk item.pk %}" data-open-item-modal="1" title="Editar item" aria-label="Editar item">
                                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4.5-1 9.2-9.2a1.8 1.8 0 0 0 0-2.6l-.9-.9a1.8 1.8 0 0 0-2.6 0L5 15.5 4 20Z"/><path d="M13.5 7.5l3 3"/></svg>
                                         <span class="visually-hidden">Editar item</span>

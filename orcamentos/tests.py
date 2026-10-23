@@ -935,7 +935,7 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Subtotal da categoria")
+        self.assertContains(response, "Por categoria")
         self.assertContains(response, "Eletrica")
         self.assertContains(response, "R$ 160,00")
 
@@ -1059,8 +1059,13 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:editar", args=[self.orcamento.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'data-unsaved-warning="1"')
-        self.assertContains(response, f'data-draft-key="orcamento:{self.orcamento.pk}:principal"')
+        # Na edição, o rascunho no navegador deu lugar ao salvamento automático
+        # no servidor; a tela traz os endereços dele e o form marcado.
+        self.assertContains(response, "data-autosave-form")
+        self.assertContains(response, reverse("orcamentos:autosalvar", args=[self.orcamento.pk]))
+        self.assertNotContains(
+            response, f'data-draft-key="orcamento:{self.orcamento.pk}:principal"'
+        )
 
     def test_resposta_ajax_de_item_mantem_hooks_de_rascunho(self):
         response = self.client.post(

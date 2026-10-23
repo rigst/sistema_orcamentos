@@ -20,6 +20,7 @@ from .views import (
     orcamento_novo,
     orcamento_visualizar,
 )
+from .views_versoes import orcamento_autosalvar, orcamento_desfazer, orcamento_refazer
 
 app_name = "orcamentos"
 
@@ -29,6 +30,9 @@ urlpatterns = [
     path("novo/rapido/", orcamento_criar_rapido, name="criar_rapido"),
     path("novo/completo/", orcamento_criar, name="criar"),
     path("<int:pk>/editar/", orcamento_editar, name="editar"),
+    path("<int:pk>/autosalvar/", orcamento_autosalvar, name="autosalvar"),
+    path("<int:pk>/desfazer/", orcamento_desfazer, name="desfazer"),
+    path("<int:pk>/refazer/", orcamento_refazer, name="refazer"),
     path("<int:pk>/visualizar/", orcamento_visualizar, name="visualizar"),
     path("<int:pk>/duplicar/", orcamento_duplicar, name="duplicar"),
     path("<int:pk>/excluir/", orcamento_excluir, name="excluir"),

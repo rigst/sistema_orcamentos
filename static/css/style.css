@@ -3587,60 +3587,6 @@ th.money { white-space: nowrap; }
   color: var(--ds-t-500);
 }
 
-/* ---- Régua de fechamento fixa (linha final do razão, sempre à vista) ---- */
-.ledger-bar {
-  position: sticky;
-  bottom: 0;
-  z-index: 30;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem 1.6rem;
-  margin-top: 1rem;
-  padding: 0.7rem 1.25rem;
-  background: var(--ds-surface);
-  border: 1px solid var(--ds-line);
-  border-top: 3px double var(--ds-accent);
-  border-radius: var(--ds-radius-md) var(--ds-radius-md) 0 0;
-  box-shadow: 0 -10px 26px rgba(15, 17, 21, 0.12);
-  transition: transform 220ms ease, opacity 220ms ease;
-}
-.ledger-bar[data-hidden="1"] {
-  transform: translateY(115%);
-  opacity: 0;
-  pointer-events: none;
-}
-.ledger-bar-group {
-  display: flex;
-  align-items: baseline;
-  gap: 0.55rem;
-}
-.ledger-bar-label {
-  font-family: var(--ds-font-mono);
-  font-size: 0.66rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ds-t-500);
-}
-.ledger-bar-group-total .ledger-bar-label { color: var(--ds-accent-fg); }
-.ledger-bar-sub {
-  font-size: 0.95rem;
-  color: var(--ds-t-700);
-}
-.ledger-bar-total {
-  font-size: 1.25rem;
-  color: var(--ds-blue-dark);
-}
-.ledger-bar > .ds-btn { margin-left: auto; }
-@media (prefers-reduced-motion: reduce) {
-  .ledger-bar { transition: none; }
-}
-@media (max-width: 640px) {
-  .ledger-bar { gap: 0.35rem 1rem; padding: 0.6rem 0.9rem; }
-  .ledger-bar-total { font-size: 1.1rem; }
-}
-
 /* ---- Subtotal ao vivo no modal de item ---- */
 .item-live-subtotal {
   display: flex;

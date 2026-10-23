@@ -83,6 +83,16 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             "contrato_inscricao_estadual",
         ]
         labels = {
+            "titulo": "Título",
+            "cliente": "Cliente",
+            "descricao_inicial": "Descrição inicial",
+            "observacoes_gerais": "Observações gerais",
+            "data_emissao": "Data de emissão",
+            "validade_em": "Validade",
+            "condicoes_pagamento": "Condições de pagamento",
+            "servicos_taxas_inclusos": "Serviços e taxas inclusos",
+            "valor_locacao": "Valor de locação",
+            "valor_servico": "Valor de serviço",
             "desconto_global_valor": "Desconto (R$)",
             "desconto_global_percentual": "Desconto (%)",
             "acrescimo_global_valor": "Acréscimo (R$)",

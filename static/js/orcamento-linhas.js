@@ -3,7 +3,7 @@
  * Enquanto o usuário digita, o subtotal da linha muda na hora (conta local,
  * a mesma do modelo). Ao parar de digitar, sair do campo ou apertar Enter, a
  * linha é salva e o servidor devolve os totais oficiais do orçamento, que
- * substituem o card de totais e a barra fixa. A conta local é só prévia: o
+ * substituem o card de totais. A conta local é só prévia: o
  * número que vale é sempre o do servidor.
  */
 (() => {
@@ -60,13 +60,6 @@
   const aplicarTotais = (dados) => {
     const totais = document.getElementById("totais-card-region");
     if (totais && dados.totais_html !== undefined) totais.innerHTML = dados.totais_html;
-    const barra = document.getElementById("ledger-bar");
-    if (barra) {
-      const total = barra.querySelector("[data-ledger-total]");
-      const sub = barra.querySelector("[data-ledger-subtotal]");
-      if (total) total.textContent = dados.total_final;
-      if (sub) sub.textContent = dados.subtotal_itens;
-    }
   };
 
   const salvar = async (linha) => {
@@ -114,6 +107,7 @@
       valor.removeAttribute("aria-invalid");
       linha.querySelector("[data-linha-subtotal]").textContent = dados.subtotal;
       aplicarTotais(dados);
+      document.dispatchEvent(new CustomEvent("orcamento:salvo", { detail: dados }));
       status(linha, "Salvo", "ok");
       setTimeout(() => {
         if (linha.querySelector("[data-linha-status]")?.dataset.tipo === "ok") status(linha, "", "");

@@ -56,13 +56,13 @@ class PaginaInicialTests(TestCase):
 
         titulos = [o.titulo for o in response.context["recentes"]]
         self.assertEqual(titulos, ["Aprovado recente"])
-        self.assertContains(response, "Mexidos por último")
+        self.assertContains(response, "Continuar de onde parou")
 
     def test_recentes_somem_ao_buscar_ou_filtrar(self):
         self._orcamento("Qualquer")
         response = self.client.get(reverse("orcamentos:lista"), {"q": "Qualquer"})
         self.assertEqual(response.context["recentes"], [])
-        self.assertNotContains(response, "Mexidos por último")
+        self.assertNotContains(response, "Continuar de onde parou")
 
     def test_recentes_mostram_no_maximo_quatro(self):
         for indice in range(6):
