@@ -1,7 +1,9 @@
 {% extends "base.html" %}
-{% load br_format %}
+{% load br_format static %}
 
 {% block title %}{{ titulo }}{% endblock %}
+
+{% block extra_head %}{% if orcamento and not modo_somente_leitura %}<link rel="stylesheet" href="{% static 'css/orcamento-linhas.css' %}"><script src="{% static 'js/orcamento-linhas.js' %}" defer></script>{% endif %}{% endblock %}
 
 {% block content %}
 <section>
@@ -16,7 +18,7 @@
                 <div class="page-head-meta">
                     <span class="page-head-num">{{ orcamento.numero }}</span>
                     <span class="badge status-{{ orcamento.status }}">{{ orcamento.get_status_display }}</span>
-                    <span class="page-head-cliente">{{ orcamento.cliente }}</span>
+                    <span class="page-head-cliente">{{ orcamento.cliente_exibicao }}</span>
                     <span class="page-head-emissao">Emissão {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
                 </div>
                 {% if somente_visualizacao %}

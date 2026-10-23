@@ -484,3 +484,6 @@ html.cards-mode .table-data-col {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* Botão de ação dentro do estado vazio (antes era style= inline no template). */
+.ds-empty-acao { margin-top: var(--ds-space-4); }

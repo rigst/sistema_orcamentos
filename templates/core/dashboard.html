@@ -107,7 +107,7 @@
                     {% for orcamento in ultimos_orcamentos %}
                         <tr>
                             <td>{{ orcamento.numero }}</td>
-                            <td>{{ orcamento.cliente }}</td>
+                            <td>{{ orcamento.cliente_exibicao }}</td>
                             <td>
                                 <span class="badge status-{{ orcamento.status }}">
                                     {{ orcamento.get_status_display }}

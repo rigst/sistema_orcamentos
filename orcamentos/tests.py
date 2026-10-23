@@ -497,7 +497,7 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, reverse("orcamentos:criar"))
+        self.assertContains(response, reverse("orcamentos:novo"))
         self.assertContains(response, "Novo orçamento")
 
     def test_visualizador_nao_ve_botoes_de_edicao_na_lista(self):
@@ -511,7 +511,7 @@ class OrcamentoViewsTests(TestCase):
         response = self.client.get(reverse("orcamentos:lista"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotContains(response, reverse("orcamentos:criar"))
+        self.assertNotContains(response, reverse("orcamentos:novo"))
         self.assertNotContains(response, reverse("orcamentos:excluir", args=[self.orcamento.pk]))
 
     def test_visualizador_nao_pode_salvar_orcamento(self):

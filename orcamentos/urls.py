@@ -4,16 +4,19 @@ from .views import (
     item_orcamento_criar,
     item_orcamento_duplicar,
     item_orcamento_duplicar_editar,
+    item_orcamento_edicao_rapida,
     item_orcamento_editar,
     item_orcamento_excluir,
     item_orcamento_mover,
     item_orcamento_preview,
     orcamento_alterar_status,
     orcamento_criar,
+    orcamento_criar_rapido,
     orcamento_duplicar,
     orcamento_editar,
     orcamento_excluir,
     orcamento_lista,
+    orcamento_novo,
     orcamento_visualizar,
 )
 
@@ -21,7 +24,9 @@ app_name = "orcamentos"
 
 urlpatterns = [
     path("", orcamento_lista, name="lista"),
-    path("novo/", orcamento_criar, name="criar"),
+    path("novo/", orcamento_novo, name="novo"),
+    path("novo/rapido/", orcamento_criar_rapido, name="criar_rapido"),
+    path("novo/completo/", orcamento_criar, name="criar"),
     path("<int:pk>/editar/", orcamento_editar, name="editar"),
     path("<int:pk>/visualizar/", orcamento_visualizar, name="visualizar"),
     path("<int:pk>/duplicar/", orcamento_duplicar, name="duplicar"),
@@ -52,4 +57,9 @@ urlpatterns = [
         name="item_mover",
     ),
     path("<int:orcamento_pk>/itens/previsualizar/", item_orcamento_preview, name="item_preview"),
+    path(
+        "<int:orcamento_pk>/itens/<int:item_pk>/rapido/",
+        item_orcamento_edicao_rapida,
+        name="item_edicao_rapida",
+    ),
 ]

@@ -27,6 +27,17 @@
 
 <script nonce="{{ request.csp_nonce }}">
 (() => {
+  // "+ Nova categoria…" mostra o campo de nome; categoria existente esconde.
+  document.addEventListener("change", (evento) => {
+    const select = evento.target.closest("[data-categoria-select]");
+    if (!select) return;
+    const campo = select.parentElement.querySelector("[data-categoria-nova]");
+    if (!campo) return;
+    campo.hidden = select.value !== "nova";
+    if (!campo.hidden) campo.focus();
+  });
+})();
+(() => {
   const regiao = document.getElementById("memorial-status");
   const url = regiao && regiao.dataset.pollUrl;
   if (!url) return;

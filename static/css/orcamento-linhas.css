@@ -1,0 +1,37 @@
+/* Edição de quantidade e valor na linha do item (tela do orçamento).
+   Só tokens do design system. */
+
+.linha-rapida { min-width: 15rem; }
+
+.linha-rapida-campos {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ds-space-2);
+}
+
+.linha-rapida .ds-input {
+  padding: var(--ds-space-1) var(--ds-space-2);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-height: 2.25rem;
+}
+.linha-rapida-qtd { width: 5.5rem; }
+.linha-rapida-valor { width: 7.5rem; }
+.linha-rapida .ds-input[aria-invalid="true"] { border-color: var(--ds-danger); }
+
+.linha-rapida-unidade {
+  color: var(--ds-t-500);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.linha-rapida-status { text-align: right; min-height: 1.1rem; }
+.linha-rapida-status[data-tipo="salvando"] { color: var(--ds-t-500); }
+.linha-rapida-status[data-tipo="ok"] { color: var(--ds-success); }
+.linha-rapida-status[data-tipo="erro"] { color: var(--ds-danger); }
+
+@media (max-width: 40rem) {
+  .linha-rapida { min-width: 0; }
+  .linha-rapida-campos { flex-wrap: wrap; justify-content: flex-start; }
+}

@@ -24,12 +24,13 @@ from django.core.exceptions import ValidationError
 from django.db import close_old_connections, transaction
 from django.utils import timezone
 
-from catalogo.models import ItemCatalogo
+from catalogo.models import CategoriaItem, ItemCatalogo
 from orcamentos.models import ItemOrcamento
 
 from . import prompts
 from .extracao import Memorial
 from .models import ImportacaoMemorial
+from .preenchimento import preencher_dados_gerais
 
 logger = logging.getLogger(__name__)
 
@@ -181,33 +182,11 @@ def _montar_item(orcamento, sugestao, catalogo_por_codigo, incluir_fora):
     return item
 
 
-CAMPOS_EVENTO = {
-    "evento_nome": 255,
-    "evento_local": 255,
-    "evento_periodo": 255,
-    "evento_area": 100,
-}
-
-
-def _preencher_dados_gerais(orcamento, dados_orcamento):
-    """Só preenche campo vazio: o que o usuário já digitou não é sobrescrito."""
-    alterados = []
-    for campo, limite in CAMPOS_EVENTO.items():
-        valor = _cortar(dados_orcamento.get(campo), limite)
-        if valor and not getattr(orcamento, campo):
-            setattr(orcamento, campo, valor)
-            alterados.append(campo)
-    descricao = str(dados_orcamento.get("descricao_inicial") or "").strip()
-    if descricao and not orcamento.descricao_inicial.strip():
-        orcamento.descricao_inicial = descricao
-        alterados.append("descricao_inicial")
-    return alterados
-
-
 def _registrar_destino(sugestao, item, motivo=""):
     sugestao["situacao"] = "adicionado" if item is not None else "ignorado"
     sugestao["no_catalogo"] = bool(item is not None and item.item_catalogo_id)
     if item is not None:
+        sugestao["item_id"] = item.pk
         sugestao["valor_unitario"] = str(item.valor_unitario)
         sugestao["quantidade_aplicada"] = str(item.quantidade)
     if motivo:
@@ -247,9 +226,13 @@ def aplicar_resultado(importacao: ImportacaoMemorial, dados: dict) -> int:
             criados += 1
 
         if importacao.preencher_evento:
-            alterados = _preencher_dados_gerais(orcamento, dados.get("orcamento") or {})
+            alterados, resumo_cliente = preencher_dados_gerais(
+                orcamento, dados.get("orcamento") or {}, importacao.empresa
+            )
             if alterados:
                 orcamento.save(update_fields=[*alterados, "atualizado_em"])
+            if resumo_cliente:
+                dados["cliente"] = resumo_cliente
         orcamento.recalcular_totais()
 
     dados["itens"] = sugestoes
@@ -259,6 +242,10 @@ def aplicar_resultado(importacao: ImportacaoMemorial, dados: dict) -> int:
 # ---------------------------------------------------------------------------
 # Orquestração
 # ---------------------------------------------------------------------------
+
+
+def categorias_da_empresa(empresa):
+    return CategoriaItem.objects.filter(empresa=empresa, ativo=True).order_by("nome")
 
 
 def catalogo_da_empresa(empresa):
@@ -277,7 +264,10 @@ def processar_importacao(importacao_id: int, memorial: Memorial) -> None:
     importacao.save(update_fields=["status", "atualizado_em"])
 
     try:
-        catalogo_texto = prompts.montar_catalogo(catalogo_da_empresa(importacao.empresa))
+        catalogo_texto = prompts.montar_catalogo(
+            catalogo_da_empresa(importacao.empresa),
+            categorias_da_empresa(importacao.empresa).values_list("nome", flat=True),
+        )
         dados, mensagem = analisar_memorial(
             memorial,
             catalogo_texto,

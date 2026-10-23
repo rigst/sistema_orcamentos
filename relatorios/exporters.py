@@ -153,7 +153,7 @@ def gerar_excel_orcamento(orcamento, configuracao, alerta_status: StatusRelatori
         return escape(str(valor or "")).replace("\n", "&#10;")
 
     empresa = configuracao.nome_empresa if configuracao else "Sua empresa"
-    cliente = str(orcamento.cliente)
+    cliente = orcamento.cliente_exibicao
     linhas_itens = []
     for item in (
         orcamento.itens.select_related("item_catalogo__categoria").all().order_by("ordem", "id")
@@ -511,7 +511,7 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: StatusRelatorio)
     resumo = Table(
         [
             [
-                bloco_info(styles, "CLIENTE", str(orcamento.cliente)),
+                bloco_info(styles, "CLIENTE", orcamento.cliente_exibicao),
                 bloco_info(styles, "STATUS", orcamento.get_status_display()),
                 bloco_info(styles, "EMISSÃO", formatar_data(orcamento.data_emissao)),
             ],
@@ -771,7 +771,7 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
             style_body,
         ),
         Spacer(1, 8),
-        Paragraph(f"<b>Expositor:</b> {escape(str(orcamento.cliente))}", style_body),
+        Paragraph(f"<b>Expositor:</b> {escape(orcamento.cliente_exibicao)}", style_body),
         Paragraph(
             f"<b>Evento:</b> {escape(orcamento.evento_nome or orcamento.titulo)}", style_body
         ),
@@ -987,7 +987,7 @@ def gerar_word_memorial_descritivo(orcamento, configuracao) -> bytes:
         r"{\fonttbl{\f0 Arial;}}",
         r"\viewkind4\uc1",
         _rtf_paragrafo(f"{cidade_base}, {formatar_data_extenso(orcamento.data_emissao)}"),
-        _rtf_paragrafo(f"Expositor: {texto_ou_linha(str(orcamento.cliente), tamanho=38)}"),
+        _rtf_paragrafo(f"Expositor: {texto_ou_linha(orcamento.cliente_exibicao, tamanho=38)}"),
         _rtf_paragrafo(
             f"Evento: {texto_ou_linha(orcamento.evento_nome or orcamento.titulo, tamanho=38)}"
         ),

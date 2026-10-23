@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Novo orçamento{% endblock %}
+
+{% block extra_head %}<link rel="stylesheet" href="{% static 'css/memoriais.css' %}">{% endblock %}
+
+{% block content %}
+<section>
+    <div class="section-heading page-head">
+        <div>
+            <a class="page-back" href="{% url 'orcamentos:lista' %}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
+                Voltar para orçamentos
+            </a>
+            <h2 class="ds-h2">Novo orçamento</h2>
+            <p>Comece pelo memorial do edital e deixe a IA montar o rascunho, ou crie em branco e preencha depois. Tudo pode ser editado.</p>
+        </div>
+    </div>
+
+    <div class="novo-caminhos">
+        {% if ia_disponivel %}
+            <div class="ds-card novo-caminho novo-caminho--destaque">
+                <h3 class="ds-h3">Começar pelo memorial descritivo</h3>
+                <p class="ds-help">A IA lê o edital, preenche título, evento e dados do contratante, identifica ou cadastra o cliente e monta os itens com os preços do teu catálogo.</p>
+
+                <form method="post" action="{% url 'memoriais:novo_com_memorial' %}" enctype="multipart/form-data" class="memorial-form" novalidate>
+                    {% csrf_token %}
+                    {% if memorial_form.non_field_errors %}
+                        <div class="ds-alert ds-alert--danger" role="alert">
+                            <div>{% for erro in memorial_form.non_field_errors %}<p>{{ erro }}</p>{% endfor %}</div>
+                        </div>
+                    {% endif %}
+
+                    <div class="ds-field">
+                        <label for="{{ memorial_form.arquivo.id_for_label }}">{{ memorial_form.arquivo.label }}</label>
+                        {{ memorial_form.arquivo }}
+                        <p class="ds-help">{{ memorial_form.arquivo.help_text }}</p>
+                        {% for erro in memorial_form.arquivo.errors %}<p class="ds-help ds-help--error">{{ erro }}</p>{% endfor %}
+                    </div>
+
+                    <details class="memorial-colar"{% if memorial_form.texto.value %} open{% endif %}>
+                        <summary>Prefiro colar o texto</summary>
+                        <div class="ds-field">
+                            <label for="{{ memorial_form.texto.id_for_label }}">{{ memorial_form.texto.label }}</label>
+                            {{ memorial_form.texto }}
+                        </div>
+                    </details>
+
+                    <div class="ds-field">
+                        <label for="{{ memorial_form.cliente.id_for_label }}">{{ memorial_form.cliente.label }}</label>
+                        {{ memorial_form.cliente }}
+                        <p class="ds-help">{{ memorial_form.cliente.help_text }}</p>
+                    </div>
+
+                    <details class="memorial-colar">
+                        <summary>Mais opções</summary>
+                        <div class="ds-field">
+                            <label for="{{ memorial_form.instrucoes.id_for_label }}">{{ memorial_form.instrucoes.label }}</label>
+                            {{ memorial_form.instrucoes }}
+                            <p class="ds-help">{{ memorial_form.instrucoes.help_text }}</p>
+                        </div>
+                        <div class="ds-check">
+                            {{ memorial_form.incluir_fora_catalogo }}
+                            <label for="{{ memorial_form.incluir_fora_catalogo.id_for_label }}">{{ memorial_form.incluir_fora_catalogo.label }}</label>
+                        </div>
+                        <div class="ds-check">
+                            {{ memorial_form.preencher_evento }}
+                            <label for="{{ memorial_form.preencher_evento.id_for_label }}">Preencher título, cliente e dados do evento a partir do memorial</label>
+                        </div>
+                    </details>
+
+                    <div class="memorial-acoes">
+                        <button class="ds-btn ds-btn--solid" type="submit" {% if restantes <= 0 %}disabled{% endif %}>
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+                            <span>Criar a partir do memorial</span>
+                        </button>
+                    </div>
+                    <p class="ds-help">Importações restantes hoje: {{ restantes }} de {{ limite }}. A leitura leva de 1 a 5 minutos.</p>
+                </form>
+            </div>
+        {% endif %}
+
+        <div class="ds-card novo-caminho">
+            <h3 class="ds-h3">Começar em branco</h3>
+            <p class="ds-help">Nada é obrigatório. Sem título vira "Novo orçamento"; sem cliente fica "a definir". Ajusta tudo na próxima tela.</p>
+            <form method="post" action="{% url 'orcamentos:criar_rapido' %}" class="memorial-form" novalidate>
+                {% csrf_token %}
+                <div class="ds-field">
+                    <label for="{{ rapido_form.titulo.id_for_label }}">{{ rapido_form.titulo.label }}</label>
+                    {{ rapido_form.titulo }}
+                    {% for erro in rapido_form.titulo.errors %}<p class="ds-help ds-help--error">{{ erro }}</p>{% endfor %}
+                </div>
+                <div class="ds-field">
+                    <label for="{{ rapido_form.cliente.id_for_label }}">{{ rapido_form.cliente.label }}</label>
+                    {{ rapido_form.cliente }}
+                    {% for erro in rapido_form.cliente.errors %}<p class="ds-help ds-help--error">{{ erro }}</p>{% endfor %}
+                </div>
+                <div class="memorial-acoes">
+                    <a class="ds-btn ds-btn--ghost" href="{% url 'orcamentos:criar' %}">Formulário completo</a>
+                    <button class="ds-btn {% if ia_disponivel %}ds-btn--ghost{% else %}ds-btn--solid{% endif %}" type="submit">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+                        <span>Criar orçamento</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

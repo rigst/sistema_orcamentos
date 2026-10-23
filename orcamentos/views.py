@@ -1,8 +1,9 @@
+from decimal import Decimal, InvalidOperation
 from urllib.parse import urlencode
 
 from django.conf import settings
 from django.contrib import messages
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import models, transaction
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -11,12 +12,13 @@ from django.urls import reverse
 from django.views.decorators.http import require_http_methods, require_POST
 
 from catalogo.models import CategoriaItem
+from core.formatting import formatar_decimal_br, formatar_moeda_br, parse_decimal_br
 from core.permissions import require_capability
 from core.query import paginate_queryset
 from core.search import filter_ranked_search
 from core.tenancy import obter_grupo_empresa_ou_erro, queryset_da_empresa
 
-from .forms import ItemOrcamentoForm, OrcamentoForm
+from .forms import ItemOrcamentoForm, OrcamentoForm, OrcamentoRapidoForm
 from .models import ItemOrcamento, Orcamento
 
 STATUS_PERMITIDOS = {
@@ -237,6 +239,50 @@ def orcamento_lista(request):
         "status_choices": Orcamento.STATUS_CHOICES,
     }
     return render(request, "orcamentos/lista.html", context)
+
+
+def renderizar_inicio_rapido(request, *, memorial_form=None, rapido_form=None, status=200):
+    """Tela de "Novo orçamento": começar por um memorial (IA) ou em branco."""
+    from memoriais import services as memoriais_services
+    from memoriais.forms import NovoOrcamentoMemorialForm
+
+    empresa = obter_grupo_empresa_ou_erro(request.user)
+    limite = memoriais_services.limite_diario(request.user)
+    ia = bool(getattr(settings, "ANTHROPIC_API_KEY", ""))
+    contexto = {
+        "memorial_form": memorial_form or NovoOrcamentoMemorialForm(user=request.user),
+        "rapido_form": rapido_form or OrcamentoRapidoForm(user=request.user),
+        "ia_disponivel": ia,
+        "restantes": max(limite - memoriais_services.usadas_hoje(empresa), 0) if ia else 0,
+        "limite": limite,
+    }
+    return render(request, "orcamentos/novo.html", contexto, status=status)
+
+
+@require_capability("pode_gerenciar_orcamentos")
+@require_http_methods(["GET"])
+def orcamento_novo(request):
+    return renderizar_inicio_rapido(request)
+
+
+@require_capability("pode_gerenciar_orcamentos")
+@require_POST
+def orcamento_criar_rapido(request):
+    """Um clique: título genérico, cliente opcional, tudo editável depois."""
+    form = OrcamentoRapidoForm(request.POST, user=request.user)
+    if not form.is_valid():
+        return renderizar_inicio_rapido(request, rapido_form=form, status=400)
+    orcamento = Orcamento.objects.create(
+        empresa=obter_grupo_empresa_ou_erro(request.user),
+        cliente=form.cleaned_data.get("cliente"),
+        titulo=form.cleaned_data["titulo"],
+        criado_por=request.user,
+        atualizado_por=request.user,
+    )
+    messages.success(
+        request, f"Orçamento {orcamento.numero} criado. Agora é só adicionar os itens."
+    )
+    return redirect("orcamentos:editar", pk=orcamento.pk)
 
 
 @require_capability("pode_gerenciar_orcamentos")
@@ -707,6 +753,62 @@ def item_orcamento_mover(request, orcamento_pk, item_pk, direcao):
         )
     messages.success(request, mensagem)
     return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
+
+
+CAMPOS_EDICAO_RAPIDA = ("quantidade", "valor_unitario")
+
+
+@require_capability("pode_gerenciar_orcamentos")
+@require_POST
+def item_orcamento_edicao_rapida(request, orcamento_pk, item_pk):
+    """Quantidade e valor unitário editados direto na linha da tabela.
+
+    Responde só o que a tela precisa trocar (a linha e os totais) em vez da
+    tabela inteira: assim o foco continua no campo seguinte enquanto o usuário
+    vai de linha em linha com o Tab.
+    """
+    orcamento = get_object_or_404(
+        queryset_da_empresa(Orcamento.objects.all(), request.user), pk=orcamento_pk
+    )
+    exigir_orcamento_editavel(request.user, orcamento)
+    item = get_object_or_404(ItemOrcamento, pk=item_pk, orcamento=orcamento)
+
+    for campo in CAMPOS_EDICAO_RAPIDA:
+        if campo not in request.POST:
+            continue
+        try:
+            valor = parse_decimal_br(request.POST[campo])
+            if valor is None:
+                return JsonResponse({"erro": "Preencha a quantidade e o valor."}, status=400)
+            if not valor.is_finite() or abs(valor) >= Decimal("1e10"):
+                raise ValueError("fora do intervalo")
+            setattr(item, campo, valor.quantize(Decimal("0.01")))
+        except (ValueError, InvalidOperation):
+            return JsonResponse({"erro": "Número inválido."}, status=400)
+    try:
+        item.save()
+    except ValidationError as exc:
+        return JsonResponse({"erro": " ".join(exc.messages)}, status=400)
+
+    orcamento.refresh_from_db()
+    return JsonResponse(
+        {
+            "quantidade": formatar_decimal_br(item.quantidade),
+            "valor_unitario": formatar_moeda_br(item.valor_unitario),
+            "subtotal": formatar_moeda_br(item.subtotal),
+            "diverge_catalogo": item.diverge_catalogo,
+            "subtotal_itens": formatar_moeda_br(orcamento.subtotal_itens),
+            "total_final": formatar_moeda_br(orcamento.total_final),
+            "totais_html": render_to_string(
+                "orcamentos/partials/totais_card.html",
+                {
+                    "orcamento": orcamento,
+                    "subtotais_categoria": orcamento.subtotais_por_categoria(),
+                },
+                request=request,
+            ),
+        }
+    )
 
 
 @require_capability("pode_gerenciar_orcamentos")

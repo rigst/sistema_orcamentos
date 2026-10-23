@@ -125,6 +125,11 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
 
         self.fields["numero"].required = False
         self.fields["data_emissao"].required = False
+        # Nada disso trava mais a criação: sem título vale o genérico, sem
+        # cliente o orçamento fica "a definir" até alguém escolher.
+        self.fields["titulo"].required = False
+        self.fields["cliente"].required = False
+        cast(forms.ModelChoiceField, self.fields["cliente"]).empty_label = Orcamento.SEM_CLIENTE
         self.fields["numero"].widget.attrs.update(
             {
                 "readonly": "readonly",
@@ -167,7 +172,7 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             from core.tenancy import queryset_da_empresa
             from relatorios.models import ConfiguracaoEmpresa
 
-            cast("forms.ModelChoiceField", self.fields["cliente"]).queryset = queryset_da_empresa(
+            cast(forms.ModelChoiceField, self.fields["cliente"]).queryset = queryset_da_empresa(
                 Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user
             )
             configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
@@ -203,6 +208,9 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
         validar_telefone_basico(valor, campo="Telefone do evento")
         return formatar_telefone_br(valor)
 
+    def clean_titulo(self):
+        return (self.cleaned_data.get("titulo") or "").strip() or Orcamento.TITULO_GENERICO
+
     def clean(self):
         cleaned_data = super().clean()
         configuracao = cleaned_data.get("configuracao_empresa")
@@ -237,6 +245,37 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
         return formatar_cep_br(valor)
 
 
+class OrcamentoRapidoForm(forms.Form):
+    """Criação sem travas: os dois campos são opcionais."""
+
+    titulo = forms.CharField(
+        required=False,
+        max_length=255,
+        label="Título",
+        widget=forms.TextInput(
+            attrs={"class": "ds-input", "placeholder": Orcamento.TITULO_GENERICO}
+        ),
+    )
+    cliente: forms.ModelChoiceField = forms.ModelChoiceField(
+        queryset=None,
+        required=False,
+        label="Cliente",
+        empty_label=Orcamento.SEM_CLIENTE,
+    )
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from clientes.models import Cliente
+        from core.tenancy import queryset_da_empresa
+
+        clientes = Cliente.objects.filter(ativo=True).order_by("nome_razao_social")
+        clientes = queryset_da_empresa(clientes, user) if user is not None else clientes.none()
+        cast(forms.ModelChoiceField, self.fields["cliente"]).queryset = clientes
+
+    def clean_titulo(self):
+        return (self.cleaned_data.get("titulo") or "").strip() or Orcamento.TITULO_GENERICO
+
+
 class ItemOrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
     class Meta:
         model = ItemOrcamento
@@ -269,7 +308,7 @@ class ItemOrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             from core.tenancy import queryset_da_empresa
 
             queryset = queryset_da_empresa(queryset, user)
-        cast("forms.ModelChoiceField", self.fields["item_catalogo"]).queryset = queryset
+        cast(forms.ModelChoiceField, self.fields["item_catalogo"]).queryset = queryset
         self.fields["item_catalogo"].required = False
         self.fields["nome"].required = False
         self.fields["unidade_medida"].required = False

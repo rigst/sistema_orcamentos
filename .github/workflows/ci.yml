@@ -162,7 +162,11 @@ jobs:
       # apaga o resto: numa primeira tentativa o `-Dsonar.exclusions=scripts/**`
       # sozinho derrubou as exclusões de migrations, staticfiles e binários que
       # o pipeline define.
+      # *.js e *.html fora da métrica de COBERTURA (não da análise): ela vem só
+      # do pytest, que não executa JS, então todo arquivo JS novo entrava como
+      # 0% e reprovava o portão. O JS é exercitado pelo job e2e (Playwright).
+      # Mesmo critério do sistema_trilhas.
       sonar-args: >-
         -Dsonar.qualitygate.wait=true
         -Dsonar.exclusions=**/migrations/**,**/staticfiles/**,**/node_modules/**,**/venv/**,**/.venv/**,**/*.jpg,**/*.jpeg,**/*.png,**/*.gif,**/*.ico,**/*.webp,**/*.pdf,**/*.woff,**/*.woff2,**/*.ttf,**/*.eot,scripts/**
-        -Dsonar.coverage.exclusions=**/migrations/**,**/tests.py,**/tests_*.py,**/test_*.py,**/tests/**,**/conftest.py,**/settings/**,**/settings.py,**/manage.py,**/wsgi.py,**/asgi.py,scripts/**
+        -Dsonar.coverage.exclusions=**/migrations/**,**/tests.py,**/tests_*.py,**/test_*.py,**/tests/**,**/conftest.py,**/settings/**,**/settings.py,**/manage.py,**/wsgi.py,**/asgi.py,scripts/**,**/*.js,**/*.html

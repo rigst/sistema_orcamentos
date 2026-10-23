@@ -16,7 +16,7 @@
             </thead>
             <tbody>
                 {% for item in itens %}
-                    <tr class="item-row-summary">
+                    <tr class="item-row-summary"{% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %} data-linha-rapida="{% url 'orcamentos:item_edicao_rapida' orcamento.pk item.pk %}" data-desc-valor="{{ item.desconto_valor|stringformat:'s' }}" data-desc-pct="{{ item.desconto_percentual|stringformat:'s' }}" data-acr-valor="{{ item.acrescimo_valor|stringformat:'s' }}" data-acr-pct="{{ item.acrescimo_percentual|stringformat:'s' }}"{% endif %}>
                         <td>{{ item.ordem }}</td>
                         <td>
                             <strong>{{ item.nome }}</strong>
@@ -37,7 +37,20 @@
                                 <small class="table-subline table-subline-warning">Personalizado em relação ao catálogo</small>
                             {% endif %}
                         </td>
-                        <td class="money">{{ item.quantidade|decimal_br }} x {{ item.valor_unitario|brl }}</td>
+                        {% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %}
+                            <td class="money linha-rapida">
+                                <div class="linha-rapida-campos">
+                                    <label class="visually-hidden" for="qtd-{{ item.pk }}">Quantidade de {{ item.nome }}</label>
+                                    <input id="qtd-{{ item.pk }}" class="ds-input linha-rapida-qtd" name="quantidade" value="{{ item.quantidade|decimal_br }}" inputmode="decimal" autocomplete="off" data-campo-rapido="quantidade">
+                                    <span class="linha-rapida-unidade" aria-hidden="true">{{ item.unidade_medida }} ×</span>
+                                    <label class="visually-hidden" for="valor-{{ item.pk }}">Valor unitário de {{ item.nome }}</label>
+                                    <input id="valor-{{ item.pk }}" class="ds-input linha-rapida-valor" name="valor_unitario" value="{{ item.valor_unitario|decimal_br }}" inputmode="decimal" autocomplete="off" data-campo-rapido="valor_unitario">
+                                </div>
+                                <small class="table-subline linha-rapida-status" data-linha-status aria-live="polite"></small>
+                            </td>
+                        {% else %}
+                            <td class="money">{{ item.quantidade|decimal_br }} x {{ item.valor_unitario|brl }}</td>
+                        {% endif %}
                         <td>
                             <div class="adjustment-badges">
                                 {% if item.desconto_valor > 0 or item.desconto_percentual > 0 %}
@@ -51,7 +64,7 @@
                                 {% endif %}
                             </div>
                         </td>
-                        <td class="money">{{ item.subtotal|brl }}</td>
+                        <td class="money" data-linha-subtotal>{{ item.subtotal|brl }}</td>
                         {% if user.pode_gerenciar_orcamentos and not modo_somente_leitura %}
                             <td class="actions-col">
                                 <div class="actions-stack">

@@ -29,9 +29,66 @@
         </div>
     </div>
 
+    {% if cliente_ia %}
+        <div class="ds-alert ds-alert--info memorial-secao">
+            <div>
+                <p class="ds-alert-title">Cliente: {{ cliente_ia.cliente_nome }}</p>
+                <p>{% if cliente_ia.criado %}Cadastrado agora a partir dos dados do edital. Confira o cadastro em Clientes.{% else %}Já estava cadastrado e foi vinculado ao orçamento.{% endif %}</p>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="memorial-acoes">
         <a class="ds-btn ds-btn--solid" href="{% url 'memoriais:status' orcamento.pk importacao.pk %}?seguir=1">Revisar e editar o orçamento</a>
     </div>
+
+    {% if para_catalogar %}
+        <div class="ds-card memorial-secao" id="salvar-catalogo">
+            <h3 class="ds-h3">Levar itens novos para o catálogo</h3>
+            <p class="ds-help">Estes itens entraram no orçamento mas ainda não existem no teu catálogo. Marque os que quer reaproveitar e escolha a categoria. Eles vão para o catálogo com o valor que está no orçamento agora, então vale precificar antes.</p>
+            <form method="post" action="{% url 'memoriais:salvar_catalogo' orcamento.pk importacao.pk %}" class="memorial-catalogo-form">
+                {% csrf_token %}
+                <div class="ds-table-wrap">
+                    <table class="ds-table memorial-tabela">
+                        <caption class="visually-hidden">Itens fora do catálogo</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col"><span class="visually-hidden">Salvar</span></th>
+                                <th scope="col">Item</th>
+                                <th scope="col" class="num">Valor no orçamento</th>
+                                <th scope="col">Categoria</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item, sugerida, categoria_id in para_catalogar %}
+                                <tr data-catalogar>
+                                    <td><input type="checkbox" name="item_{{ item.pk }}" id="cat-item-{{ item.pk }}" checked></td>
+                                    <td><label for="cat-item-{{ item.pk }}">{{ item.nome }}</label><small>{{ item.get_unidade_medida_display }}</small></td>
+                                    <td class="num">{{ item.valor_unitario|brl }}{% if not item.valor_unitario %}<small>sem preço ainda</small>{% endif %}</td>
+                                    <td>
+                                        <label class="visually-hidden" for="cat-sel-{{ item.pk }}">Categoria de {{ item.nome }}</label>
+                                        <select id="cat-sel-{{ item.pk }}" name="categoria_{{ item.pk }}" class="ds-select" data-categoria-select>
+                                            {% for categoria in categorias %}
+                                                <option value="{{ categoria.pk }}"{% if categoria.pk == categoria_id %} selected{% endif %}>{{ categoria.nome }}</option>
+                                            {% endfor %}
+                                            <option value="nova"{% if not categoria_id %} selected{% endif %}>+ Nova categoria…</option>
+                                        </select>
+                                        <label class="visually-hidden" for="cat-nova-{{ item.pk }}">Nome da nova categoria</label>
+                                        <input id="cat-nova-{{ item.pk }}" class="ds-input memorial-categoria-nova" name="categoria_nova_{{ item.pk }}" value="{% if not categoria_id %}{{ sugerida }}{% endif %}" placeholder="Nome da nova categoria" maxlength="100" data-categoria-nova{% if categoria_id %} hidden{% endif %}>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="memorial-acoes">
+                    <button class="ds-btn ds-btn--solid" type="submit">Salvar marcados no catálogo</button>
+                </div>
+            </form>
+        </div>
+    {% elif salvos_no_catalogo %}
+        <p class="ds-help memorial-secao">{{ salvos_no_catalogo|length }} item{{ salvos_no_catalogo|length|pluralize:"s" }} desta importação já {{ salvos_no_catalogo|length|pluralize:"está,estão" }} no catálogo.</p>
+    {% endif %}
 
     {% if pendencias %}
         <div class="ds-card memorial-secao">
