@@ -47,6 +47,10 @@ def resposta_ia(itens, pendencias=None, orcamento=None):
             "evento_periodo": "10 a 14/11/2026",
             "evento_area": "27 m2",
             "descricao_inicial": "Montagem de 3 estandes de 3x3 m.",
+            "contratante_nome": "",
+            "contratante_cnpj": "",
+            "contratante_endereco": "",
+            "contratante_cidade": "",
         },
         "itens": itens,
         "pendencias": pendencias or [],
@@ -65,6 +69,7 @@ def sugestao(
         "justificativa": "3 estandes de 3x3 m = 27 m2",
         "trecho_memorial": "item 2.1",
         "confianca": confianca,
+        "categoria_sugerida": "",
     }
 
 
@@ -318,7 +323,7 @@ class ImportacaoFalhasTests(BaseMemorialTests):
             resposta_ia([sugestao(self.piso.codigo), sugestao(self.carpete.codigo)])
         )
         with (
-            mock.patch.object(services, "_preencher_dados_gerais", side_effect=RuntimeError("bug")),
+            mock.patch.object(services, "preencher_dados_gerais", side_effect=RuntimeError("bug")),
             self.assertLogs("memoriais.services", level="ERROR"),
         ):
             self.importar(falso)

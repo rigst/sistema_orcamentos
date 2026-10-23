@@ -9,6 +9,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import IntegrityError, models
 from django.db.models import Max
+from django.utils.timezone import localdate
 
 from core.tenancy import obter_grupo_empresa_padrao
 
@@ -35,10 +36,14 @@ class Orcamento(models.Model):
 
     numero = models.CharField(max_length=30)
 
+    # Opcional para não travar a criação: o orçamento nasce sem cliente e ele é
+    # definido depois. Tudo que exibe o cliente passa por `cliente_exibicao`.
     cliente = models.ForeignKey(
         "clientes.Cliente",
         on_delete=models.PROTECT,
         related_name="orcamentos",
+        null=True,
+        blank=True,
     )
 
     titulo = models.CharField(max_length=255)
@@ -210,10 +215,15 @@ class Orcamento(models.Model):
     # dentro do save, e o mypy não enxerga atributo que nasce assim.
     _empresa_numero_context: ClassVar[Group | None] = None
 
+    SEM_CLIENTE = "Cliente a definir"
+    TITULO_GENERICO = "Novo orçamento"
+
     def __str__(self):
-        return f"{self.numero} - {self.cliente}"
+        return f"{self.numero} - {self.cliente_exibicao}"
 
     def save(self, *args, **kwargs):
+        if self.data_emissao is None:
+            self.data_emissao = localdate()
         if self.empresa_id is None:
             if self.criado_por_id and self.criado_por.groups.exists():
                 self.empresa = self.criado_por.groups.order_by("name", "id").first()
@@ -244,6 +254,14 @@ class Orcamento(models.Model):
                     raise
             finally:
                 type(self)._empresa_numero_context = None
+
+    @property
+    def cliente_exibicao(self) -> str:
+        return str(self.cliente) if self.cliente_id else self.SEM_CLIENTE
+
+    @property
+    def titulo_e_generico(self) -> bool:
+        return not (self.titulo or "").strip() or self.titulo == self.TITULO_GENERICO
 
     @classmethod
     def gerar_proximo_numero(cls, ano: int) -> str:

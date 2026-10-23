@@ -64,3 +64,25 @@
 .memorial-secao h3 { margin-bottom: var(--ds-space-3); }
 .memorial-tabela td small { display: block; color: var(--ds-t-500); margin-top: var(--ds-space-1); }
 .memorial-tabela .num { text-align: right; white-space: nowrap; }
+
+/* Tela de "Novo orçamento" com os dois caminhos. */
+.novo-caminhos {
+  display: grid;
+  gap: var(--ds-space-6);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+@media (min-width: 60rem) {
+  .novo-caminhos { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+}
+.novo-caminho h3 { margin-bottom: var(--ds-space-2); }
+.novo-caminho > .ds-help { margin-bottom: var(--ds-space-4); }
+.novo-caminho--destaque { border-color: var(--ds-accent-fg); }
+
+.memorial-colar { margin-top: var(--ds-space-4); }
+.memorial-colar > summary { cursor: pointer; color: var(--ds-t-500); font-size: 0.9rem; }
+.memorial-colar[open] > summary { margin-bottom: var(--ds-space-3); }
+
+.memorial-categoria-nova { margin-top: var(--ds-space-2); }
+.memorial-catalogo-form .ds-select,
+.memorial-catalogo-form .ds-input { min-width: 12rem; }

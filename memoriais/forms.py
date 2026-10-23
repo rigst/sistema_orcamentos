@@ -1,3 +1,5 @@
+from typing import cast
+
 from django import forms
 
 from .extracao import EXTENSOES_ACEITAS
@@ -42,3 +44,29 @@ class ImportarMemorialForm(forms.Form):
         if dados.get("arquivo") and (dados.get("texto") or "").strip():
             raise forms.ValidationError("Use o arquivo ou o texto colado, não os dois.")
         return dados
+
+
+class NovoOrcamentoMemorialForm(ImportarMemorialForm):
+    """Início rápido: memorial e, opcionalmente, o cliente. O resto vem da IA."""
+
+    cliente: forms.ModelChoiceField = forms.ModelChoiceField(
+        queryset=None,
+        required=False,
+        label="Cliente",
+        empty_label="Identificar pelo memorial",
+        help_text="Deixe em branco e a IA usa o órgão do edital, cadastrando se for novo.",
+    )
+
+    field_order = ["arquivo", "texto", "cliente", "instrucoes"]
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        from clientes.models import Cliente
+        from core.tenancy import queryset_da_empresa
+
+        clientes = Cliente.objects.filter(ativo=True).order_by("nome_razao_social")
+        if user is not None:
+            clientes = queryset_da_empresa(clientes, user)
+        else:
+            clientes = clientes.none()
+        cast("forms.ModelChoiceField", self.fields["cliente"]).queryset = clientes

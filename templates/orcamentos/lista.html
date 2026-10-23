@@ -11,7 +11,7 @@
             <p style="color: var(--ds-t-500); margin-top: 0.5rem;">Gerencie, filtre e altere rapidamente os orçamentos do sistema.</p>
         </div>
         {% if user.pode_gerenciar_orcamentos %}
-            <a class="ds-btn ds-btn--solid" href="{% url 'orcamentos:criar' %}">
+            <a class="ds-btn ds-btn--solid" href="{% url 'orcamentos:novo' %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Novo orçamento
             </a>
@@ -69,7 +69,7 @@
                                 <span class="table-subline table-subline-muted">Validade: {% if orcamento.validade_em %}{{ orcamento.validade_em|date:"d/m/Y" }}{% else %}-{% endif %}</span>
                             </td>
                             <td class="budget-meta-cell">
-                                <strong>{{ orcamento.cliente }}</strong>
+                                <strong>{{ orcamento.cliente_exibicao }}</strong>
                             </td>
                             <td class="budget-title-cell">
                                 <strong>{{ orcamento.titulo }}</strong>
@@ -185,7 +185,7 @@
                 <h3 class="ds-h3">Nenhum orçamento encontrado</h3>
                 <p>Crie o primeiro orçamento para começar.</p>
                 {% if user.pode_gerenciar_orcamentos %}
-                    <a class="ds-btn ds-btn--solid" href="{% url 'orcamentos:criar' %}" style="margin-top: 1rem;">
+                    <a class="ds-btn ds-btn--solid ds-empty-acao" href="{% url 'orcamentos:novo' %}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         Novo orçamento
                     </a>
