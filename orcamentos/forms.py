@@ -129,7 +129,7 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
         # cliente o orçamento fica "a definir" até alguém escolher.
         self.fields["titulo"].required = False
         self.fields["cliente"].required = False
-        cast("forms.ModelChoiceField", self.fields["cliente"]).empty_label = Orcamento.SEM_CLIENTE
+        cast(forms.ModelChoiceField, self.fields["cliente"]).empty_label = Orcamento.SEM_CLIENTE
         self.fields["numero"].widget.attrs.update(
             {
                 "readonly": "readonly",
@@ -172,7 +172,7 @@ class OrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             from core.tenancy import queryset_da_empresa
             from relatorios.models import ConfiguracaoEmpresa
 
-            cast("forms.ModelChoiceField", self.fields["cliente"]).queryset = queryset_da_empresa(
+            cast(forms.ModelChoiceField, self.fields["cliente"]).queryset = queryset_da_empresa(
                 Cliente.objects.filter(ativo=True).order_by("nome_razao_social"), user
             )
             configuracoes = queryset_da_empresa(ConfiguracaoEmpresa.objects.all(), user)
@@ -270,7 +270,7 @@ class OrcamentoRapidoForm(forms.Form):
 
         clientes = Cliente.objects.filter(ativo=True).order_by("nome_razao_social")
         clientes = queryset_da_empresa(clientes, user) if user is not None else clientes.none()
-        cast("forms.ModelChoiceField", self.fields["cliente"]).queryset = clientes
+        cast(forms.ModelChoiceField, self.fields["cliente"]).queryset = clientes
 
     def clean_titulo(self):
         return (self.cleaned_data.get("titulo") or "").strip() or Orcamento.TITULO_GENERICO
@@ -308,7 +308,7 @@ class ItemOrcamentoForm(OptimisticLockModelFormMixin, forms.ModelForm):
             from core.tenancy import queryset_da_empresa
 
             queryset = queryset_da_empresa(queryset, user)
-        cast("forms.ModelChoiceField", self.fields["item_catalogo"]).queryset = queryset
+        cast(forms.ModelChoiceField, self.fields["item_catalogo"]).queryset = queryset
         self.fields["item_catalogo"].required = False
         self.fields["nome"].required = False
         self.fields["unidade_medida"].required = False

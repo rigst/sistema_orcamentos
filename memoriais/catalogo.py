@@ -72,46 +72,46 @@ def _categoria(empresa, escolha: Escolha, criadas: dict):
     return criadas[chave]
 
 
+def _criar_no_catalogo(empresa, item, categoria):
+    unidade = item.unidade_medida if item.unidade_medida in UNIDADES_CATALOGO else "un"
+    catalogo = ItemCatalogo.objects.create(
+        empresa=empresa,
+        categoria=categoria,
+        nome=item.nome,
+        descricao_padrao=item.descricao,
+        unidade_medida=unidade,
+        valor_unitario_padrao=item.valor_unitario,
+        observacoes="Cadastrado a partir de sugestão da IA num memorial descritivo.",
+    )
+    # update() e não save(): o vínculo não muda subtotal nem código da linha,
+    # e o save() do item refaria a validação inteira à toa.
+    ItemOrcamento.objects.filter(pk=item.pk).update(item_catalogo=catalogo)
+
+
+def _marcar_salvos(importacao: ImportacaoMemorial, salvos: set[int]):
+    resultado = dict(importacao.resultado or {})
+    for sugestao in resultado.get("itens") or []:
+        if sugestao.get("item_id") in salvos:
+            sugestao["no_catalogo"] = True
+            sugestao["salvo_no_catalogo"] = True
+    importacao.resultado = resultado
+    importacao.save(update_fields=["resultado", "atualizado_em"])
+
+
 def salvar_no_catalogo(importacao: ImportacaoMemorial, escolhas: list[Escolha]) -> int:
     """Cria os itens de catálogo e vincula as linhas do orçamento a eles.
     Atômico. Devolve quantos itens foram para o catálogo."""
-    empresa = importacao.empresa
     validos = {item.pk: item for item, _ in itens_fora_do_catalogo(importacao)}
     criadas: dict = {}
-    salvos = 0
+    salvos: set[int] = set()
     with transaction.atomic():
         for escolha in escolhas:
             item = validos.get(escolha.item_id)
-            if item is None:
+            categoria = item and _categoria(importacao.empresa, escolha, criadas)
+            if item is None or categoria is None:
                 continue
-            categoria = _categoria(empresa, escolha, criadas)
-            if categoria is None:
-                continue
-            unidade = item.unidade_medida if item.unidade_medida in UNIDADES_CATALOGO else "un"
-            catalogo = ItemCatalogo.objects.create(
-                empresa=empresa,
-                categoria=categoria,
-                nome=item.nome,
-                descricao_padrao=item.descricao,
-                unidade_medida=unidade,
-                valor_unitario_padrao=item.valor_unitario,
-                observacoes="Cadastrado a partir de sugestão da IA num memorial descritivo.",
-            )
-            # update() e não save(): o vínculo não muda subtotal nem código da
-            # linha, e o save() do item refaria a validação inteira à toa.
-            ItemOrcamento.objects.filter(pk=item.pk).update(item_catalogo=catalogo)
-            salvos += 1
+            _criar_no_catalogo(importacao.empresa, item, categoria)
+            salvos.add(item.pk)
         if salvos:
-            resultado = dict(importacao.resultado or {})
-            for sugestao in resultado.get("itens") or []:
-                if (
-                    sugestao.get("item_id") in validos
-                    and ItemOrcamento.objects.filter(
-                        pk=sugestao["item_id"], item_catalogo__isnull=False
-                    ).exists()
-                ):
-                    sugestao["no_catalogo"] = True
-                    sugestao["salvo_no_catalogo"] = True
-            importacao.resultado = resultado
-            importacao.save(update_fields=["resultado", "atualizado_em"])
-    return salvos
+            _marcar_salvos(importacao, salvos)
+    return len(salvos)

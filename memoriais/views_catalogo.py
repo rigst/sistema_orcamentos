@@ -9,7 +9,7 @@ from orcamentos.views import exigir_orcamento_editavel
 
 from .catalogo import Escolha, salvar_no_catalogo
 from .models import ImportacaoMemorial
-from .views import _orcamento_da_empresa
+from .views import ROTA_STATUS, _orcamento_da_empresa
 
 
 def _escolhas_do_post(post):
@@ -41,7 +41,7 @@ def salvar_catalogo(request, orcamento_pk, pk):
     escolhas = _escolhas_do_post(request.POST)
     if not escolhas:
         messages.error(request, "Marque ao menos um item para levar ao catálogo.")
-        return redirect("memoriais:status", orcamento_pk=orcamento.pk, pk=importacao.pk)
+        return redirect(ROTA_STATUS, orcamento_pk=orcamento.pk, pk=importacao.pk)
 
     salvos = salvar_no_catalogo(importacao, escolhas)
     if salvos:
@@ -52,4 +52,4 @@ def salvar_catalogo(request, orcamento_pk, pk):
         )
     else:
         messages.error(request, "Nenhum item foi salvo. Escolha a categoria de cada item marcado.")
-    return redirect("memoriais:status", orcamento_pk=orcamento.pk, pk=importacao.pk)
+    return redirect(ROTA_STATUS, orcamento_pk=orcamento.pk, pk=importacao.pk)

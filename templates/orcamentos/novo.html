@@ -60,8 +60,14 @@
                             {{ memorial_form.instrucoes }}
                             <p class="ds-help">{{ memorial_form.instrucoes.help_text }}</p>
                         </div>
-                        <label class="ds-check">{{ memorial_form.incluir_fora_catalogo }} <span>{{ memorial_form.incluir_fora_catalogo.label }}</span></label>
-                        <label class="ds-check">{{ memorial_form.preencher_evento }} <span>Preencher título, cliente e dados do evento a partir do memorial</span></label>
+                        <div class="ds-check">
+                            {{ memorial_form.incluir_fora_catalogo }}
+                            <label for="{{ memorial_form.incluir_fora_catalogo.id_for_label }}">{{ memorial_form.incluir_fora_catalogo.label }}</label>
+                        </div>
+                        <div class="ds-check">
+                            {{ memorial_form.preencher_evento }}
+                            <label for="{{ memorial_form.preencher_evento.id_for_label }}">Preencher título, cliente e dados do evento a partir do memorial</label>
+                        </div>
                     </details>
 
                     <div class="memorial-acoes">

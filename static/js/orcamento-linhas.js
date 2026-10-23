@@ -16,9 +16,9 @@
   // Mesma regra do parse_decimal_br do servidor: com vírgula e ponto, o ponto
   // é milhar; só vírgula, ela é a decimal; só ponto, ele é a decimal.
   const lerNumero = (texto) => {
-    let s = String(texto || "").replace(/R\$|\s/g, "").trim();
-    if (!s) return NaN;
-    if (s.includes(",") && s.includes(".")) s = s.replace(/\./g, "").replace(",", ".");
+    let s = String(texto || "").replaceAll(/R\$|\s/g, "").trim();
+    if (!s) return Number.NaN;
+    if (s.includes(",") && s.includes(".")) s = s.replaceAll(".", "").replace(",", ".");
     else if (s.includes(",")) s = s.replace(",", ".");
     return Number(s);
   };
@@ -116,11 +116,10 @@
       aplicarTotais(dados);
       status(linha, "Salvo", "ok");
       setTimeout(() => {
-        const alvo = linha.querySelector("[data-linha-status]");
-        if (alvo && alvo.dataset.tipo === "ok") status(linha, "", "");
+        if (linha.querySelector("[data-linha-status]")?.dataset.tipo === "ok") status(linha, "", "");
       }, 1800);
-    } catch (erro) {
-      status(linha, erro.message, "erro");
+    } catch (error_) {
+      status(linha, error_.message, "erro");
       qtd.setAttribute("aria-invalid", "true");
       valor.setAttribute("aria-invalid", "true");
     } finally {
@@ -128,7 +127,7 @@
       pendentes -= 1;
       if (est.pendente) {
         est.pendente = false;
-        salvar(linha);
+        void salvar(linha);
       }
     }
   };
@@ -148,13 +147,12 @@
     status(linha, "", "");
     const est = pegarEstado(linha);
     clearTimeout(est.timer);
-    est.timer = setTimeout(() => salvar(linha), ESPERA_MS);
+    est.timer = setTimeout(() => void salvar(linha), ESPERA_MS);
   });
 
   document.addEventListener("change", (evento) => {
-    const campo = evento.target.closest("[data-campo-rapido]");
-    const linha = campo && campo.closest("[data-linha-rapida]");
-    if (linha) salvar(linha);
+    const linha = evento.target.closest("[data-campo-rapido]")?.closest("[data-linha-rapida]");
+    if (linha) void salvar(linha);
   });
 
   document.addEventListener("keydown", (evento) => {
@@ -162,10 +160,9 @@
     if (!campo || evento.key !== "Enter") return;
     evento.preventDefault();
     const linha = campo.closest("[data-linha-rapida]");
-    salvar(linha);
+    void salvar(linha);
     // Enter desce para o mesmo campo da linha de baixo, como numa planilha.
-    const proxima = linha.nextElementSibling;
-    const alvo = proxima && proxima.querySelector(`[data-campo-rapido='${campo.dataset.campoRapido}']`);
+    const alvo = linha.nextElementSibling?.querySelector(`[data-campo-rapido='${campo.dataset.campoRapido}']`);
     if (alvo) {
       alvo.focus();
       alvo.select();
@@ -178,10 +175,8 @@
   });
 
   window.addEventListener("beforeunload", (evento) => {
-    if (pendentes > 0) {
-      evento.preventDefault();
-      evento.returnValue = "";
-    }
+    // preventDefault basta nos navegadores atuais para pedir confirmação.
+    if (pendentes > 0) evento.preventDefault();
   });
 
   // A tabela é trocada inteira por outras ações (adicionar, mover, duplicar):

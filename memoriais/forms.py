@@ -69,4 +69,4 @@ class NovoOrcamentoMemorialForm(ImportarMemorialForm):
             clientes = queryset_da_empresa(clientes, user)
         else:
             clientes = clientes.none()
-        cast("forms.ModelChoiceField", self.fields["cliente"]).queryset = clientes
+        cast(forms.ModelChoiceField, self.fields["cliente"]).queryset = clientes

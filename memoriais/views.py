@@ -16,6 +16,8 @@ from .extracao import MemorialInvalido, ler_memorial
 from .forms import ImportarMemorialForm, NovoOrcamentoMemorialForm
 from .models import ImportacaoMemorial
 
+ROTA_STATUS = "memoriais:status"
+
 
 def _orcamento_da_empresa(request, orcamento_pk):
     return get_object_or_404(
@@ -67,7 +69,7 @@ def importar(request, orcamento_pk):
         status__in=ImportacaoMemorial.EM_ANDAMENTO
     ).first()
     if em_andamento is not None:
-        return redirect("memoriais:status", orcamento_pk=orcamento.pk, pk=em_andamento.pk)
+        return redirect(ROTA_STATUS, orcamento_pk=orcamento.pk, pk=em_andamento.pk)
 
     limite, restantes = _cota(request, empresa)
     form = ImportarMemorialForm(request.POST or None, request.FILES or None)
@@ -77,7 +79,7 @@ def importar(request, orcamento_pk):
             form.add_error(None, "O limite diário de importações com IA foi atingido.")
         elif (memorial := _ler_ou_anotar(form)) is not None:
             importacao = _registrar_e_disparar(request, form, orcamento, empresa, memorial)
-            return redirect("memoriais:status", orcamento_pk=orcamento.pk, pk=importacao.pk)
+            return redirect(ROTA_STATUS, orcamento_pk=orcamento.pk, pk=importacao.pk)
 
     return render(
         request,
@@ -119,7 +121,7 @@ def novo_com_memorial(request):
                     atualizado_por=request.user,
                 )
                 importacao = _registrar_e_disparar(request, form, orcamento, empresa, memorial)
-            return redirect("memoriais:status", orcamento_pk=orcamento.pk, pk=importacao.pk)
+            return redirect(ROTA_STATUS, orcamento_pk=orcamento.pk, pk=importacao.pk)
 
     from orcamentos.views import renderizar_inicio_rapido
 
