@@ -27,7 +27,8 @@ from .forms import (
     OrcamentoForm,
     OrcamentoRapidoForm,
 )
-from .models import ItemOrcamento, Orcamento
+from .models import NAO_REGISTRADO, ItemOrcamento, Orcamento
+from .versoes import estado_historico, garantir_versao_base, registrar_versao
 
 STATUS_PERMITIDOS = {
     "rascunho",
@@ -181,12 +182,13 @@ def renderizar_editor_orcamento(
         "modo_somente_leitura": modo_somente_leitura,
         "somente_visualizacao": somente_visualizacao,
         "bloqueio_status": orcamento_bloqueado_para_edicao(orcamento),
-        "subtotais_categoria": orcamento.subtotais_por_categoria(),
+        "subtotais_categoria": orcamento.subtotais_por_categoria(NAO_REGISTRADO),
         "memorial_ia_disponivel": bool(getattr(settings, "ANTHROPIC_API_KEY", "")),
         "campos_evento": CAMPOS_EVENTO,
         "campos_contrato": CAMPOS_CONTRATO,
         "campos_ajuste": CAMPOS_AJUSTE_GLOBAL,
         "transicoes_status": transicoes_permitidas(request.user, orcamento),
+        "historico": estado_historico(orcamento),
     }
     context.update(obter_estado_itens(request, orcamento))
     return render(request, "orcamentos/form.html", context)
@@ -206,16 +208,24 @@ def responder_ajax_item(
         "orcamento": orcamento,
         "item_editando": item_editando,
         "item_form_edicao": item_form_edicao,
-        "subtotais_categoria": orcamento.subtotais_por_categoria(),
+        "subtotais_categoria": orcamento.subtotais_por_categoria(NAO_REGISTRADO),
     }
     context_base.update(obter_estado_itens(request, orcamento))
+    if mensagem:
+        registrar_versao(orcamento, request.user, mensagem)
+    orcamento.refresh_from_db()
     payload = {
+        "historico": estado_historico(orcamento),
+        "concorrencia": orcamento.atualizado_em.isoformat(timespec="microseconds"),
         "itens_html": render_to_string(
             "orcamentos/partials/itens_tabela.html", context_base, request=request
         ),
         "totais_html": render_to_string(
             "orcamentos/partials/totais_card.html",
-            {"orcamento": orcamento, "subtotais_categoria": orcamento.subtotais_por_categoria()},
+            {
+                "orcamento": orcamento,
+                "subtotais_categoria": orcamento.subtotais_por_categoria(NAO_REGISTRADO),
+            },
             request=request,
         ),
         "flash_html": render_to_string(
@@ -285,10 +295,18 @@ def orcamento_lista(request):
             .order_by("-atualizado_em")[:4]
         )
 
+    ativos = queryset_da_empresa(Orcamento.objects.filter(ativo=True), request.user)
+    resumo_inicio = ativos.aggregate(
+        total=models.Count("id"),
+        rascunhos=models.Count("id", filter=models.Q(status="rascunho")),
+        enviados=models.Count("id", filter=models.Q(status="enviado")),
+    )
+
     context = {
         "orcamentos": page_obj,
         "page_obj": page_obj,
         "recentes": recentes,
+        "resumo_inicio": resumo_inicio,
         "busca": busca,
         "status": status,
         "ativo": ativo,
@@ -385,9 +403,12 @@ def orcamento_editar(request, pk):
             orcamento.atualizado_por = request.user
             orcamento.save()
             orcamento.recalcular_totais()
+            registrar_versao(orcamento, request.user, "Editou dados")
             messages.success(request, "Orçamento atualizado com sucesso.")
             return redirect("orcamentos:editar", pk=orcamento.pk)
     else:
+        if not modo_somente_leitura:
+            garantir_versao_base(orcamento, request.user)
         form = OrcamentoForm(instance=orcamento, user=request.user)
 
     item_form = ItemOrcamentoForm(user=request.user)
@@ -474,6 +495,7 @@ def orcamento_contrato_do_cliente(request, pk):
     if alterados:
         orcamento.atualizado_por = request.user
         orcamento.save(update_fields=[*alterados, "atualizado_por", "atualizado_em"])
+        registrar_versao(orcamento, request.user, "Copiou o contrato do cliente")
         messages.success(request, "Dados contratuais atualizados a partir do cadastro do cliente.")
     else:
         messages.info(request, "Os dados contratuais já estão iguais ao cadastro do cliente.")
@@ -710,6 +732,7 @@ def item_orcamento_excluir(request, orcamento_pk, item_pk):
         nome_item = item.nome
         item.delete()
         normalizar_ordens_itens(orcamento)
+        registrar_versao(orcamento, request.user, f"Excluiu {nome_item}")
         messages.success(request, f"Item '{nome_item}' excluído.")
         return redirect(montar_url_edicao_orcamento(request, orcamento.pk))
 
@@ -872,9 +895,12 @@ def item_orcamento_edicao_rapida(request, orcamento_pk, item_pk):
     except ValidationError as exc:
         return JsonResponse({"erro": " ".join(exc.messages)}, status=400)
 
+    registrar_versao(orcamento, request.user, f"Alterou {item.nome}")
     orcamento.refresh_from_db()
     return JsonResponse(
         {
+            "historico": estado_historico(orcamento),
+            "concorrencia": orcamento.atualizado_em.isoformat(timespec="microseconds"),
             "quantidade": formatar_decimal_br(item.quantidade),
             "valor_unitario": formatar_moeda_br(item.valor_unitario),
             "subtotal": formatar_moeda_br(item.subtotal),
@@ -885,7 +911,7 @@ def item_orcamento_edicao_rapida(request, orcamento_pk, item_pk):
                 "orcamentos/partials/totais_card.html",
                 {
                     "orcamento": orcamento,
-                    "subtotais_categoria": orcamento.subtotais_por_categoria(),
+                    "subtotais_categoria": orcamento.subtotais_por_categoria(NAO_REGISTRADO),
                 },
                 request=request,
             ),

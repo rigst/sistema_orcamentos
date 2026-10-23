@@ -3,7 +3,7 @@
 
 {% block title %}{{ titulo }}{% endblock %}
 
-{% block extra_head %}{% if orcamento %}<script src="{% static 'js/orcamento-abas.js' %}" defer></script>{% endif %}{% if orcamento and not modo_somente_leitura %}<link rel="stylesheet" href="{% static 'css/orcamento-linhas.css' %}"><script src="{% static 'js/orcamento-linhas.js' %}" defer></script>{% endif %}{% endblock %}
+{% block extra_head %}{% if orcamento %}<link rel="stylesheet" href="{% static 'css/orcamento-edicao.css' %}"><script src="{% static 'js/orcamento-abas.js' %}" defer></script>{% endif %}{% if orcamento and not modo_somente_leitura %}<link rel="stylesheet" href="{% static 'css/orcamento-linhas.css' %}"><script src="{% static 'js/orcamento-linhas.js' %}" defer></script><script src="{% static 'js/orcamento-autosave.js' %}" defer></script>{% endif %}{% endblock %}
 
 {% block content %}
 {% comment %}
@@ -18,7 +18,7 @@
         <div class="orc-cabecalho-texto">
             <a class="page-back" href="{% url 'orcamentos:lista' %}">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h10"/></svg>
-                Voltar para orçamentos
+                Voltar ao início
             </a>
             {% if orcamento %}
                 <div class="page-head-meta">
@@ -38,17 +38,32 @@
                     <span>Relatórios</span>
                 </a>
             {% endif %}
-            {% if not modo_somente_leitura %}
+            {% if orcamento and not modo_somente_leitura %}
+                <div class="autosave" data-autosave
+                     data-url-salvar="{% url 'orcamentos:autosalvar' orcamento.pk %}"
+                     data-url-desfazer="{% url 'orcamentos:desfazer' orcamento.pk %}"
+                     data-url-refazer="{% url 'orcamentos:refazer' orcamento.pk %}">
+                    <button type="button" class="ds-icon-btn autosave-btn" data-desfazer {% if not historico.pode_desfazer %}disabled{% endif %}
+                            title="Desfazer{% if historico.desfazer_rotulo %}: {{ historico.desfazer_rotulo }}{% endif %} (Ctrl+Z)" aria-label="Desfazer">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+                    </button>
+                    <button type="button" class="ds-icon-btn autosave-btn" data-refazer {% if not historico.pode_refazer %}disabled{% endif %}
+                            title="Refazer{% if historico.refazer_rotulo %}: {{ historico.refazer_rotulo }}{% endif %} (Ctrl+Shift+Z)" aria-label="Refazer">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+                    </button>
+                    <span class="autosave-status" data-autosave-status role="status" aria-live="polite" data-tipo="ok">Tudo salvo</span>
+                </div>
+            {% elif not orcamento %}
                 <button class="ds-btn ds-btn--solid" type="submit" form="orcamento-main-form">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
-                    <span>Salvar</span>
+                    <span>Criar orçamento</span>
                 </button>
             {% endif %}
         </div>
     </div>
 
     <div class="editor-shell">
-        <form method="post" id="orcamento-main-form" class="orc-form" novalidate data-unsaved-warning="1" data-draft-key="orcamento:{% if orcamento %}{{ orcamento.pk }}{% else %}novo{% endif %}:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1">
+        <form method="post" id="orcamento-main-form" class="orc-form" novalidate {% if orcamento %}data-autosave-form{% else %}data-unsaved-warning="1" data-draft-key="orcamento:novo:principal" data-draft-status-target="#orcamento-draft-status" data-clear-draft-on-submit="1"{% endif %}>
             {% csrf_token %}
             {{ form.concorrencia_atualizado_em }}
             {% if form.non_field_errors %}
@@ -93,7 +108,7 @@
             <fieldset {% if modo_somente_leitura %}disabled{% endif %} class="orc-paineis-form">
                 <legend class="visually-hidden">Demais dados</legend>
                 <div class="orc-painel" role="tabpanel" id="painel-evento" aria-labelledby="aba-evento" {% if orcamento %}hidden{% endif %} data-painel="evento">
-                    <h3 class="ds-h3 orc-painel-titulo">Evento ou projeto</h3>
+                    {% if not orcamento %}<h3 class="ds-h3 orc-painel-titulo">Evento ou projeto</h3>{% endif %}
                     <div class="form-grid">
                         {% for campo in form %}{% if campo.name in campos_evento %}
                             <div{% if campo.name == "evento_nome" %} class="full"{% endif %}>
@@ -111,7 +126,7 @@
                 </div>
 
                 <div class="orc-painel" role="tabpanel" id="painel-comercial" aria-labelledby="aba-comercial" {% if orcamento %}hidden{% endif %} data-painel="comercial">
-                    <h3 class="ds-h3 orc-painel-titulo">Condições comerciais</h3>
+                    {% if not orcamento %}<h3 class="ds-h3 orc-painel-titulo">Condições comerciais</h3>{% endif %}
                     <div class="form-grid">
                         <div>
                             <label for="{{ form.data_emissao.id_for_label }}">Data de emissão</label>
@@ -154,7 +169,7 @@
 
                 <div class="orc-painel" role="tabpanel" id="painel-contrato" aria-labelledby="aba-contrato" {% if orcamento %}hidden{% endif %} data-painel="contrato">
                     <div class="orc-painel-cabeca">
-                        <h3 class="ds-h3 orc-painel-titulo">Dados contratuais</h3>
+                        {% if not orcamento %}<h3 class="ds-h3 orc-painel-titulo">Dados contratuais</h3>{% endif %}
                         {% if orcamento.cliente_id and not modo_somente_leitura %}
                             <button class="ds-btn ds-btn--ghost ds-btn--sm" type="submit" form="form-contrato-do-cliente" title="Substitui os campos abaixo pelos dados atuais do cadastro do cliente">Copiar do cadastro do cliente</button>
                         {% endif %}
@@ -181,13 +196,7 @@
             <div id="item-feedback-region" aria-live="polite"></div>
 
             <div class="table-section">
-                <div class="section-heading section-heading-compact">
-                    <div>
-                        <h3 class="ds-h3">Itens do orçamento</h3>
-                        {% if modo_somente_leitura %}
-                            <p>Visualização dos itens do orçamento.</p>
-                        {% endif %}
-                    </div>
+                <div class="itens-acoes">
                     {% if not modo_somente_leitura %}
                         <div class="inline-actions">
                             {% if memorial_ia_disponivel %}
@@ -249,29 +258,10 @@
                             </div>
                         {% endif %}{% endfor %}
                     </fieldset>
-                    {% if not modo_somente_leitura %}
-                        <button class="ds-btn ds-btn--ghost ds-btn--sm" type="submit" form="orcamento-main-form">Aplicar ao total</button>
-                    {% endif %}
+
                 </details>
             </div>
           </div>
-
-            <div class="ledger-bar" id="ledger-bar" role="status" aria-label="Resumo do orçamento">
-                <div class="ledger-bar-group">
-                    <span class="ledger-bar-label">Subtotal</span>
-                    <span class="ledger-bar-sub money" data-ledger-subtotal>{{ orcamento.subtotal_itens|brl }}</span>
-                </div>
-                <div class="ledger-bar-group ledger-bar-group-total">
-                    <span class="ledger-bar-label">Total final</span>
-                    <strong class="ledger-bar-total money" data-ledger-total>{{ orcamento.total_final|brl }}</strong>
-                </div>
-                {% if not modo_somente_leitura %}
-                    <button class="ds-btn ds-btn--solid ds-btn--sm" type="submit" form="orcamento-main-form">
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
-                        <span>Salvar</span>
-                    </button>
-                {% endif %}
-            </div>
 
             {% if not modo_somente_leitura %}
                 <div class="item-modal" id="item-modal" hidden>
@@ -298,31 +288,6 @@
   };
 
   openSectionsWithErrors();
-
-  const ledgerBar = document.getElementById("ledger-bar");
-
-  const syncLedgerBar = () => {
-    if (!ledgerBar) return;
-    const totais = document.getElementById("totais-card-region");
-    if (!totais) return;
-    const total = totais.querySelector(".totals-card-emphasis strong");
-    const subtotal = totais.querySelector(".totals-strip-general .totals-card strong");
-    const totalOut = ledgerBar.querySelector("[data-ledger-total]");
-    const subtotalOut = ledgerBar.querySelector("[data-ledger-subtotal]");
-    if (total && totalOut) totalOut.textContent = total.textContent.trim();
-    if (subtotal && subtotalOut) subtotalOut.textContent = subtotal.textContent.trim();
-  };
-
-  if (ledgerBar && "IntersectionObserver" in window) {
-    const totaisRegion = document.getElementById("totais-card-region");
-    if (totaisRegion) {
-      new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          ledgerBar.dataset.hidden = entry.isIntersecting ? "1" : "0";
-        });
-      }).observe(totaisRegion);
-    }
-  }
 
   const initItemBuilders = (scope = document) => {
     scope.querySelectorAll("[data-item-builder]").forEach((root) => {
@@ -555,7 +520,6 @@
       if (tabela && data.itens_html !== undefined) tabela.innerHTML = data.itens_html;
       if (totais && data.totais_html !== undefined) {
         totais.innerHTML = data.totais_html;
-        syncLedgerBar();
       }
       if (feedback && data.flash_html !== undefined) feedback.innerHTML = data.flash_html;
       if (data.modal_html !== undefined) {
@@ -564,6 +528,7 @@
         closeItemModal();
       }
       form.dispatchEvent(new CustomEvent("codex:mark-clean"));
+      document.dispatchEvent(new CustomEvent("orcamento:salvo", { detail: data }));
       document.dispatchEvent(new CustomEvent("codex:refresh-decimals", { detail: { scope: document } }));
       initItemBuilders(document);
     } finally {

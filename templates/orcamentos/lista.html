@@ -1,14 +1,14 @@
 {% extends "base.html" %}
 {% load br_format querystring %}
 
-{% block title %}Orçamentos{% endblock %}
+{% block title %}Início · Orçamentos{% endblock %}
 
 {% block content %}
 <section>
     <div class="lista-cabecalho">
         <div>
-            <h1 class="ds-h1 lista-titulo">Orçamentos</h1>
-            <p class="lista-subtitulo">Os teus orçamentos, do mais recente ao mais antigo.</p>
+            <h1 class="ds-h1 lista-titulo">{% if empresa_ativa %}{{ empresa_ativa.nome }}{% else %}Início{% endif %}</h1>
+            <p class="lista-subtitulo">{{ resumo_inicio.total }} proposta{{ resumo_inicio.total|pluralize }}{% if resumo_inicio.rascunhos %} · {{ resumo_inicio.rascunhos }} em rascunho{% endif %}{% if resumo_inicio.enviados %} · {{ resumo_inicio.enviados }} aguardando resposta{% endif %}</p>
         </div>
         {% if user.pode_gerenciar_orcamentos %}
             <a class="ds-btn ds-btn--solid" href="{% url 'orcamentos:novo' %}">
@@ -20,7 +20,7 @@
 
     {% if recentes %}
         <section class="recentes" aria-labelledby="recentes-titulo">
-            <h2 class="ds-h3" id="recentes-titulo">Mexidos por último</h2>
+            <h2 class="ds-h3" id="recentes-titulo">Continuar de onde parou</h2>
             <div class="recentes-grade">
                 {% for recente in recentes %}
                     <a class="ds-card recente" href="{% if user.pode_gerenciar_orcamentos and recente.status == 'rascunho' %}{% url 'orcamentos:editar' recente.pk %}{% else %}{% url 'orcamentos:visualizar' recente.pk %}{% endif %}">
@@ -35,7 +35,7 @@
                 {% endfor %}
             </div>
         </section>
-        <h2 class="ds-h3 lista-todos">Todos os orçamentos</h2>
+        <h2 class="ds-h3 lista-todos">Histórico</h2>
     {% endif %}
 
     <form method="get" class="ds-toolbar lista-filtros" data-autosubmit="1">

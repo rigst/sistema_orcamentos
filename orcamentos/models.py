@@ -24,6 +24,11 @@ def normalizar_texto_comparacao(valor):
     return " ".join(str(valor or "").split())
 
 
+# Item que entrou no orçamento sem vir do catálogo (digitado ou sugerido pela
+# IA). Rótulo da tela de edição; os documentos do cliente não o mostram.
+NAO_REGISTRADO = "Não registrado"
+
+
 class Orcamento(models.Model):
     STATUS_CHOICES = [
         ("rascunho", "Rascunho"),
@@ -391,6 +396,14 @@ class Orcamento(models.Model):
 
         return arredondar(total)
 
+    @property
+    def valor_desconto_percentual_global(self) -> Decimal:
+        return arredondar(self.subtotal_itens * (self.desconto_global_percentual / Decimal("100")))
+
+    @property
+    def valor_acrescimo_percentual_global(self) -> Decimal:
+        return arredondar(self.subtotal_itens * (self.acrescimo_global_percentual / Decimal("100")))
+
     def recalcular_totais(self, salvar: bool = True):
         self.subtotal_itens = self.calcular_subtotal_itens()
         self.total_final = self.calcular_total_final()
@@ -398,42 +411,43 @@ class Orcamento(models.Model):
         if salvar:
             self.save(update_fields=["subtotal_itens", "total_final", "atualizado_em"])
 
-    def subtotais_por_categoria(self):
-        itens = (
-            self.itens.select_related("item_catalogo__categoria")
-            .all()
-            .order_by(
-                "item_catalogo__categoria__nome",
-                "ordem",
-                "id",
-            )
-        )
+    def subtotais_por_categoria(self, rotulo_sem_catalogo: str | None = None):
+        """Subtotal por categoria do catálogo, na ordem do nome da categoria.
+
+        `rotulo_sem_catalogo`: no editor, os itens que não vieram do catálogo
+        ficam num grupo à parte com esse nome ("Não registrado"), separado dos
+        itens de catálogo sem categoria. Sem ele (relatórios para o cliente),
+        os dois casos caem juntos em "Sem categoria", como sempre foi.
+        """
+        itens = list(self.itens.select_related("item_catalogo__categoria").all())
 
         def categoria_do_item(item):
-            """(id, nome, cor) da categoria, com o fallback de "sem categoria".
-
-            Uma função em vez do lambda de três condicionais que estava aqui:
-            cada ramo repetia a mesma navegação anulável por três níveis
-            (item -> item_catalogo -> categoria), e o encadeamento por
-            `item_catalogo_id` não prova ao checador que `item_catalogo` existe.
-            """
             catalogo = item.item_catalogo if item.item_catalogo_id else None
             categoria = catalogo.categoria if catalogo and catalogo.categoria_id else None
-            if categoria is None:
-                return None, "Sem categoria", "#CBD5E1"
-            return categoria.pk, categoria.nome, categoria.cor
+            if categoria is not None:
+                return categoria.pk, categoria.nome, categoria.cor
+            if catalogo is None and rotulo_sem_catalogo:
+                return None, rotulo_sem_catalogo, "#94A3B8"
+            return None, "Sem categoria", "#CBD5E1"
 
+        # Grupos com categoria primeiro (por nome); os sem categoria no fim.
+        itens.sort(
+            key=lambda i: (categoria_do_item(i)[0] is None, categoria_do_item(i)[1], i.ordem, i.pk)
+        )
+
+        total = sum((item.subtotal for item in itens), Decimal("0.00"))
         grupos = []
         for chave, itens_grupo in groupby(itens, key=categoria_do_item):
             itens_lista = list(itens_grupo)
+            subtotal = arredondar(sum((item.subtotal for item in itens_lista), Decimal("0.00")))
             grupos.append(
                 {
                     "categoria_id": chave[0],
                     "categoria_nome": chave[1],
                     "categoria_cor": chave[2],
-                    "subtotal": arredondar(
-                        sum((item.subtotal for item in itens_lista), Decimal("0.00"))
-                    ),
+                    "subtotal": subtotal,
+                    "quantidade_itens": len(itens_lista),
+                    "percentual": arredondar(subtotal * 100 / total) if total else Decimal("0.00"),
                     "itens": itens_lista,
                 }
             )
@@ -629,3 +643,7 @@ class ItemOrcamento(models.Model):
             subtotal = Decimal("0.00")
 
         return arredondar(subtotal)
+
+
+# Registra o modelo de versões (vive em módulo próprio para não inchar este).
+from .models_versoes import VersaoOrcamento  # noqa: E402, F401

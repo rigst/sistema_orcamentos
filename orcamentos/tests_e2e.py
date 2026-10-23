@@ -23,7 +23,7 @@ def test_editar_quantidade_e_valor_na_linha_atualiza_total(
     page.on("pageerror", lambda erro: erros.append(str(erro)))
     page.goto(f"{live_server.url}/orcamentos/{orcamento.pk}/editar/")
 
-    total = page.locator("#totais-card-region .totals-card-emphasis strong")
+    total = page.locator("#totais-card-region [data-total-final]")
     assert texto(total) == "R$ 700,00"
 
     linha = page.locator("tr[data-linha-rapida]").first
@@ -36,11 +36,10 @@ def test_editar_quantidade_e_valor_na_linha_atualiza_total(
     valor.fill("75,50")
     valor.press("Tab")
     page.wait_for_function(
-        "() => document.querySelector('#totais-card-region .totals-card-emphasis strong')"
+        "() => document.querySelector('#totais-card-region [data-total-final]')"
         ".textContent.includes('1.106,00')"
     )
     assert "Salvo" in linha.locator("[data-linha-status]").inner_text()
-    assert texto(page.locator("[data-ledger-total]")) == "R$ 1.106,00"
 
     orcamento = Orcamento.objects.get(pk=orcamento.pk)
     item = orcamento.itens.get(nome="Piso")

@@ -5,8 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Orçamentos{% endblock %}</title>
-    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+    <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" sizes="48x48">
     <link rel="apple-touch-icon" href="{% static 'favicon.png' %}">
+    <meta name="theme-color" content="#0f1115">
 
     <!-- Fontes auto-hospedadas do DS (Inter + Manrope) -->
     <link rel="stylesheet" href="{% static 'fonts/fonts.css' %}">
@@ -34,7 +36,11 @@
         <div class="container">
             <nav class="nav">
                 <div class="nav-top">
-                    <a href="{% url 'orcamentos:lista' %}" class="brand">Orçamentos</a>
+                    {% comment %}A marca é o único "Orçamentos" do topo e leva ao início.{% endcomment %}
+                    <a href="{% url 'orcamentos:lista' %}" class="brand"{% if request.resolver_match.namespace == 'orcamentos' or request.resolver_match.namespace == 'memoriais' %} aria-current="page"{% endif %}>
+                        <img class="brand-icone" src="{% static 'favicon.svg' %}" alt="" width="22" height="22">
+                        Orçamentos
+                    </a>
 
                     {% if user.is_authenticated %}
                         <button class="nav-toggle js-nav-toggle" type="button" aria-expanded="false" aria-controls="header-user-meta header-main-links">
@@ -49,9 +55,6 @@
                 {% if user.is_authenticated %}
                     <div id="header-main-links" class="nav-bottom">
                         <ul class="nav-links">
-                            {% if user.pode_visualizar_orcamentos %}
-                                <li><a href="{% url 'orcamentos:lista' %}" {% if request.resolver_match.namespace == 'orcamentos' or request.resolver_match.namespace == 'memoriais' %}class="active" aria-current="page"{% endif %}>Orçamentos</a></li>
-                            {% endif %}
                             {% if user.pode_visualizar_catalogo %}
                                 <li><a href="{% url 'catalogo:item_lista' %}" {% if request.resolver_match.namespace == 'catalogo' %}class="active" aria-current="page"{% endif %}>Catálogo</a></li>
                             {% endif %}
@@ -122,7 +125,7 @@
                     <p class="site-footer-copy">Um app <a href="https://stolben.com/" target="_blank" rel="noopener">Stölben</a> · &copy; 2026 · <a href="{% url 'privacidade' %}">Privacidade</a> · <a href="{% url 'termos' %}">Termos</a> · <a href="https://github.com/rigst/sistema_orcamentos" target="_blank" rel="noopener">Código-fonte (AGPL-3.0)</a></p>
                 </div>
                 <ul class="site-footer-points">
-                    <li><span class="site-footer-dot"></span> Orçamentos profissionais</li>
+                    <li><span class="site-footer-dot"></span> Propostas profissionais</li>
                     <li><span class="site-footer-dot"></span> PDF e Excel</li>
                     <li><span class="site-footer-dot"></span> Catálogo e clientes</li>
                 </ul>
