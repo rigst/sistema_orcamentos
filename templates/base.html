@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
     <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" sizes="48x48">
     <link rel="apple-touch-icon" href="{% static 'favicon.png' %}">
-    <meta name="theme-color" content="#0f1115">
+    <meta name="theme-color" content="#2563eb">
 
     <!-- Fontes auto-hospedadas do DS (Inter + Manrope) -->
     <link rel="stylesheet" href="{% static 'fonts/fonts.css' %}">
@@ -22,17 +22,10 @@
     <link rel="stylesheet" href="{% static 'css/fluxo.css' %}">
     <link rel="stylesheet" href="{% static 'css/inicio.css' %}">
     {% block extra_head %}{% endblock %}
+    <!-- Padrões de componente (cabeçalho, formulário, modal, tabela): por último, valem em todas as telas -->
+    <link rel="stylesheet" href="{% static 'css/padroes.css' %}">
 </head>
 <body class="ds-root {% block body_class %}{% endblock %}">
-    <script nonce="{{ request.csp_nonce }}">
-    (function () {
-      try {
-        var pref = localStorage.getItem("orca-list-view");
-        var cards = window.matchMedia("(max-width: 760px)").matches ? true : pref === "cards";
-        document.documentElement.classList.toggle("cards-mode", cards);
-      } catch (e) {}
-    })();
-    </script>
     <header class="site-header">
         <div class="container">
             <nav class="nav">
@@ -664,13 +657,13 @@
       };
 
       const setTableCardLabels = (scope = document) => {
-        scope.querySelectorAll(".table-wrap > table").forEach((table) => {
+        scope.querySelectorAll(".table-wrap > table, .ds-table-wrap > table").forEach((table) => {
           if (table.dataset.cardReady === "1") return;
           table.dataset.cardReady = "1";
 
           const headers = Array.from(table.querySelectorAll("thead th")).map((th) => th.textContent.trim());
           table.querySelectorAll("tbody tr").forEach((row) => {
-            const cells = Array.from(row.children).filter((el) => el.tagName === "TD");
+            const cells = Array.from(row.children).filter((el) => el.tagName === "TD" || el.tagName === "TH");
             cells.forEach((cell, index) => {
               if (cell.hasAttribute("data-label")) return;
               cell.setAttribute("data-label", headers[index] || "");
@@ -678,69 +671,6 @@
           });
         });
       };
-
-      /* ===== Alternância tabela/cards das listas ===== */
-      const LIST_VIEW_KEY = "orca-list-view";
-      const listTables = () =>
-        Array.from(document.querySelectorAll(".table-wrap")).filter((w) => w.querySelector("table thead"));
-
-      const isCardsView = () => {
-        let pref = null;
-        try { pref = localStorage.getItem(LIST_VIEW_KEY); } catch (e) {}
-        if (window.matchMedia("(max-width: 760px)").matches) return true;
-        return pref === "cards";
-      };
-
-      const markCardCells = (scope = document) => {
-        scope.querySelectorAll(".table-wrap > table tbody tr").forEach((tr) => {
-          const tds = Array.from(tr.children).filter((c) => c.tagName === "TD");
-          tds.forEach((td, i) => {
-            if (i === 0 || td.classList.contains("actions-col") || td.classList.contains("status-col")) {
-              td.classList.remove("card-hide");
-              return;
-            }
-            const t = td.textContent.trim();
-            if (t === "" || t === "-" || t === "—") td.classList.add("card-hide");
-            else td.classList.remove("card-hide");
-          });
-        });
-      };
-
-      const applyListView = () => {
-        const cards = isCardsView();
-        document.documentElement.classList.toggle("cards-mode", cards);
-        document.querySelectorAll(".view-switch").forEach((s) => s.classList.toggle("is-cards", cards));
-        document.querySelectorAll(".view-switch [data-view]").forEach((b) => {
-          b.classList.toggle("is-active", b.dataset.view === (cards ? "cards" : "table"));
-        });
-        if (cards) markCardCells();
-      };
-
-      const injectListViewToggle = () => {
-        const tables = listTables();
-        if (!tables.length || document.querySelector(".list-view-bar")) return;
-        const bar = document.createElement("div");
-        bar.className = "list-view-bar";
-        bar.innerHTML =
-          '<div class="view-switch" role="group" aria-label="Modo de visualização">' +
-          '<button type="button" data-view="table">Tabela</button>' +
-          '<button type="button" data-view="cards">Cards</button>' +
-          '<span class="view-switch-thumb" aria-hidden="true"></span>' +
-          '</div>';
-        tables[0].parentNode.insertBefore(bar, tables[0]);
-        bar.addEventListener("click", (e) => {
-          const b = e.target.closest("[data-view]");
-          if (!b) return;
-          try { localStorage.setItem(LIST_VIEW_KEY, b.dataset.view); } catch (err) {}
-          applyListView();
-        });
-      };
-
-      let listViewResizeTimer = null;
-      window.addEventListener("resize", () => {
-        clearTimeout(listViewResizeTimer);
-        listViewResizeTimer = setTimeout(applyListView, 150);
-      }, { passive: true });
 
       document.addEventListener("submit", (event) => {
         const form = event.target;
@@ -770,8 +700,6 @@
       bindHeaderScroll();
       setupPanelModal();
       setTableCardLabels();
-      injectListViewToggle();
-      applyListView();
       document.addEventListener("codex:refresh-decimals", (event) => {
         initDecimalInputs(event.detail?.scope || document);
         initUnsavedWarnings(event.detail?.scope || document);
@@ -780,8 +708,7 @@
         bindConfirmForms(event.detail?.scope || document);
         bindMobileHeaderToggle();
         setTableCardLabels(event.detail?.scope || document);
-        applyListView();
-      });
+        });
     })();
     </script>
 </body>

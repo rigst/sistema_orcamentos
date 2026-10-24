@@ -36,27 +36,25 @@
 
     {% if clientes %}
         <div class="ds-table-wrap">
-            <table>
+            <table class="ds-table">
                 <thead>
                     <tr>
+                        <th class="col-marca"><span class="visually-hidden">Tipo</span></th>
                         <th>Nome / Razão social</th>
-                        <th>Tipo</th>
                         <th>CPF/CNPJ</th>
                         <th>E-mail</th>
                         <th>Telefone</th>
-                        <th>Ativo</th>
                         <th class="actions-col">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for cliente in clientes %}
                         <tr>
-                            <td>{{ cliente.nome_razao_social }}</td>
-                            <td>{{ cliente.get_tipo_pessoa_display }}</td>
-                            <td class="nowrap">{{ cliente.cpf_cnpj|default:"-" }}</td>
-                            <td>{{ cliente.email|default:"-" }}</td>
-                            <td class="nowrap">{{ cliente.telefone|default:"-" }}</td>
-                            <td>{% if cliente.ativo %}Sim{% else %}Não{% endif %}</td>
+                            <td class="col-marca"><span class="orc-marca" style="--orc-cor: {{ cliente.cor_identificacao }};" title="{{ cliente.get_tipo_pessoa_display }}">{{ cliente.iniciais }}</span></td>
+                            <td class="col-principal"><strong>{{ cliente.nome_razao_social }}</strong>{% if not cliente.ativo %} <span class="ds-badge ds-badge--neutral">Inativo</span>{% endif %}<span class="table-subline">{{ cliente.get_tipo_pessoa_display }}</span></td>
+                            <td class="nowrap {% if not cliente.cpf_cnpj %}celula-vazia{% endif %}" data-label="CPF/CNPJ">{{ cliente.cpf_cnpj|default:"—" }}</td>
+                            <td class="{% if not cliente.email %}celula-vazia{% endif %}" data-label="E-mail">{{ cliente.email|default:"—" }}</td>
+                            <td class="nowrap {% if not cliente.telefone %}celula-vazia{% endif %}" data-label="Telefone">{{ cliente.telefone|default:"—" }}</td>
                             <td class="actions-col">
                                 <div class="actions-stack actions-stack-inline">
                                     <a class="ds-icon-btn" href="{% url 'clientes:visualizar' cliente.pk %}" title="Ver">

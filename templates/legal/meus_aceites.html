@@ -15,8 +15,8 @@
         </header>
 
         {% if aceites %}
-            <div class="table-wrapper">
-                <table class="table">
+            <div class="ds-table-wrap">
+                <table class="ds-table">
                     <thead>
                         <tr>
                             <th>Documento</th>
@@ -28,7 +28,7 @@
                     <tbody>
                         {% for aceite in aceites %}
                             <tr>
-                                <td>
+                                <td class="col-principal">
                                     <a href="{% url 'legal:versao' aceite.documento.tipo aceite.documento.versao %}">
                                         {{ aceite.documento.titulo }}
                                     </a>

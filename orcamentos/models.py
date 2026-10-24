@@ -11,6 +11,7 @@ from django.db import IntegrityError, models
 from django.db.models import Max
 from django.utils.timezone import localdate
 
+from core.identificacao import PALETA_IDENTIFICACAO, cor_por_id, iniciais_de
 from core.tenancy import obter_grupo_empresa_padrao
 
 DUAS_CASAS = Decimal("0.01")
@@ -319,22 +320,16 @@ class Orcamento(models.Model):
 
     # Cor de identificação na lista e nos cards: fixa por orçamento (vem do
     # id), sem campo no banco. Tons médios que funcionam como faixa e ponto.
-    PALETA_IDENTIFICACAO = (
-        "#2563EB",
-        "#0D9488",
-        "#D97706",
-        "#7C3AED",
-        "#DB2777",
-        "#0891B2",
-        "#65A30D",
-        "#DC2626",
-        "#4F46E5",
-        "#C2410C",
-    )
+    PALETA_IDENTIFICACAO = PALETA_IDENTIFICACAO
 
     @property
     def cor_identificacao(self) -> str:
-        return self.PALETA_IDENTIFICACAO[(self.pk or 0) % len(self.PALETA_IDENTIFICACAO)]
+        return cor_por_id(self.pk)
+
+    @property
+    def iniciais(self) -> str:
+        """Duas letras do título para a marca colorida (ex.: "Expointer 2026" -> "EX")."""
+        return iniciais_de(self.titulo)
 
     @property
     def cliente_exibicao(self) -> str:

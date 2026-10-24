@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load br_format %}
+{% load br_format catalogo_icones %}
 
 {% block title %}Relatório do Orçamento{% endblock %}
 
@@ -22,8 +22,8 @@
     </div>
 
     <div class="editor-grid">
-        <div class="ds-card">
-            <h3 class="ds-h3">Resumo do documento</h3>
+        <div class="form-secao">
+            <h3 class="form-secao-titulo">Resumo do documento</h3>
             {% if configuracao and configuracao.logo %}
                 <div class="report-logo-card">
                     <img src="{% url 'relatorios:configuracao_logo' configuracao.pk %}" alt="Logo da empresa" class="report-logo">
@@ -61,10 +61,8 @@
                     <span class="preview-label">Subtotais por categoria</span>
                     {% for grupo in subtotais_categoria %}
                         <p>
-                            <span class="category-chip category-chip-inline" style="--category-color: {{ grupo.categoria_cor }};">
-                                <span class="category-chip-dot"></span>
-                                {{ grupo.categoria_nome }}
-                            </span>
+                            <span class="item-icone item-icone--sm" style="--category-color: {{ grupo.categoria_cor }};">{% if grupo.categoria_id %}{% icone_por_chave grupo.categoria_icone %}{% else %}{% icone_por_chave "caixa" %}{% endif %}</span>
+                            <span>{{ grupo.categoria_nome }}</span>
                             <strong class="money">{{ grupo.subtotal|brl }}</strong>
                         </p>
                     {% endfor %}
@@ -87,8 +85,8 @@
 
         <aside class="editor-sidebar">
             {% if user.pode_gerenciar_orcamentos %}
-                <div class="ds-card">
-                    <h3 class="ds-h3">Opções do relatório</h3>
+                <div class="form-secao">
+                    <h3 class="form-secao-titulo">Opções do relatório</h3>
                     <form method="post">
                         {% csrf_token %}
                         <div class="report-options-group">
@@ -134,7 +132,7 @@
                                 <label for="id_mostrar_informacoes_complementares_no_memorial">Mostrar informações complementares</label>
                             </div>
                         </div>
-                        <div class="inline-actions inline-actions-end" style="margin-top: 1rem;">
+                        <div class="form-acoes">
                             <button class="ds-btn ds-btn--solid" type="submit" title="Salvar opções do relatório" aria-label="Salvar opções do relatório">
                                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
                                 <span>Salvar opções</span>
@@ -143,8 +141,8 @@
                     </form>
                 </div>
             {% endif %}
-            <div class="ds-card">
-                <h3 class="ds-h3">Exportar</h3>
+            <div class="form-secao">
+                <h3 class="form-secao-titulo">Exportar</h3>
                 <div class="report-export-list">
                     <a class="ds-btn ds-btn--solid" href="{% url 'relatorios:orcamento_pdf' orcamento.pk %}">Baixar PDF</a>
                     <a class="ds-btn ds-btn--ghost" href="{% url 'relatorios:orcamento_excel' orcamento.pk %}">Baixar Excel</a>

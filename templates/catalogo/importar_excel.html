@@ -15,8 +15,7 @@
         </div>
     </div>
 
-    <div class="form-panel form-panel-compact">
-        <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="form-secoes">
             {% csrf_token %}
             {% if form.non_field_errors %}
                 <div class="ds-alert ds-alert--danger">
@@ -31,17 +30,16 @@
                 As unidades aceitas incluem `m`, `m2`, `m3`, `un`, `unid.` e `-`.
             </div>
 
-            <div>
+            <fieldset class="form-secao">
+                <legend class="form-secao-titulo">Arquivo</legend>
                 <label for="{{ form.arquivo.id_for_label }}">Arquivo Excel</label>
                 {{ form.arquivo }}
                 {{ form.arquivo.errors }}
-            </div>
-
-            <div class="inline-actions">
+            </fieldset>
+            <div class="form-acoes">
                 <a class="ds-btn ds-btn--ghost" href="{% url 'catalogo:item_lista' %}">Voltar</a>
                 <button class="ds-btn ds-btn--solid" type="submit">Importar</button>
             </div>
-        </form>
-    </div>
+    </form>
 </section>
 {% endblock %}

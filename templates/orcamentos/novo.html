@@ -20,7 +20,7 @@
 
     <div class="novo-caminhos">
         {% if ia_disponivel %}
-            <div class="ds-card novo-caminho novo-caminho--destaque">
+            <div class="form-secao novo-caminho novo-caminho--destaque">
                 <h3 class="ds-h3">Começar pelo memorial descritivo</h3>
                 <p class="ds-help">A IA lê o edital, preenche título, evento e dados do contratante, identifica ou cadastra o cliente e monta os itens com os preços do teu catálogo.</p>
 
@@ -70,7 +70,7 @@
                         </div>
                     </details>
 
-                    <div class="memorial-acoes">
+                    <div class="memorial-acoes form-acoes">
                         <button class="ds-btn ds-btn--solid" type="submit" {% if restantes <= 0 %}disabled{% endif %}>
                             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
                             <span>Criar a partir do memorial</span>
@@ -81,7 +81,7 @@
             </div>
         {% endif %}
 
-        <div class="ds-card novo-caminho">
+        <div class="form-secao novo-caminho">
             <h3 class="ds-h3">Começar em branco</h3>
             <p class="ds-help">Nada é obrigatório. Sem título vira "Novo orçamento"; sem cliente fica "a definir". Ajusta tudo na próxima tela.</p>
             <form method="post" action="{% url 'orcamentos:criar_rapido' %}" class="memorial-form" novalidate>
@@ -96,7 +96,7 @@
                     {{ rapido_form.cliente }}
                     {% for erro in rapido_form.cliente.errors %}<p class="ds-help ds-help--error">{{ erro }}</p>{% endfor %}
                 </div>
-                <div class="memorial-acoes">
+                <div class="memorial-acoes form-acoes">
                     <a class="ds-btn ds-btn--ghost" href="{% url 'orcamentos:criar' %}">Formulário completo</a>
                     <button class="ds-btn {% if ia_disponivel %}ds-btn--ghost{% else %}ds-btn--solid{% endif %}" type="submit">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14"/><path d="M5 12h14"/></svg>

@@ -41,7 +41,7 @@ class SaudacaoTests(BaseFluxoTests):
         self.assertRegex(conteudo, r"(Bom dia|Boa tarde|Boa noite), Rodrigo\.")
         self.assertIn('class="inicio-frase"', conteudo)
         self.assertIn("inicio-fundo.webp", conteudo)
-        self.assertIn("Alex Blăjan", conteudo)
+        self.assertIn("Jeremy Yap", conteudo)
 
     def test_sem_nome_a_saudacao_fica_sem_virgula(self):
         self.user.nome_exibicao = ""

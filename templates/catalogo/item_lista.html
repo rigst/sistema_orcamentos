@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load br_format querystring %}
+{% load br_format querystring catalogo_icones %}
 
 {% block title %}Catálogo{% endblock %}
 
@@ -37,7 +37,7 @@
         {% for categoria_obj in categorias %}
             <span class="catalogo-categoria-grupo">
                 <a class="catalogo-categoria{% if categoria_atual.pk == categoria_obj.pk %} is-ativa{% endif %}" href="?categoria={{ categoria_obj.pk }}&q={{ busca|urlencode }}&sort={{ sort|urlencode }}" style="--category-color: {{ categoria_obj.cor }};"{% if categoria_atual.pk == categoria_obj.pk %} aria-current="true"{% endif %}>
-                    <span class="category-chip-dot" aria-hidden="true"></span>
+                    <span class="catalogo-categoria-icone" aria-hidden="true">{% icone_categoria categoria_obj rotulo=False %}</span>
                     {{ categoria_obj.nome }} <span class="catalogo-categoria-conta">{{ categoria_obj.itens_count }}</span>
                 </a>
                 {% if user.pode_gerenciar_catalogo %}
@@ -83,31 +83,24 @@
             <table class="ds-table">
                 <thead>
                     <tr>
+                        <th class="col-marca"><span class="visually-hidden">Categoria</span></th>
+                        <th>Item</th>
                         <th>Código</th>
-                        <th>Nome</th>
                         <th>Categoria</th>
                         <th>Valor padrão</th>
-                        <th>Ativo</th>
                         <th class="actions-col">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for item in itens %}
                         <tr>
-                            <td>{{ item.codigo }}</td>
-                            <td>{{ item.nome }}</td>
-                            <td>
-                                {% if item.categoria %}
-                                    <span class="category-chip" style="--category-color: {{ item.categoria.cor }};">
-                                        <span class="category-chip-dot"></span>
-                                        {{ item.categoria.nome }}
-                                    </span>
-                                {% else %}
-                                    -
-                                {% endif %}
+                            <td class="col-marca">
+                                {% if item.categoria %}<span class="item-icone" style="--category-color: {{ item.categoria.cor }};">{% icone_categoria item.categoria rotulo=False %}</span>{% else %}<span class="item-icone item-icone--sem">{% icone_por_chave "caixa" %}</span>{% endif %}
                             </td>
-                                <td class="money">{{ item.valor_unitario_padrao|brl }} <span class="value-unit">/ {{ item.get_unidade_medida_display }}</span></td>
-                                <td>{% if item.ativo %}Sim{% else %}Não{% endif %}</td>
+                            <td class="col-principal"><strong>{{ item.nome }}</strong>{% if not item.ativo %} <span class="ds-badge ds-badge--neutral">Inativo</span>{% endif %}</td>
+                            <td data-label="Código">{{ item.codigo|default:"—" }}</td>
+                            <td data-label="Categoria">{{ item.categoria.nome|default:"Sem categoria" }}</td>
+                                <td class="money col-destaque">{{ item.valor_unitario_padrao|brl }} <span class="value-unit">/ {{ item.get_unidade_medida_display }}</span></td>
                                 <td class="actions-col">
                                     <div class="actions-stack actions-stack-inline">
                                         <a class="ds-icon-btn" href="{% url 'catalogo:item_visualizar' item.pk %}" title="Ver">
