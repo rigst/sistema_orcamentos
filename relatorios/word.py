@@ -7,7 +7,7 @@ from io import BytesIO
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_TAB_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
@@ -15,6 +15,7 @@ from docx.shared import Cm, Pt, RGBColor
 from . import conteudo as c
 
 FONTE = "Inter"
+W_VAL = "w:val"
 TINTA = RGBColor(0x11, 0x18, 0x27)
 TEXTO = RGBColor(0x37, 0x41, 0x51)
 SUAVE = RGBColor(0x58, 0x60, 0x70)
@@ -49,33 +50,33 @@ def _rotulo_secao(doc, titulo: str):
 
 
 def _linha_inferior(paragrafo, cor="D8DBE2", espessura=6):
-    pPr = paragrafo._p.get_or_add_pPr()
+    propriedades = paragrafo._p.get_or_add_pPr()
     borda = OxmlElement("w:pBdr")
     baixo = OxmlElement("w:bottom")
     for chave, valor in (
-        ("w:val", "single"),
+        (W_VAL, "single"),
         ("w:sz", str(espessura)),
         ("w:space", "4"),
         ("w:color", cor),
     ):
         baixo.set(qn(chave), valor)
     borda.append(baixo)
-    pPr.append(borda)
+    propriedades.append(borda)
 
 
 def _sem_bordas(tabela):
     tbl = tabela._tbl
-    tblPr = tbl.tblPr
+    propriedades = tbl.tblPr
     bordas = OxmlElement("w:tblBorders")
     for lado in ("top", "left", "bottom", "right", "insideV"):
         el = OxmlElement(f"w:{lado}")
-        el.set(qn("w:val"), "nil")
+        el.set(qn(W_VAL), "nil")
         bordas.append(el)
     h = OxmlElement("w:insideH")
-    for chave, valor in (("w:val", "single"), ("w:sz", "4"), ("w:color", "E7E9EE")):
+    for chave, valor in ((W_VAL, "single"), ("w:sz", "4"), ("w:color", "E7E9EE")):
         h.set(qn(chave), valor)
     bordas.append(h)
-    tblPr.append(bordas)
+    propriedades.append(bordas)
 
 
 def _tabela_campos(doc, campos: list[c.Campo], largura_rotulo=Cm(4.6)):
@@ -138,7 +139,7 @@ def _categorias(doc, categorias) -> None:
         _run(p, "● ", tamanho=10, cor=RGBColor.from_string(cor.upper()))
         _run(p, grupo["categoria_nome"], tamanho=11, negrito=True, cor=TINTA)
         _run(p, f"\t{c.formatar_moeda(grupo['subtotal'])}", tamanho=11, negrito=True, cor=TINTA)
-        p.paragraph_format.tab_stops.add_tab_stop(Cm(17.6), alignment=2)  # 2 = direita
+        p.paragraph_format.tab_stops.add_tab_stop(Cm(17.6), alignment=WD_TAB_ALIGNMENT.RIGHT)
         p.paragraph_format.keep_with_next = True
         _linha_inferior(p)
         for item in grupo["itens"]:

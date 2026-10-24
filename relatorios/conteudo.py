@@ -221,7 +221,7 @@ class SecaoTexto:
     texto: str
 
 
-def secoes_finais_orcamento(orcamento, configuracao) -> list[SecaoTexto]:
+def secoes_finais_orcamento(orcamento) -> list[SecaoTexto]:
     secoes = []
     if orcamento.condicoes_pagamento:
         secoes.append(SecaoTexto("Condições de pagamento", orcamento.condicoes_pagamento))

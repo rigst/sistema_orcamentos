@@ -36,6 +36,13 @@ from .pdf_estilo import (
     texto,
 )
 
+NBSP = "&nbsp;"
+
+
+def _sem_quebra(valor: str) -> str:
+    """Troca espaços por espaço inquebrável (valores e quantidades numa linha só)."""
+    return valor.replace(" ", NBSP)
+
 
 def _documento(buffer, titulo: str, autor: str) -> SimpleDocTemplate:
     return SimpleDocTemplate(
@@ -104,13 +111,13 @@ def _linha_item(numero: int, item, mostrar_ajustes: bool, est) -> list:
     celula_item = [Paragraph(texto(item.nome), est["celula_nome"])]
     if detalhe:
         celula_item.append(Paragraph("<br/>".join(detalhe), est["celula_detalhe"]))
-    quantidade = f"{formatar_decimal_br(item.quantidade)}&nbsp;{texto(c.unidade_curta(item))}"
+    quantidade = f"{formatar_decimal_br(item.quantidade)}{NBSP}{texto(c.unidade_curta(item))}"
     return [
         Paragraph(str(numero), est["celula_detalhe"]),
         celula_item,
         Paragraph(quantidade, est["celula_num"]),
-        Paragraph(c.formatar_moeda(item.valor_unitario).replace(" ", "&nbsp;"), est["celula_num"]),
-        Paragraph(c.formatar_moeda(item.subtotal).replace(" ", "&nbsp;"), est["celula_num_forte"]),
+        Paragraph(_sem_quebra(c.formatar_moeda(item.valor_unitario)), est["celula_num"]),
+        Paragraph(_sem_quebra(c.formatar_moeda(item.subtotal)), est["celula_num_forte"]),
     ]
 
 
@@ -119,7 +126,7 @@ def _linha_categoria(grupo, est) -> list:
     return [
         "",
         Paragraph(
-            f"<font color='{cor}'>●</font>&nbsp;&nbsp;{texto(grupo['categoria_nome'])}",
+            f"<font color='{cor}'>●</font>{NBSP}{NBSP}{texto(grupo['categoria_nome'])}",
             est["categoria"],
         ),
         "",
@@ -179,7 +186,7 @@ def _conta(orcamento, est):
             Paragraph(texto(linha.rotulo), est["conta_rotulo"]),
             Paragraph(
                 f"{'− ' if linha.sinal == '-' else '+ ' if linha.sinal == '+' else ''}"
-                f"{linha.valor.replace(' ', '&nbsp;')}",
+                f"{_sem_quebra(linha.valor)}",
                 est["conta_valor"],
             ),
         ]
@@ -188,9 +195,7 @@ def _conta(orcamento, est):
     linhas.append(
         [
             Paragraph("Total", est["total_rotulo"]),
-            Paragraph(
-                c.formatar_moeda(orcamento.total_final).replace(" ", "&nbsp;"), est["total_valor"]
-            ),
+            Paragraph(_sem_quebra(c.formatar_moeda(orcamento.total_final)), est["total_valor"]),
         ]
     )
     largura = 100 * mm
@@ -228,10 +233,13 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: c.StatusRelatori
     empresa = c.nome_empresa(configuracao)
     doc = _documento(buffer, f"Orçamento {orcamento.numero}", empresa)
 
-    story = [cabecalho_empresa(configuracao, est, c.contato_empresa(configuracao)), Spacer(1, 18)]
-    story.append(Paragraph(f"PROPOSTA COMERCIAL · {texto(orcamento.numero)}", est["rotulo"]))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(texto(orcamento.titulo), est["titulo"]))
+    story = [
+        cabecalho_empresa(configuracao, est, c.contato_empresa(configuracao)),
+        Spacer(1, 18),
+        Paragraph(f"PROPOSTA COMERCIAL · {texto(orcamento.numero)}", est["rotulo"]),
+        Spacer(1, 4),
+        Paragraph(texto(orcamento.titulo), est["titulo"]),
+    ]
     if orcamento.status != "aprovado" and orcamento.status != "enviado":
         story += [Spacer(1, 8), _selo_status(alerta_status, est)]
     story.append(Spacer(1, 12))
@@ -261,7 +269,7 @@ def gerar_pdf_orcamento(orcamento, configuracao, alerta_status: c.StatusRelatori
 
     story += [_secao("Itens", est), _tabela_itens(orcamento, est), Spacer(1, 14)]
     story.append(KeepTogether([_conta(orcamento, est)]))
-    story += _blocos_texto(c.secoes_finais_orcamento(orcamento, configuracao), est)
+    story += _blocos_texto(c.secoes_finais_orcamento(orcamento), est)
 
     rodape = c.rodape_institucional(orcamento, configuracao)
     if rodape:
@@ -304,7 +312,7 @@ def _categorias_memorial(categorias, est) -> list:
     for grupo in categorias:
         cor = grupo["categoria_cor"] or "#94A3B8"
         titulo = Paragraph(
-            f"<font color='{cor}'>●</font>&nbsp;&nbsp;{texto(grupo['categoria_nome'])}",
+            f"<font color='{cor}'>●</font>{NBSP}{NBSP}{texto(grupo['categoria_nome'])}",
             est["corpo_forte"],
         )
         cabeca = Table(
@@ -352,14 +360,17 @@ def gerar_pdf_memorial_descritivo(orcamento, configuracao) -> bytes:
     doc = _documento(buffer, f"Memorial Descritivo {orcamento.numero}", empresa)
     memorial = c.montar_memorial(orcamento, configuracao)
 
-    story = [cabecalho_empresa(configuracao, est, c.contato_empresa(configuracao)), Spacer(1, 18)]
-    story.append(Paragraph(f"MEMORIAL DESCRITIVO · {texto(orcamento.numero)}", est["rotulo"]))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(texto(orcamento.evento_nome or orcamento.titulo), est["titulo"]))
-    story.append(Spacer(1, 4))
-    story.append(Paragraph(texto(memorial.local_data), est["subtitulo"]))
-    story.append(Spacer(1, 12))
-    story.append(_lista_campos(memorial.cabecalho, est, largura_rotulo=32 * mm))
+    story = [
+        cabecalho_empresa(configuracao, est, c.contato_empresa(configuracao)),
+        Spacer(1, 18),
+        Paragraph(f"MEMORIAL DESCRITIVO · {texto(orcamento.numero)}", est["rotulo"]),
+        Spacer(1, 4),
+        Paragraph(texto(orcamento.evento_nome or orcamento.titulo), est["titulo"]),
+        Spacer(1, 4),
+        Paragraph(texto(memorial.local_data), est["subtitulo"]),
+        Spacer(1, 12),
+        _lista_campos(memorial.cabecalho, est, largura_rotulo=32 * mm),
+    ]
     story += [
         Spacer(1, 14),
         Paragraph(texto(memorial.saudacao), est["corpo"]),

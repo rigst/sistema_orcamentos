@@ -170,18 +170,22 @@ def carregar_logo(configuracao, largura_max=46 * mm, altura_max=16 * mm):
         return None
 
 
+def _identidade_empresa(configuracao, nome: str, logo, est) -> list:
+    """Lado esquerdo do topo: a logo, ou o nome (e o fantasia) quando não há logo."""
+    if logo:
+        return [logo]
+    fantasia = configuracao.nome_fantasia if configuracao and configuracao.nome_fantasia else ""
+    bloco = [Paragraph(texto(nome), est["empresa"])] if nome else []
+    if fantasia and fantasia != nome:
+        bloco.append(Paragraph(texto(fantasia), est["empresa_info"]))
+    return bloco
+
+
 def cabecalho_empresa(configuracao, est, linhas_contato: list[str]):
     """Logo + nome à esquerda; dados de contato à direita. Sem caixa."""
     nome = configuracao.nome_empresa if configuracao and configuracao.nome_empresa else ""
-    fantasia = configuracao.nome_fantasia if configuracao and configuracao.nome_fantasia else ""
     logo = carregar_logo(configuracao)
-    esquerda = []
-    if logo:
-        esquerda.append(logo)
-    if nome and not logo:
-        esquerda.append(Paragraph(texto(nome), est["empresa"]))
-    if fantasia and fantasia != nome and not logo:
-        esquerda.append(Paragraph(texto(fantasia), est["empresa_info"]))
+    esquerda = _identidade_empresa(configuracao, nome, logo, est)
     direita = [Paragraph(texto(nome), est["corpo_forte"])] if logo and nome else []
     direita += [Paragraph(texto(linha), est["empresa_info"]) for linha in linhas_contato]
     if not esquerda and not direita:

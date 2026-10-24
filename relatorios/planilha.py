@@ -147,7 +147,7 @@ def _textos(ws: Worksheet, orcamento, configuracao, linha: int) -> None:
     textos = []
     if orcamento.mostrar_descricao_inicial_no_relatorio and orcamento.descricao_inicial:
         textos.append(c.SecaoTexto("Descrição inicial", orcamento.descricao_inicial))
-    textos += c.secoes_finais_orcamento(orcamento, configuracao)
+    textos += c.secoes_finais_orcamento(orcamento)
     rodape = c.rodape_institucional(orcamento, configuracao)
     if rodape:
         textos.append(c.SecaoTexto("Rodapé institucional", rodape))
