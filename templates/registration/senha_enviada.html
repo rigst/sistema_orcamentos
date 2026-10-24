@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Confira seu e-mail · Orçamentos{% endblock %}
+{% block body_class %}is-vitrine{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-stack">
+    <div class="panel auth-card">
+        <div class="auth-header">
+            <h2 class="ds-h2">Confira seu e-mail</h2>
+            <p>Se o endereço informado estiver cadastrado, você vai receber em instantes um link para criar uma senha nova. O link vale por 2 horas e só pode ser usado uma vez.</p>
+            <p>Não chegou? Olhe a caixa de spam ou peça de novo daqui a alguns minutos.</p>
+        </div>
+        <a class="ds-btn ds-btn--ghost auth-submit" href="{% url 'login' %}">Voltar para o login</a>
+    </div>
+    </div>
+</section>
+{% endblock %}

@@ -5,6 +5,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from legal import views as legal_views
+from usuarios import senha
 from usuarios.views import UsuarioLoginView, UsuarioLogoutView
 
 urlpatterns = [
@@ -19,6 +20,14 @@ urlpatterns = [
     path("legal/", include("legal.urls")),
     path("login/", UsuarioLoginView.as_view(), name="login"),
     path("logout/", UsuarioLogoutView.as_view(), name="logout"),
+    path("senha/esqueci/", senha.PedirNovaSenhaView.as_view(), name="senha_pedir"),
+    path("senha/enviada/", senha.SenhaEnviadaView.as_view(), name="senha_enviada"),
+    path(
+        "senha/nova/<uidb64>/<token>/",
+        senha.DefinirNovaSenhaView.as_view(),
+        name="senha_definir",
+    ),
+    path("senha/concluida/", senha.SenhaConcluidaView.as_view(), name="senha_concluida"),
     path("", include("core.urls")),
     path("clientes/", include("clientes.urls")),
     path("catalogo/", include("catalogo.urls")),

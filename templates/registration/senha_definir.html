@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Nova senha · Orçamentos{% endblock %}
+{% block body_class %}is-vitrine{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-stack">
+    <div class="panel auth-card">
+        {% if validlink %}
+        <div class="auth-header">
+            <h2 class="ds-h2">Crie uma senha nova</h2>
+            <p>Use pelo menos 8 caracteres, sem ser parecida com seu nome de usuário nem só números.</p>
+        </div>
+
+        {% if form.errors %}
+            {% for field in form %}{% for erro in field.errors %}<p class="auth-error-text">{{ erro }}</p>{% endfor %}{% endfor %}
+            {% for erro in form.non_field_errors %}<p class="auth-error-text">{{ erro }}</p>{% endfor %}
+        {% endif %}
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.new_password1.id_for_label }}">Nova senha</label>
+                {{ form.new_password1 }}
+            </div>
+            <div>
+                <label for="{{ form.new_password2.id_for_label }}">Repita a nova senha</label>
+                {{ form.new_password2 }}
+            </div>
+            <button class="ds-btn ds-btn--solid auth-submit" type="submit">Salvar senha</button>
+        </form>
+        {% else %}
+        <div class="auth-header">
+            <h2 class="ds-h2">Link expirado</h2>
+            <p>Este link de nova senha já foi usado ou passou do prazo de 2 horas. Peça um novo.</p>
+        </div>
+        <a class="ds-btn ds-btn--solid auth-submit" href="{% url 'senha_pedir' %}">Pedir outro link</a>
+        {% endif %}
+    </div>
+    </div>
+</section>
+{% endblock %}

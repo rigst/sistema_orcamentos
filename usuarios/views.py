@@ -15,7 +15,9 @@ from legal.models import OrigemAceite
 from legal.services import documentos_vigentes, registrar_aceite
 from legal.utils import ip_do_request
 
+from .forms_login import LoginForm
 from .models import Usuario
+from .senha import email_configurado
 from .visitantes import (
     excedeu_rate_limit_visitante,
     limpar_visitantes_expirados,
@@ -27,6 +29,12 @@ logger = logging.getLogger(__name__)
 
 class UsuarioLoginView(LoginView):
     template_name = "registration/login.html"
+    authentication_form = LoginForm
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto["recuperacao_senha_ativa"] = email_configurado()
+        return contexto
 
     def post(self, request, *args, **kwargs):
         if "entrar_visitante" in request.POST:

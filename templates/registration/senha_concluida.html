@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Senha alterada · Orçamentos{% endblock %}
+{% block body_class %}is-vitrine{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+    <div class="auth-stack">
+    <div class="panel auth-card">
+        <div class="auth-header">
+            <h2 class="ds-h2">Senha alterada</h2>
+            <p>Pronto! Sua senha nova já vale. Por segurança, as sessões abertas com a senha antiga foram encerradas.</p>
+        </div>
+        <a class="ds-btn ds-btn--solid auth-submit" href="{% url 'login' %}">Entrar</a>
+    </div>
+    </div>
+</section>
+{% endblock %}
