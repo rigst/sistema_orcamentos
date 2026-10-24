@@ -36,8 +36,10 @@
                     <a class="ds-card recente" style="--orc-cor: {{ recente.cor_identificacao }};" href="{% if user.pode_gerenciar_orcamentos and recente.status == 'rascunho' %}{% url 'orcamentos:editar' recente.pk %}{% else %}{% url 'orcamentos:visualizar' recente.pk %}{% endif %}">
                         <span class="recente-topo">
                             <span class="orc-marca" aria-hidden="true">{{ recente.iniciais }}</span>
-                            <span class="recente-numero">{{ recente.numero }}</span>
-                            <span class="badge status-{{ recente.status }}">{{ recente.get_status_display }}</span>
+                            <span class="recente-ident">
+                                <span class="recente-numero">{{ recente.numero }}</span>
+                                <span class="badge status-{{ recente.status }}">{{ recente.get_status_display }}</span>
+                            </span>
                         </span>
                         <strong class="recente-titulo">{{ recente.titulo }}</strong>
                         <span class="recente-cliente">{{ recente.cliente_exibicao }}</span>

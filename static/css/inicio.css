@@ -130,8 +130,9 @@
 }
 
 /* ---------- orçamentos: a cor aparece só na marca (.orc-marca, padroes.css) ---------- */
-.recente-topo { justify-content: flex-start; }
-.recente-topo .badge { margin-left: auto; }
-.recente .recente-numero { color: var(--ds-t-500); font-weight: 600; }
+.recente-topo { justify-content: flex-start; align-items: center; gap: 0.65rem; }
+.recente-ident { display: grid; justify-items: start; gap: 0.2rem; min-width: 0; }
+.recente .recente-numero { color: var(--ds-t-500); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.recente-ident .badge { white-space: nowrap; }
 tr.linha-orcamento .linha-orcamento-link { color: inherit; text-decoration: none; }
 tr.linha-orcamento .linha-orcamento-link:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; border-radius: 4px; }
