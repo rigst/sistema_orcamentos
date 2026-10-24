@@ -56,6 +56,8 @@ Variáveis de produção mais importantes:
 - `DJANGO_REDIS_CACHE_URL` (segredo se tiver senha)
 - `DJANGO_USE_X_FORWARDED_PROTO=True`
 - `DJANGO_USE_MANIFEST_STATICFILES=True`
+- `DJANGO_EMAIL_*` e `DJANGO_DEFAULT_FROM_EMAIL` (recuperação de senha; sem `DJANGO_EMAIL_HOST`, o "Esqueci minha senha" fica indisponível)
+- `DJANGO_LOGIN_FALHAS_POR_USUARIO`, `DJANGO_LOGIN_FALHAS_POR_IP`, `DJANGO_LOGIN_BLOQUEIO_SEGUNDOS` (trava de tentativas de login; padrão 5, 20 e 15 min)
 
 ## Deploy em VPS com subdomínio
 
@@ -126,11 +128,11 @@ sudo systemctl status sistema_orcamentos.service
 
 9. Limpeza automática de visitantes expirados
 ```bash
-sudo cp deploy/visitantes-cleanup.service.example /etc/systemd/system/visitantes-cleanup.service
-sudo cp deploy/visitantes-cleanup.timer.example /etc/systemd/system/visitantes-cleanup.timer
+sudo cp deploy/visitantes-cleanup.service.example /etc/systemd/system/sistema_orcamentos-visitantes.service
+sudo cp deploy/visitantes-cleanup.timer.example /etc/systemd/system/sistema_orcamentos-visitantes.timer
 sudo systemctl daemon-reload
-sudo systemctl enable --now visitantes-cleanup.timer
-sudo systemctl status visitantes-cleanup.timer
+sudo systemctl enable --now sistema_orcamentos-visitantes.timer
+sudo systemctl status sistema_orcamentos-visitantes.timer
 ```
 
 10. Nginx para subdomínio

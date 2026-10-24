@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
+from django.db import transaction
 from django.utils import timezone
 
 from catalogo.models import CategoriaItem, ItemCatalogo
@@ -68,7 +69,7 @@ def limpar_dados_visitante(user):
         grupo.delete()
 
 
-def limpar_visitantes_expirados():
+def limpar_visitantes_expirados() -> int:
     limite = timezone.now() - timedelta(hours=_visitante_ttl_hours())
     usuarios_expirados = (
         get_user_model()
@@ -78,7 +79,17 @@ def limpar_visitantes_expirados():
     )
     total = 0
     for visitante in usuarios_expirados:
-        limpar_dados_visitante(visitante)
+        try:
+            with transaction.atomic():
+                limpar_dados_visitante(visitante)
+        except Exception:
+            # Um visitante com dado travado não pode impedir a limpeza dos
+            # outros; fica no log para alguém olhar e sai na próxima rodada.
+            logger.exception(
+                "Falha ao remover visitante expirado", extra={"usuario_id": visitante.pk}
+            )
+            continue
         total += 1
     if total:
         logger.info("Visitantes expirados removidos", extra={"total": total})
+    return total

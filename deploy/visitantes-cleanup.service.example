@@ -4,7 +4,8 @@ After=network.target
 
 [Service]
 Type=oneshot
-User=www-data
+# Mesmo usuário do gunicorn (sistema_orcamentos.service): é quem lê o .env.
+User=rod
 Group=www-data
 WorkingDirectory=/var/www/sistema_orcamentos/current
 EnvironmentFile=/var/www/sistema_orcamentos/shared/.env

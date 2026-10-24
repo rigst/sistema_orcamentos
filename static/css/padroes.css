@@ -561,3 +561,21 @@ fieldset:has(input[name="cor"][value="#475569"]:checked) .icone-escolha { --cate
 .item-icone--sem { --category-color: #94a3b8; }
 .categoria-icone { width: 60%; height: 60%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
+
+/* Parágrafos seguidos no topo das telas de acesso. */
+.auth-header p + p {
+  margin-top: var(--ds-space-3, 0.75rem);
+}
+
+/* Link discreto abaixo dos formulários de acesso (esqueci a senha, voltar). */
+.auth-link-voltar {
+  margin-top: var(--ds-space-4);
+  text-align: center;
+  font-size: 0.92rem;
+}
+
+.auth-link-voltar a {
+  color: var(--ds-t-500, currentColor);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

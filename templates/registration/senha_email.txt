@@ -1,0 +1,10 @@
+{% autoescape off %}Olá, {{ user.get_short_name|default:user.get_username }}!
+
+Recebemos um pedido para criar uma senha nova para o usuário "{{ user.get_username }}" no Stölben Orçamentos.
+
+Para criar a senha nova, abra o link abaixo (vale por 2 horas e só funciona uma vez):
+
+{{ protocol }}://{{ domain }}{% url 'senha_definir' uidb64=uid token=token %}
+
+Se não foi você que pediu, pode ignorar este e-mail: sua senha atual continua valendo.
+{% endautoescape %}

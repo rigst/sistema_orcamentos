@@ -7,5 +7,7 @@ class Command(BaseCommand):
     help = "Remove usuários visitantes expirados e seus dados relacionados."
 
     def handle(self, *args, **options):
-        limpar_visitantes_expirados()
-        self.stdout.write(self.style.SUCCESS("Limpeza de visitantes expirados concluída."))
+        total = limpar_visitantes_expirados()
+        self.stdout.write(
+            self.style.SUCCESS(f"Limpeza de visitantes concluída: {total} conta(s) removida(s).")
+        )

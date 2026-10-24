@@ -20,7 +20,7 @@
         </div>
 
         {% if form.errors %}
-            <p class="auth-error-text">Usuário ou senha inválidos.</p>
+            {% for erro in form.non_field_errors %}<p class="auth-error-text">{{ erro }}</p>{% empty %}<p class="auth-error-text">Usuário ou senha inválidos.</p>{% endfor %}
         {% endif %}
 
         <form method="post" class="auth-form">
@@ -35,6 +35,9 @@
             </div>
             <button class="ds-btn ds-btn--solid auth-submit" type="submit">Entrar</button>
         </form>
+        {% if recuperacao_senha_ativa %}
+            <p class="auth-link-voltar"><a href="{% url 'senha_pedir' %}">Esqueci minha senha</a></p>
+        {% endif %}
 
         <div class="auth-visitor-section">
             <p>Quer apenas conhecer a interface? O acesso visitante cria um perfil temporário automaticamente.</p>

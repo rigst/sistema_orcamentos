@@ -194,6 +194,31 @@ SHORT_DATE_FORMAT = "d/m/Y"
 
 AUTH_USER_MODEL = "usuarios.Usuario"
 
+# Login com trava de tentativas (usuarios/protecao_login.py): vale para a tela
+# de login, o /admin/ e qualquer `authenticate()` por senha.
+AUTHENTICATION_BACKENDS = ["usuarios.backends.BackendComTrava"]
+
+# E-mail (recuperação de senha). Mesmas variáveis dos outros apps do servidor.
+# Sem DJANGO_EMAIL_HOST, "Esqueci minha senha" avisa que está indisponível em
+# vez de fingir que enviou. Django 6.0: ainda EMAIL_*; ao subir para 6.1, migrar
+# para MAILERS, como no sistema_arq.
+EMAIL_BACKEND = os.getenv("DJANGO_EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("DJANGO_EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("DJANGO_EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("DJANGO_EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("DJANGO_EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = env_bool("DJANGO_EMAIL_USE_TLS", True)
+EMAIL_USE_SSL = env_bool("DJANGO_EMAIL_USE_SSL", False)
+if EMAIL_USE_TLS and EMAIL_USE_SSL:
+    raise RuntimeError("DJANGO_EMAIL_USE_TLS e DJANGO_EMAIL_USE_SSL não podem estar ativos juntos.")
+EMAIL_TIMEOUT = int(os.getenv("DJANGO_EMAIL_TIMEOUT", "10"))
+DEFAULT_FROM_EMAIL = os.getenv(
+    "DJANGO_DEFAULT_FROM_EMAIL", "Stölben Orçamentos <noreply@localhost>"
+)
+RECUPERACAO_SENHA_ATIVA = bool(EMAIL_HOST)
+# Link de nova senha vale 2 horas (o padrão do Django é 3 dias).
+PASSWORD_RESET_TIMEOUT = 2 * 60 * 60
+
 UNFOLD = {
     "SITE_TITLE": "Orçamentos",
     "SITE_HEADER": "Orçamentos",
@@ -329,6 +354,7 @@ if IS_TEST:
         "core.hashers.PBKDF2RapidoParaTestes",
     ]
     EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+    RECUPERACAO_SENHA_ATIVA = True
 
 LOGGING = {
     "version": 1,

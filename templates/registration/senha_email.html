@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>Nova senha · Stölben Orçamentos</title>
+</head>
+<body style="margin:0;padding:24px;background:#F7F8FA;font-family:Inter,Segoe UI,Arial,sans-serif;color:#374151;">
+  <div style="max-width:520px;margin:0 auto;background:#ffffff;border-radius:12px;padding:32px;">
+    <p style="margin:0 0 4px;font-size:12px;font-weight:600;letter-spacing:.06em;color:#586070;text-transform:uppercase;">Stölben Orçamentos</p>
+    <h1 style="margin:0 0 16px;font-size:22px;color:#111827;">Crie uma senha nova</h1>
+    <p style="margin:0 0 12px;line-height:1.5;">Olá, {{ user.get_short_name|default:user.get_username }}! Recebemos um pedido para criar uma senha nova para o usuário <strong>{{ user.get_username }}</strong>.</p>
+    <p style="margin:24px 0;">
+      <a href="{{ protocol }}://{{ domain }}{% url 'senha_definir' uidb64=uid token=token %}" style="display:inline-block;background:#2563EB;color:#ffffff;text-decoration:none;font-weight:600;padding:12px 20px;border-radius:8px;">Criar senha nova</a>
+    </p>
+    <p style="margin:0 0 12px;line-height:1.5;font-size:14px;color:#586070;">O link vale por 2 horas e só funciona uma vez.</p>
+    <p style="margin:0;line-height:1.5;font-size:14px;color:#586070;">Se não foi você que pediu, pode ignorar este e-mail: sua senha atual continua valendo.</p>
+  </div>
+</body>
+</html>
