@@ -32,6 +32,21 @@ LICENCA_PROJETO = "AGPL-3.0"
 # Formato: (nome, versão, licença, observação)
 PROGRAMAS_EXTERNOS: list[tuple[str, str, str, str]] = []
 
+# Fontes distribuídas junto do código (embutidas nos PDFs dos relatórios).
+# Formato: (fonte, arquivos, licença)
+FONTES: list[tuple[str, str, str]] = [
+    (
+        "Inter 4.1",
+        "`relatorios/fontes/Inter-*.ttf`",
+        "SIL Open Font License 1.1 (`relatorios/fontes/OFL-Inter.txt`)",
+    ),
+    (
+        "Manrope",
+        "`relatorios/fontes/Manrope-*.ttf` (pesos 700 e 800 instanciados da fonte variável)",
+        "SIL Open Font License 1.1 (`relatorios/fontes/OFL-Manrope.txt`)",
+    ),
+]
+
 # Observações que valem manutenção contínua.
 NOTAS: list[str] = [
     "**Redis**: o servidor em uso é a série 7.0 (BSD-3-Clause). As versões 7.4 a "
@@ -178,6 +193,16 @@ def main() -> int:
             "| Programa | Versão | Licença | Observação |",
             "|---|---|---|---|",
             *[f"| {n} | {v} | {lic} | {obs} |" for n, v, lic, obs in PROGRAMAS_EXTERNOS],
+            "",
+        ]
+
+    if FONTES:
+        linhas += [
+            "## Fontes embutidas nos relatórios",
+            "",
+            "| Fonte | Arquivos | Licença |",
+            "|---|---|---|",
+            *[f"| {nome} | {arquivos} | {lic} |" for nome, arquivos, lic in FONTES],
             "",
         ]
 

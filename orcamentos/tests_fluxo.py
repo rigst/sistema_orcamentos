@@ -2,21 +2,24 @@
 
 from datetime import date
 from decimal import Decimal
+from io import BytesIO
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from docx import Document
+from openpyxl import load_workbook
 
 from catalogo.models import CategoriaItem, ItemCatalogo
 from clientes.models import Cliente
 from core.models import Empresa
 from core.testing import SENHA_TESTE
 from relatorios.exporters import (
+    gerar_docx_memorial_descritivo,
     gerar_excel_orcamento,
     gerar_pdf_memorial_descritivo,
     gerar_pdf_orcamento,
-    gerar_word_memorial_descritivo,
     obter_alerta_status,
 )
 from relatorios.models import ConfiguracaoEmpresa
@@ -127,12 +130,13 @@ class CriacaoSemTravasTests(BaseFluxoTests):
 
         pdf = gerar_pdf_orcamento(orcamento, configuracao, status)
         self.assertTrue(bytes(pdf).startswith(b"%PDF"))
-        excel = gerar_excel_orcamento(orcamento, configuracao, status)
-        self.assertIn(Orcamento.SEM_CLIENTE.encode(), bytes(excel))
+        excel = load_workbook(BytesIO(gerar_excel_orcamento(orcamento, configuracao, status)))
+        self.assertEqual(excel["Orçamento"]["A5"].value, Orcamento.SEM_CLIENTE)
         memorial_pdf = gerar_pdf_memorial_descritivo(orcamento, configuracao)
         self.assertTrue(bytes(memorial_pdf).startswith(b"%PDF"))
-        memorial_doc = gerar_word_memorial_descritivo(orcamento, configuracao)
-        self.assertTrue(len(memorial_doc) > 0)
+        memorial_doc = Document(BytesIO(gerar_docx_memorial_descritivo(orcamento, configuracao)))
+        textos = [c.text for t in memorial_doc.tables for r in t.rows for c in r.cells]
+        self.assertIn(Orcamento.SEM_CLIENTE, textos)
 
 
 class EdicaoNaLinhaTests(BaseFluxoTests):

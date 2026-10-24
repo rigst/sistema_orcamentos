@@ -20,6 +20,11 @@ django-unfold==0.101.0
 # do sistema_trilhas e do dracma.
 anthropic==0.121.0
 
+# Relatórios: planilha .xlsx e memorial .docx de verdade (antes eram XML do
+# Excel 2003 e RTF).
+openpyxl==3.1.5
+python-docx==1.2.0
+
 # Monitoramento de erros (ativo só com SENTRY_DSN definido)
 sentry-sdk==2.68.1
 

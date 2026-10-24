@@ -5,7 +5,6 @@ from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from io import BytesIO
 from time import monotonic
 from xml.etree import ElementTree as ET
-from xml.sax.saxutils import escape
 from zipfile import ZipFile
 
 from django.core.exceptions import ValidationError
@@ -215,55 +214,6 @@ def _normalizar_unidade(unidade):
     if unidade_normalizada:
         return unidade_normalizada
     raise ValueError(f"Unidade inválida na importação: {unidade_original}")
-
-
-def exportar_catalogo_excel(itens) -> bytes:
-    linhas_itens = []
-    itens_iteraveis = (
-        itens.select_related("categoria") if hasattr(itens, "select_related") else itens
-    )
-    for item in itens_iteraveis:
-        linhas_itens.append(
-            f"""
-            <Row>
-                <Cell><Data ss:Type="String">{escape(item.categoria.nome if item.categoria else "")}</Data></Cell>
-                <Cell><Data ss:Type="String">{escape(item.nome)}</Data></Cell>
-                <Cell><Data ss:Type="Number">{item.valor_unitario_padrao}</Data></Cell>
-                <Cell><Data ss:Type="String">{escape(item.unidade_medida)}</Data></Cell>
-                <Cell><Data ss:Type="String">{escape(item.descricao_padrao or "")}</Data></Cell>
-                <Cell><Data ss:Type="String">{escape(item.observacoes or "")}</Data></Cell>
-            </Row>
-            """
-        )
-
-    xml = f"""<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
- <Styles>
-  <Style ss:ID="Header">
-   <Font ss:Bold="1"/>
-   <Interior ss:Color="#DCE9FF" ss:Pattern="Solid"/>
-  </Style>
- </Styles>
- <Worksheet ss:Name="Catalogo">
-  <Table>
-   <Row ss:StyleID="Header">
-    <Cell><Data ss:Type="String">CATEGORIA</Data></Cell>
-    <Cell><Data ss:Type="String">ITEM</Data></Cell>
-    <Cell><Data ss:Type="String">VALOR</Data></Cell>
-    <Cell><Data ss:Type="String">UNIDADE</Data></Cell>
-    <Cell><Data ss:Type="String">DESCRIÇÃO</Data></Cell>
-    <Cell><Data ss:Type="String">OBSERVAÇÃO</Data></Cell>
-   </Row>
-   {"".join(linhas_itens)}
-  </Table>
- </Worksheet>
-</Workbook>
-"""
-    return xml.encode("utf-8")
 
 
 def _formatar_erro_validacao(exc):

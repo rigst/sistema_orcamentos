@@ -6,6 +6,8 @@ from django.contrib.auth.models import Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from docx import Document
+from openpyxl import load_workbook
 from PIL import Image
 
 from catalogo.models import CategoriaItem, ItemCatalogo
@@ -13,7 +15,26 @@ from clientes.models import Cliente
 from core.testing import SENHA_TESTE
 from orcamentos.models import ItemOrcamento, Orcamento
 
+from .formatos import DOCX, XLSX
 from .models import ConfiguracaoEmpresa
+
+
+def texto_da_planilha(planilha) -> str:
+    return "\n".join(
+        str(celula)
+        for aba in planilha.worksheets
+        for linha in aba.iter_rows(values_only=True)
+        for celula in linha
+        if celula is not None
+    )
+
+
+def texto_do_docx(conteudo: bytes) -> str:
+    documento = Document(BytesIO(conteudo))
+    partes = [p.text for p in documento.paragraphs]
+    for tabela in documento.tables:
+        partes += [celula.text for linha in tabela.rows for celula in linha.cells]
+    return "\n".join(partes)
 
 
 class RelatoriosPermissaoTests(TestCase):
@@ -277,15 +298,27 @@ class RelatoriosExportacaoTests(TestCase):
         response = self.client.get(reverse("relatorios:orcamento_excel", args=[self.orcamento.pk]))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Content-Type"], "application/vnd.ms-excel")
-        self.assertIn("attachment;", response["Content-Disposition"])
-        self.assertIn(b"Or\xc3\xa7amento em rascunho", response.content)
-        self.assertIn(b"Categoria", response.content)
-        self.assertIn(b"Civil", response.content)
-        self.assertIn(b"Descricao detalhada", response.content)
-        self.assertIn("Descrição inicial: Introducao do PDF".encode(), response.content)
-        self.assertIn("Observações gerais: Observacoes do documento".encode(), response.content)
-        self.assertIn("Rodapé institucional: Rodape institucional".encode(), response.content)
+        self.assertEqual(response["Content-Type"], XLSX)
+        self.assertIn('.xlsx"', response["Content-Disposition"])
+        planilha = load_workbook(BytesIO(response.content))
+        textos = texto_da_planilha(planilha)
+        self.assertIn("Orçamento em rascunho", textos)
+        self.assertIn("CATEGORIA", textos)
+        self.assertIn("Civil", textos)
+        self.assertIn("Descricao detalhada", textos)
+        self.assertIn("Introducao do PDF", textos)
+        self.assertIn("Observacoes do documento", textos)
+        self.assertIn("Rodape institucional", textos)
+        # números são números (dá para somar no Excel), com formato de moeda
+        aba = planilha["Orçamento"]
+        subtotais = [
+            linha
+            for linha in aba.iter_rows(min_row=8, max_col=13)
+            if isinstance(linha[12].value, (int, float)) and linha[3].value
+        ]
+        self.assertTrue(subtotais)
+        self.assertEqual(subtotais[0][12].number_format, '"R$" #,##0.00')
+        self.assertIn("Por categoria", planilha.sheetnames)
 
     def test_exportacao_pdf_retorna_arquivo(self):
         response = self.client.get(reverse("relatorios:orcamento_pdf", args=[self.orcamento.pk]))
@@ -336,13 +369,23 @@ class RelatoriosExportacaoTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/pdf")
         self.assertTrue(response.content.startswith(b"%PDF-1.4"))
-        self.assertIn(b"Memorial Descritivo", response.content)
-        self.assertIn(b"CIVIL", response.content)
-        self.assertIn(b"Descricao longa do servico", response.content)
-        self.assertIn(b"Expodireto 2026", response.content)
-        self.assertIn(b"30% na aprovacao", response.content)
-        self.assertIn(b"Cliente Exportacao LTDA", response.content)
-        self.assertIn(b"pix@empresa.com", response.content)
+        self.assertIn(b"Memorial Descritivo", response.content)  # título do documento
+        # O texto do PDF sai das fontes embutidas (codificado); o conteúdo é o
+        # mesmo do Word, conferido no .docx.
+        word = self.client.get(
+            reverse("relatorios:orcamento_memorial_word", args=[self.orcamento.pk])
+        )
+        textos = texto_do_docx(word.content)
+        for esperado in (
+            "Civil",
+            "Descricao longa do servico",
+            "Expodireto 2026",
+            "30% na aprovacao",
+            "Cliente Exportacao LTDA",
+            "pix@empresa.com",
+            "Documento emitido para fins comerciais.",
+        ):
+            self.assertIn(esperado, textos)
 
     def test_exportacao_memorial_word_retorna_arquivo(self):
         self.orcamento.evento_contato = "Mariana"
@@ -367,13 +410,13 @@ class RelatoriosExportacaoTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Content-Type"], "application/rtf")
-        self.assertIn('.rtf"', response["Content-Disposition"])
-        self.assertTrue(response.content.startswith(b"{\\rtf1"))
-        self.assertIn(b"Relatorio profissional", response.content)
-        self.assertIn(b"Mariana", response.content)
-        self.assertIn(b"Cliente Exportacao LTDA", response.content)
-        self.assertIn(b"pix@empresa.com", response.content)
+        self.assertEqual(response["Content-Type"], DOCX)
+        self.assertIn('.docx"', response["Content-Disposition"])
+        textos = texto_do_docx(response.content)
+        self.assertIn("Relatorio profissional", textos)
+        self.assertIn("Mariana", textos)
+        self.assertIn("Cliente Exportacao LTDA", textos)
+        self.assertIn("pix@empresa.com", textos)
 
     def test_exportacao_memorial_word_omite_blocos_desmarcados(self):
         self.orcamento.evento_contato = "Mariana"
@@ -403,10 +446,11 @@ class RelatoriosExportacaoTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn(b"Mariana", response.content)
-        self.assertNotIn(b"Cliente Exportacao LTDA", response.content)
-        self.assertNotIn(b"30% na aprovacao", response.content)
-        self.assertNotIn(b"Observacoes ocultas", response.content)
+        textos = texto_do_docx(response.content)
+        self.assertNotIn("Mariana", textos)
+        self.assertNotIn("Cliente Exportacao LTDA", textos)
+        self.assertNotIn("30% na aprovacao", textos)
+        self.assertNotIn("Observacoes ocultas", textos)
 
 
 class RelatoriosValidacaoTests(TestCase):
