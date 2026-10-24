@@ -2,7 +2,7 @@
    ícone por categoria, botão de adicionar e fechamento. */
 
 /* ---------- abas + salvamento na mesma linha ---------- */
-.editor-shell:has([data-orc-abas]) { gap: var(--ds-space-4, 1rem); }
+.editor-shell:has([data-orc-abas]) { gap: var(--abas-respiro, 1.25rem); }
 /* Com a aba Itens aberta, o fieldset dos outros painéis fica vazio e somava
    o espaçamento da grade duas vezes. */
 .orc-paineis-form:not(:has(.orc-painel:not([hidden]))) { display: none; }

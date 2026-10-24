@@ -579,3 +579,17 @@ fieldset:has(input[name="cor"][value="#475569"]:checked) .icone-escolha { --cate
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+
+/* ---------- Abas (padrão): o conteúdo começa sempre à mesma distância da
+   barra de abas, qualquer que seja a aba aberta. Os painéis de formulário
+   (Evento, Comercial, Contrato) ficam no mesmo <form> da barra e encostavam
+   nela; o de Itens fica fora do form e já recebia o espaço da grade. ---------- */
+:root { --abas-respiro: var(--ds-space-5, 1.25rem); }
+.orc-abas-barra + .orc-paineis-form { margin-top: var(--abas-respiro); }
+
+/* ---------- Cabeçalho flutuante no celular: com o menu fechado, só a linha
+   da marca existe. As linhas vazias da grade (links e usuário) somavam o
+   espaçamento entre linhas e deixavam a pílula com folga sobrando embaixo. ---------- */
+@media (max-width: 1024px) {
+  .nav:not(.nav-open) { row-gap: 0; }
+}
