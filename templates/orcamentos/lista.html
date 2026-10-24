@@ -9,7 +9,7 @@
     <header class="inicio-hero">
         <picture class="inicio-hero-fundo">
             <source media="(max-width: 760px)" srcset="{% static 'img/inicio-fundo-1200.webp' %}">
-            <img src="{% static 'img/inicio-fundo.webp' %}" alt="" width="2400" height="800" fetchpriority="high">
+            <img src="{% static 'img/inicio-fundo.webp' %}" alt="" width="2400" height="750" fetchpriority="high">
         </picture>
         <div class="inicio-hero-conteudo">
             <h1 class="inicio-saudacao">{{ saudacao }}{% if user.primeiro_nome %}, {{ user.primeiro_nome }}{% endif %}.</h1>
@@ -25,7 +25,7 @@
                 Novo orçamento
             </a>
         {% endif %}
-        <p class="inicio-credito">Foto: Alex Blăjan (CC0)</p>
+        <p class="inicio-credito">Foto: Jeremy Yap (CC0)</p>
     </header>
 
     {% if recentes %}
@@ -35,8 +35,11 @@
                 {% for recente in recentes %}
                     <a class="ds-card recente" style="--orc-cor: {{ recente.cor_identificacao }};" href="{% if user.pode_gerenciar_orcamentos and recente.status == 'rascunho' %}{% url 'orcamentos:editar' recente.pk %}{% else %}{% url 'orcamentos:visualizar' recente.pk %}{% endif %}">
                         <span class="recente-topo">
-                            <span class="recente-numero">{{ recente.numero }}</span>
-                            <span class="badge status-{{ recente.status }}">{{ recente.get_status_display }}</span>
+                            <span class="orc-marca" aria-hidden="true">{{ recente.iniciais }}</span>
+                            <span class="recente-ident">
+                                <span class="recente-numero">{{ recente.numero }}</span>
+                                <span class="badge status-{{ recente.status }}">{{ recente.get_status_display }}</span>
+                            </span>
                         </span>
                         <strong class="recente-titulo">{{ recente.titulo }}</strong>
                         <span class="recente-cliente">{{ recente.cliente_exibicao }}</span>
@@ -82,38 +85,40 @@
             <table class="ds-table">
                 <thead>
                     <tr>
+                        <th class="col-marca"><span class="visually-hidden">Cor</span></th>
                         <th>Orçamento</th>
                         <th>Cliente</th>
                         <th>Título</th>
                         <th>Status</th>
                         <th class="ds-td-num">Total final</th>
-                        <th class="ds-th-acoes">Ações</th>
+                        <th class="actions-col">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for orcamento in orcamentos %}
                         <tr class="linha-orcamento" style="--orc-cor: {{ orcamento.cor_identificacao }};" data-href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}">
-                            <td class="budget-main-cell">
+                            <td class="col-marca"><span class="orc-marca" aria-hidden="true">{{ orcamento.iniciais }}</span></td>
+                            <td class="budget-main-cell col-principal">
                                 <a class="linha-orcamento-link" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}"><strong>{{ orcamento.numero }}</strong></a>
                                 <span class="table-subline">Emissão: {{ orcamento.data_emissao|date:"d/m/Y" }}</span>
                                 <span class="table-subline table-subline-muted">Validade: {% if orcamento.validade_em %}{{ orcamento.validade_em|date:"d/m/Y" }}{% else %}-{% endif %}</span>
                             </td>
-                            <td class="budget-meta-cell">
+                            <td class="budget-meta-cell" data-label="Cliente">
                                 <strong>{{ orcamento.cliente_exibicao }}</strong>
                             </td>
-                            <td class="budget-title-cell">
+                            <td class="budget-title-cell" data-label="Título">
                                 <strong>{{ orcamento.titulo }}</strong>
                             </td>
-                            <td>
+                            <td data-label="Status">
                                 {% include "orcamentos/partials/status_seletor.html" with transicoes_status=orcamento.transicoes %}
                                 {% if not orcamento.ativo %}
                                     <span class="ds-badge ds-badge--danger">Inativo</span>
                                 {% endif %}
                             </td>
-                            <td class="ds-td-num money">
+                            <td class="ds-td-num money col-destaque" data-label="Total">
                                 <strong>{{ orcamento.total_final|brl }}</strong>
                             </td>
-                            <td>
+                            <td class="actions-col">
                                 <div class="ds-row-actions">
                                     <a class="ds-icon-btn" href="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}{% url 'orcamentos:editar' orcamento.pk %}{% else %}{% url 'orcamentos:visualizar' orcamento.pk %}{% endif %}" title="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}Editar{% else %}Ver{% endif %}" aria-label="{% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}Editar orçamento{% else %}Ver orçamento{% endif %}">
                                         {% if user.pode_gerenciar_orcamentos and orcamento.status == 'rascunho' %}

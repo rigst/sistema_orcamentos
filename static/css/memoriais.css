@@ -69,7 +69,6 @@
 .memorial-secao + .memorial-secao { margin-top: var(--ds-space-6); }
 .memorial-secao h3 { margin-bottom: var(--ds-space-3); }
 .memorial-tabela td small { display: block; color: var(--ds-t-500); margin-top: var(--ds-space-1); }
-.memorial-tabela .num { text-align: right; white-space: nowrap; }
 
 /* Tela de "Novo orçamento" com os dois caminhos. */
 .novo-caminhos {
@@ -84,15 +83,9 @@
 .novo-caminho { padding: clamp(1.25rem, 3vw, 2rem); }
 .novo-caminho h3 { margin: 0 0 var(--ds-space-2); }
 .novo-caminho > .ds-help { margin: 0 0 var(--ds-space-6); max-width: 60ch; line-height: 1.55; }
-.novo-caminho--destaque { border-color: var(--ds-accent-fg); }
+/* o caminho recomendado se destaca pelo botão principal, sem risco colorido */
 
-.memorial-colar {
-  border: 1px dashed var(--ds-line-strong, var(--ds-line));
-  border-radius: var(--ds-radius-md, 0.6rem);
-  padding: var(--ds-space-3) var(--ds-space-4);
-}
-.memorial-colar > summary { cursor: pointer; color: var(--ds-t-500); font-size: 0.9rem; }
-.memorial-colar[open] > summary { margin-bottom: var(--ds-space-3); }
+/* .memorial-colar segue o padrão de expansível (padroes.css). */
 .memorial-colar .ds-field + .ds-check,
 .memorial-colar .ds-check + .ds-check { margin-top: var(--ds-space-3); }
 

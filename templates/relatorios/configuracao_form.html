@@ -11,8 +11,7 @@
         </div>
     </div>
 
-    <div class="empresa-pagina">
-        <form method="post" enctype="multipart/form-data" data-unsaved-warning="{% if not somente_leitura %}1{% else %}0{% endif %}">
+    <form method="post" enctype="multipart/form-data" class="form-secoes" data-unsaved-warning="{% if not somente_leitura %}1{% else %}0{% endif %}">
             {% csrf_token %}
             {{ form.ativo }}
             {{ form.concorrencia_atualizado_em }}
@@ -34,9 +33,9 @@
                 </div>
             {% endif %}
 
-            <fieldset class="empresa-secoes" {% if somente_leitura %}disabled{% endif %}>
-                <section class="empresa-secao">
-                    <h3 class="empresa-secao-titulo">Dados da empresa</h3>
+            <fieldset class="form-secoes" {% if somente_leitura %}disabled{% endif %}>
+                <section class="form-secao">
+                    <h3 class="form-secao-titulo">Dados da empresa</h3>
                     <div class="form-grid">
                     <div>
                         <label for="{{ form.nome_empresa.id_for_label }}">Nome da empresa{% if form.nome_empresa.field.required %}<span class="ds-req">*</span>{% endif %}</label>
@@ -73,8 +72,8 @@
 
                     </div>
                 </section>
-                <section class="empresa-secao">
-                    <h3 class="empresa-secao-titulo">Endereço</h3>
+                <section class="form-secao">
+                    <h3 class="form-secao-titulo">Endereço</h3>
                     <div class="form-grid">
                     <div>
                         <label for="{{ form.cep.id_for_label }}">CEP{% if form.cep.field.required %}<span class="ds-req">*</span>{% endif %}</label>
@@ -131,8 +130,8 @@
 
                     </div>
                 </section>
-                <section class="empresa-secao">
-                    <h3 class="empresa-secao-titulo">Configurações institucionais</h3>
+                <section class="form-secao">
+                    <h3 class="form-secao-titulo">Configurações institucionais</h3>
                     <div class="form-grid">
 
                     <div class="full">
@@ -171,8 +170,8 @@
 
                     </div>
                 </section>
-                <section class="empresa-secao">
-                    <h3 class="empresa-secao-titulo">Padrões dos orçamentos novos</h3>
+                <section class="form-secao">
+                    <h3 class="form-secao-titulo">Padrões dos orçamentos novos</h3>
                     <div class="form-grid">
                     <div class="full">
                         <label for="{{ form.condicoes_pagamento_padrao.id_for_label }}">{{ form.condicoes_pagamento_padrao.label }}</label>
@@ -195,7 +194,7 @@
             </fieldset>
 
             {% if not somente_leitura %}
-                <div class="inline-actions inline-actions-end">
+                <div class="form-acoes">
                     <button class="ds-btn ds-btn--solid" type="submit" title="Salvar empresa" aria-label="Salvar empresa">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>
                         <span>Salvar empresa</span>
@@ -203,6 +202,5 @@
                 </div>
             {% endif %}
         </form>
-    </div>
 </section>
 {% endblock %}

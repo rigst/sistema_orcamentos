@@ -153,25 +153,13 @@
   .orc-ajustes { grid-column: 1; }
 }
 
-/* O modo cards (app-overrides.css) vira toda tabela em blocos no celular; o
-   fechamento é compacto e continua tabela. */
-@media (max-width: 820px) {
-  html.cards-mode .fechamento-tabela tbody { display: table-row-group; }
-  html.cards-mode .fechamento-tabela tbody tr { display: table-row; padding: 0; border-bottom: 0; }
-  html.cards-mode .fechamento-tabela tbody td,
-  html.cards-mode .fechamento-tabela tbody th { display: table-cell; padding: 0.55rem 0; border-bottom: 1px solid var(--ds-line, rgba(0, 0, 0, 0.08)); }
-  html.cards-mode .fechamento-tabela tbody td::before { content: none; }
-  html.cards-mode .fechamento-tabela tbody td.fechamento-barra-col { padding-right: 0.75rem; }
-  html.cards-mode .fechamento-tabela tbody th.fechamento-categoria-nome { padding-right: 0.5rem; }
-}
-@media (max-width: 820px) {
-  html.cards-mode .fechamento-tabela { display: table; width: 100%; }
-}
+/* Celular: a tabela de fechamento continua tabela (não entra no padrão de
+   cartões, que vale para .ds-table-wrap). */
 @media (max-width: 520px) {
   .fechamento-tabela { table-layout: auto; }
   .fechamento-tabela colgroup { display: none; }
-  .fechamento-tabela th.fechamento-categoria-nome { width: 100%; white-space: normal; }
-  .fechamento-tabela .fechamento-barra-col { width: 3.5rem; min-width: 3.5rem; }
-  html.cards-mode .fechamento-tabela tbody .fechamento-conta-itens,
-  html.cards-mode .fechamento-tabela tbody .fechamento-percentual { display: none; }
+  .fechamento-tabela th.fechamento-categoria-nome { width: 100%; white-space: normal; padding-right: 0.5rem; }
+  .fechamento-tabela td.fechamento-barra-col { width: 3.5rem; min-width: 3.5rem; padding-right: 0.75rem; }
+  .fechamento-tabela .fechamento-conta-itens,
+  .fechamento-tabela .fechamento-percentual { display: none; }
 }

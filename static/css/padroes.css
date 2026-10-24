@@ -1,0 +1,563 @@
+/* =====================================================================
+   PADRÕES DE COMPONENTES — uma regra por componente, valendo para todas
+   as telas. Carregado por último no base.html.
+
+   Componentes:
+     1. Cabeçalho de página ........ .page-head (título, subtítulo, ações)
+     2. Formulário ................. .form-secao / .form-secao-titulo / .form-acoes
+     3. Modal ...................... .panel-modal e .item-modal (mesma anatomia)
+     4. Tabela ..................... .ds-table-wrap > table (desktop e celular)
+     5. Marca de cor ............... .orc-marca (círculo com iniciais na cor)
+     6. Escolha de ícone ........... .icone-escolha
+   Regra geral: no máximo UM nível de caixa. Dentro de um cartão ou modal,
+   nada ganha borda/fundo próprio de novo.
+   ===================================================================== */
+
+/* ---------- 1. cabeçalho de página: sem caixa ---------- */
+.page-head,
+.section-heading.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem 1.5rem;
+  position: static;
+  overflow: visible;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ds-t-700);
+  padding: 0 0 1.25rem;
+  margin: 0 0 1.75rem;
+  border-bottom: 1px solid var(--ds-line);
+}
+.page-head::after,
+.page-head::before { content: none; }
+.page-head > div { position: static; min-width: 0; }
+.panel-modal .page-head > div,
+.item-modal .item-modal-heading > div { flex: 1 1 auto; text-align: left; }
+.page-head h1,
+.page-head h2,
+.page-head .ds-h1,
+.page-head .ds-h2 {
+  margin: 0;
+  font-family: var(--ds-font-display);
+  font-size: clamp(1.75rem, 3.2vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.035em;
+  color: var(--ds-t-900);
+}
+.page-head p {
+  margin: 0.45rem 0 0;
+  max-width: 62ch;
+  font-size: 0.98rem;
+  color: var(--ds-t-500);
+}
+.page-head .page-back {
+  display: inline-flex;
+  margin: 0 0 0.6rem;
+  color: var(--ds-t-500);
+  font-size: 0.85rem;
+}
+.page-head .page-back:hover { color: var(--ds-t-900); }
+.page-head .inline-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; }
+@media (max-width: 700px) {
+  .page-head { padding-bottom: 1rem; margin-bottom: 1.25rem; }
+  .page-head .inline-actions { width: 100%; }
+}
+
+/* ---------- 2. formulários: página sem caixa externa, seções como cartão ---------- */
+/* Os invólucros antigos de formulário deixam de ser caixa. */
+.form-panel,
+.ds-card.form-invólucro,
+.form-invólucro {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.form-secoes { display: grid; gap: 1.25rem; min-width: 0; border: 0; padding: 0; margin: 0; }
+.form-secao {
+  min-width: 0;
+  margin: 0;
+  padding: clamp(1.1rem, 2.5vw, 1.6rem);
+  border: 1px solid var(--ds-line);
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+}
+.form-secao-titulo {
+  margin: 0 0 1rem;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+}
+/* <legend> fica dentro do bloco (por padrão o navegador o põe sobre a borda). */
+legend.form-secao-titulo { float: left; width: 100%; }
+legend.form-secao-titulo + * { clear: both; }
+/* Rótulo de campo: um estilo só em qualquer formulário. */
+.form-secao .form-grid > div > label,
+.form-secao .ds-field > .ds-label,
+.form-secao > label:not(.ds-check),
+.item-modal .form-grid > div > label,
+.item-modal .catalog-picker label {
+  display: block;
+  margin: 0 0 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--ds-t-700);
+}
+.form-secao-ajuda { margin: -0.5rem 0 1rem; font-size: 0.88rem; color: var(--ds-t-500); }
+.form-secao > .ds-field { margin: 0; }
+.form-secao > .ds-field + .ds-field { margin-top: 1.1rem; }
+/* Avisos e erros dentro de seção: texto com ícone, sem segunda caixa. */
+.form-secao .ds-alert,
+.form-secoes > .ds-alert {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+  box-shadow: none;
+}
+.form-secoes > .ds-alert { margin: 0; }
+.form-acoes {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 0;
+}
+/* Subtítulo antigo (barra azul com traço) fica no mesmo estilo do título de seção. */
+.form-subhead {
+  grid-column: 1 / -1;
+  display: block;
+  margin: 1.5rem 0 0;
+  padding: 1.25rem 0 0;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--ds-line);
+  border-radius: 0;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+}
+.form-subhead:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+
+/* Expansível dentro de formulário: linha com seta, sem caixa. */
+.form-secao details,
+.form-secoes details {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  background: none;
+}
+.form-secao details > summary,
+.form-secoes details > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  list-style: none;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ds-accent-dark, var(--ds-accent));
+}
+.form-secao details > summary::-webkit-details-marker,
+.form-secoes details > summary::-webkit-details-marker { display: none; }
+.form-secao details > summary::before,
+.form-secoes details > summary::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .form-secao details > summary::before,
+  .form-secoes details > summary::before { transition: transform 0.15s; }
+}
+.form-secao details[open] > summary::before,
+.form-secoes details[open] > summary::before { transform: rotate(45deg); }
+.form-secao details[open] > summary,
+.form-secoes details[open] > summary { margin-bottom: 1rem; }
+
+/* ---------- 3. modais: cartão único, cabeçalho claro, corpo rolável, ações no rodapé ---------- */
+.panel-modal-backdrop,
+.item-modal-backdrop {
+  background: rgba(15, 17, 21, 0.45);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.panel-modal-dialog,
+.item-modal-dialog {
+  width: min(680px, 100%);
+  border-radius: var(--ds-radius-lg);
+  background: var(--ds-surface);
+  box-shadow: 0 24px 60px rgba(15, 17, 21, 0.28);
+}
+.item-modal-dialog { width: min(820px, 100%); }
+/* cabeçalho */
+.panel-modal .page-head,
+.item-modal .item-modal-heading {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  text-align: left;
+  align-items: center;
+  margin: 0;
+  padding: 1.15rem 3.5rem 1rem 1.5rem;
+  background: var(--ds-surface);
+  color: var(--ds-t-900);
+  border: 0;
+  border-bottom: 1px solid var(--ds-line);
+  border-radius: 0;
+}
+.panel-modal .page-head h2,
+.panel-modal .page-head .ds-h2,
+.item-modal .item-modal-heading h3 {
+  margin: 0;
+  font-family: var(--ds-font-display);
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ds-t-900);
+}
+.panel-modal .page-head p { display: none; }
+.panel-modal .page-back { display: none; }
+.panel-modal-close,
+.item-modal .panel-modal-close {
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 2.1rem;
+  height: 2.1rem;
+  background: transparent;
+  border: 0;
+  color: var(--ds-t-500);
+}
+.panel-modal-close:hover,
+.panel-modal-close:focus-visible { background: var(--ds-panel); color: var(--ds-t-900); }
+/* corpo: o formulário rola e o rodapé de ações fica fixo embaixo; dentro do
+   modal nada vira caixa de novo */
+.panel-modal section { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+.panel-modal form.form-secoes,
+.item-modal .item-builder-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 0;
+}
+.panel-modal form.form-secoes > .ds-alert { margin: 1.1rem 1.5rem 0; }
+@media (max-width: 700px) { .panel-modal form.form-secoes > .ds-alert { margin: 1rem 1.1rem 0; } }
+.item-modal .item-builder-grid { gap: 0; padding: 0; }
+.panel-modal .form-secao,
+.item-modal .item-block {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  padding: 1.25rem 1.5rem;
+  margin: 0;
+}
+.panel-modal .form-secao + .form-secao,
+.item-modal .item-block + .item-block { border-top: 1px solid var(--ds-line); }
+.item-modal .item-block-header h4 {
+  margin: 0 0 1rem;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+}
+.item-modal .item-builder-form { padding: 0; overflow: hidden; }
+/* rodapé com as ações, sempre visível */
+.panel-modal .form-acoes,
+.item-modal .form-acoes {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  flex: 0 0 auto;
+  margin-bottom: 0;
+  padding: 0.9rem 1.5rem;
+  border-top: 1px solid var(--ds-line);
+  background: var(--ds-panel);
+}
+@media (max-width: 700px) {
+  .panel-modal .page-head,
+  .item-modal .item-modal-heading { padding: 1rem 3.25rem 0.9rem 1.1rem; }
+  .panel-modal .form-secao,
+  .item-modal .item-block { padding: 1.1rem; }
+  .panel-modal .form-acoes,
+  .item-modal .form-acoes { padding: 0.8rem 1.1rem calc(0.8rem + env(safe-area-inset-bottom)); }
+  .panel-modal .form-acoes .ds-btn,
+  .item-modal .form-acoes .ds-btn { flex: 1 1 auto; justify-content: center; }
+}
+
+/* ---------- 4. tabelas ---------- */
+.ds-table-wrap > table { width: 100%; border-collapse: collapse; border: 0; border-radius: 0; background: none; }
+.ds-table-wrap > table thead th {
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 0.8rem 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ds-t-500);
+  background: var(--ds-panel);
+  border-bottom: 1px solid var(--ds-line);
+}
+.ds-table-wrap > table tbody td {
+  padding: 0.85rem 0.9rem;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--ds-line);
+  background: none;
+}
+.ds-table-wrap > table tbody tr:last-child > td { border-bottom: 0; }
+.ds-table-wrap > table th:first-child,
+.ds-table-wrap > table td:first-child { padding-left: 1.25rem; }
+.ds-table-wrap > table th:last-child,
+.ds-table-wrap > table td:last-child { padding-right: 1.25rem; }
+.ds-table-wrap > table td.col-principal strong { display: block; line-height: 1.3; }
+.ds-table-wrap > table td.col-principal .table-subline { display: block; margin-top: 0.2rem; }
+.ds-table-wrap > table td.col-destaque { font-weight: 600; }
+.ds-table-wrap > table tbody tr:hover > td { background: var(--ds-panel); }
+.ds-table-wrap > table td.money,
+.ds-table-wrap > table td.num,
+.ds-table-wrap > table td.col-destaque,
+.ds-table-wrap > table td.ds-td-num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ds-table-wrap > table .col-marca { width: 3.25rem; text-align: center; padding-right: 0; }
+.ds-table-wrap > table .actions-col { width: 1%; min-width: 0; white-space: nowrap; text-align: center; }
+.ds-table-wrap > table td.actions-col .actions-stack,
+.ds-table-wrap > table td.actions-col .ds-row-actions { display: inline-flex; flex-wrap: nowrap; gap: 0.25rem; justify-content: center; }
+.ds-table-wrap > table td.actions-col form { display: inline-flex; margin: 0; }
+tr[data-href] { cursor: pointer; }
+
+/* Celular: cada linha vira um cartão. Papéis por classe, iguais em toda tabela:
+   .col-marca (ícone/círculo), .col-principal (título), .col-destaque (valor),
+   .actions-col (botões); as demais células viram linhas "rótulo  valor". */
+@media (max-width: 760px) {
+  .ds-table-wrap { overflow: visible; border: 0; background: none; box-shadow: none; border-radius: 0; }
+  .ds-table-wrap > table,
+  .ds-table-wrap > table tbody { display: block; width: 100%; }
+  .ds-table-wrap > table thead { display: none; }
+  .ds-table-wrap > table tbody { display: grid; gap: 0.75rem; }
+  .ds-table-wrap > table tbody tr {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.4rem;
+    padding: 0.9rem 1rem;
+    margin: 0;
+    border: 1px solid var(--ds-line);
+    border-radius: var(--ds-radius-md);
+    background: var(--ds-surface);
+  }
+  .ds-table-wrap > table tbody tr:hover > td { background: none; }
+  .ds-table-wrap > table tbody td {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    width: auto;
+    min-width: 0;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    text-align: right;
+    font-size: 0.92rem;
+  }
+  .ds-table-wrap > table tbody td::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--ds-t-500);
+    text-align: left;
+  }
+  .ds-table-wrap > table tbody td:empty,
+  .ds-table-wrap > table tbody td.celula-vazia { display: none; }
+  .ds-table-wrap > table tbody td:first-child,
+  .ds-table-wrap > table tbody td:last-child { padding-left: 0; padding-right: 0; }
+  /* campos dentro da célula encolhem para caber ao lado do rótulo */
+  .ds-table-wrap > table tbody td > * { min-width: 0; }
+  .ds-table-wrap > table tbody td input.ds-input { min-width: 0; }
+  .ds-table-wrap > table tbody td .table-subline:empty { display: none; }
+  .ds-table-wrap > table tbody td:not(.col-principal) > .table-subline { flex-basis: 100%; text-align: right; }
+  .ds-table-wrap > table tbody td.col-principal,
+  .ds-table-wrap > table tbody td.col-principal .table-subline { text-align: left; }
+  /* topo do cartão: marca | principal | destaque */
+  .ds-table-wrap > table tbody td.col-marca { grid-column: 1; grid-row: 1; display: block; width: auto; }
+  .ds-table-wrap > table tbody td.col-principal {
+    grid-column: 2 / -1;
+    grid-row: 1;
+    display: block;
+    text-align: left;
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+  .ds-table-wrap > table tbody tr:has(td.col-destaque) td.col-principal { grid-column: 2; }
+  .ds-table-wrap > table tbody tr:not(:has(td.col-marca)) td.col-principal { grid-column: 1 / 3; }
+  .ds-table-wrap > table tbody tr:not(:has(td.col-marca)):not(:has(td.col-destaque)) td.col-principal { grid-column: 1 / -1; }
+  .ds-table-wrap > table tbody td.col-destaque { grid-column: 3; grid-row: 1; display: block; font-weight: 700; }
+  .ds-table-wrap > table tbody td.col-marca::before,
+  .ds-table-wrap > table tbody td.col-principal::before,
+  .ds-table-wrap > table tbody td.col-destaque::before,
+  .ds-table-wrap > table tbody td.actions-col::before { content: none; }
+  .ds-table-wrap > table tbody td.col-principal + td:not(.col-destaque),
+  .ds-table-wrap > table tbody td.col-destaque + td { margin-top: 0.35rem; }
+  .ds-table-wrap > table tbody td.actions-col {
+    width: auto;
+    justify-content: flex-end;
+    margin-top: 0.35rem;
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--ds-line);
+  }
+  .ds-table-wrap > table tbody td:not(.col-principal) .table-subline { margin: 0; }
+  .ds-table-wrap > table tbody td.col-principal .table-subline { display: block; font-size: 0.82rem; }
+}
+
+/* ---------- 5. marca de cor de cada orçamento ---------- */
+.orc-marca {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--orc-cor, var(--ds-accent)) 14%, var(--ds-surface));
+  color: color-mix(in srgb, var(--orc-cor, var(--ds-accent)) 85%, black);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.orc-marca--lg { width: 2.75rem; height: 2.75rem; font-size: 0.95rem; }
+
+/* ---------- 6. escolha de ícone da categoria ---------- */
+.icone-escolha {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+}
+.icone-opcao {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 2.75rem;
+  border-radius: var(--ds-radius-sm);
+  color: var(--categoria-cor, var(--ds-t-700));
+  background: var(--ds-panel);
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+.icone-opcao input { position: absolute; opacity: 0; pointer-events: none; }
+.icone-opcao svg { width: 1.35rem; height: 1.35rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.icone-opcao:hover { background: color-mix(in srgb, var(--categoria-cor, var(--ds-accent)) 10%, var(--ds-surface)); }
+.icone-opcao:has(input:checked) {
+  background: color-mix(in srgb, var(--categoria-cor, var(--ds-accent)) 16%, var(--ds-surface));
+  box-shadow: inset 0 0 0 2px var(--categoria-cor, var(--ds-accent));
+}
+.icone-opcao:has(input:focus-visible) { outline: 2px solid var(--ds-accent); outline-offset: 2px; }
+.icone-opcao-auto { font-size: 0.72rem; font-weight: 600; color: var(--ds-t-500); }
+
+/* ---------- 7. escolha de cor (mesmo padrão da escolha de ícone) ---------- */
+.cor-escolha { display: flex; flex-wrap: wrap; gap: 0.55rem; margin-top: 0.4rem; }
+.cor-opcao {
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--opcao-cor);
+  cursor: pointer;
+  transition: box-shadow 0.12s;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cor-opcao { transition: transform 0.12s, box-shadow 0.12s; }
+  .cor-opcao:hover { transform: scale(1.08); }
+}
+.cor-opcao input { position: absolute; opacity: 0; pointer-events: none; }
+.cor-opcao:has(input:checked) { box-shadow: 0 0 0 3px var(--ds-surface), 0 0 0 5px var(--opcao-cor); }
+.cor-opcao:has(input:focus-visible) { outline: 2px solid var(--ds-accent); outline-offset: 5px; }
+
+/* O ícone acompanha a cor marcada no mesmo formulário (sem JS). */
+fieldset:has(input[name="cor"][value="#17795A"]:checked) .icone-escolha { --categoria-cor: #17795A; }
+fieldset:has(input[name="cor"][value="#2563EB"]:checked) .icone-escolha { --categoria-cor: #2563EB; }
+fieldset:has(input[name="cor"][value="#DC2626"]:checked) .icone-escolha { --categoria-cor: #DC2626; }
+fieldset:has(input[name="cor"][value="#EAB308"]:checked) .icone-escolha { --categoria-cor: #EAB308; }
+fieldset:has(input[name="cor"][value="#16A34A"]:checked) .icone-escolha { --categoria-cor: #16A34A; }
+fieldset:has(input[name="cor"][value="#EA580C"]:checked) .icone-escolha { --categoria-cor: #EA580C; }
+fieldset:has(input[name="cor"][value="#7C3AED"]:checked) .icone-escolha { --categoria-cor: #7C3AED; }
+fieldset:has(input[name="cor"][value="#DB2777"]:checked) .icone-escolha { --categoria-cor: #DB2777; }
+fieldset:has(input[name="cor"][value="#92400E"]:checked) .icone-escolha { --categoria-cor: #92400E; }
+fieldset:has(input[name="cor"][value="#111827"]:checked) .icone-escolha { --categoria-cor: #111827; }
+fieldset:has(input[name="cor"][value="#475569"]:checked) .icone-escolha { --categoria-cor: #475569; }
+
+/* Chip de categoria com o ícone na cor dela (catálogo). */
+.catalogo-categoria-icone { display: inline-grid; place-items: center; width: 1.05rem; height: 1.05rem; color: var(--category-color, var(--ds-t-500)); }
+.catalogo-categoria-icone svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---------- 8. avisos (mensagens de salvamento): tom suave, sem risco lateral ---------- */
+.flash-message {
+  padding: 0.6rem 0.9rem;
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-blue-50);
+}
+.flash-message.flash-success { background: var(--ds-success-50, #f0fdf4); }
+.flash-message.flash-warning { background: var(--ds-warn-50, #fffbeb); }
+.flash-message.flash-error,
+.flash-message.flash-danger { background: var(--ds-danger-50, #fef2f2); }
+
+/* ---------- 9. sub-bloco dentro de cartão: separado por linha, nunca outra caixa ---------- */
+.form-secao .report-meta-card,
+.form-secao .report-logo-card,
+.form-secao .report-status-card,
+.form-secao .catalog-summary,
+.form-secao .item-builder-preview {
+  margin: 1.1rem 0 0;
+  padding: 1.1rem 0 0;
+  border: 0;
+  border-top: 1px solid var(--ds-line);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.form-secao .report-meta-card p { display: flex; align-items: center; gap: 0.75rem; margin: 0.35rem 0; }
+.form-secao .report-meta-card p .money { margin-left: auto; }
+/* aviso de situação no topo da página: faixa suave, sem borda */
+.report-status-card { border: 0; box-shadow: none; }
+
+/* ---------- 10. ícone da categoria (catálogo, edição, relatório) ---------- */
+.icone-col { width: 3rem; text-align: center; }
+.item-icone {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  color: var(--category-color, var(--ds-t-500));
+  background: color-mix(in srgb, var(--category-color, #94a3b8) 13%, transparent);
+}
+.item-icone--sm { width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; }
+.item-icone--sem { --category-color: #94a3b8; }
+.categoria-icone { width: 60%; height: 60%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+

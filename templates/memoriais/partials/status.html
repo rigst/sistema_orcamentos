@@ -1,6 +1,6 @@
 {% load br_format %}
 {% if importacao.em_andamento %}
-    <div class="ds-card" data-memorial-andamento="1">
+    <div class="form-secao" data-memorial-andamento="1">
         <div class="memorial-progresso">
             <span class="memorial-spinner" aria-hidden="true"></span>
             <div>
@@ -17,7 +17,7 @@
             <p>Nenhum item foi adicionado.</p>
         </div>
     </div>
-    <div class="memorial-acoes">
+    <div class="memorial-acoes form-acoes">
         <a class="ds-btn ds-btn--ghost" href="{% url 'orcamentos:editar' orcamento.pk %}">Voltar ao orçamento</a>
         <a class="ds-btn ds-btn--solid" href="{% url 'memoriais:importar' orcamento.pk %}">Tentar de novo</a>
     </div>
@@ -38,13 +38,13 @@
         </div>
     {% endif %}
 
-    <div class="memorial-acoes">
+    <div class="memorial-acoes form-acoes">
         <a class="ds-btn ds-btn--solid" href="{% url 'memoriais:status' orcamento.pk importacao.pk %}?seguir=1">Revisar e editar o orçamento</a>
     </div>
 
     {% if para_catalogar %}
-        <div class="ds-card memorial-secao" id="salvar-catalogo">
-            <h3 class="ds-h3">Levar itens novos para o catálogo</h3>
+        <div class="form-secao memorial-secao" id="salvar-catalogo">
+            <h3 class="form-secao-titulo">Levar itens novos para o catálogo</h3>
             <p class="ds-help">Estes itens entraram no orçamento mas ainda não existem no teu catálogo. Marque os que quer reaproveitar e escolha a categoria. Eles vão para o catálogo com o valor que está no orçamento agora, então vale precificar antes.</p>
             <form method="post" action="{% url 'memoriais:salvar_catalogo' orcamento.pk importacao.pk %}" class="memorial-catalogo-form">
                 {% csrf_token %}
@@ -62,8 +62,8 @@
                         <tbody>
                             {% for item, sugerida, categoria_id in para_catalogar %}
                                 <tr data-catalogar>
-                                    <td><input type="checkbox" name="item_{{ item.pk }}" id="cat-item-{{ item.pk }}" checked></td>
-                                    <td><label for="cat-item-{{ item.pk }}">{{ item.nome }}</label><small>{{ item.get_unidade_medida_display }}</small></td>
+                                    <td class="col-marca"><input type="checkbox" name="item_{{ item.pk }}" id="cat-item-{{ item.pk }}" checked></td>
+                                    <td class="col-principal"><label for="cat-item-{{ item.pk }}">{{ item.nome }}</label><small>{{ item.get_unidade_medida_display }}</small></td>
                                     <td class="num">{{ item.valor_unitario|brl }}{% if not item.valor_unitario %}<small>sem preço ainda</small>{% endif %}</td>
                                     <td>
                                         <label class="visually-hidden" for="cat-sel-{{ item.pk }}">Categoria de {{ item.nome }}</label>
@@ -81,7 +81,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="memorial-acoes">
+                <div class="memorial-acoes form-acoes">
                     <button class="ds-btn ds-btn--solid" type="submit">Salvar marcados no catálogo</button>
                 </div>
             </form>
@@ -91,8 +91,8 @@
     {% endif %}
 
     {% if pendencias %}
-        <div class="ds-card memorial-secao">
-            <h3 class="ds-h3">Pontos para tu conferir</h3>
+        <div class="form-secao memorial-secao">
+            <h3 class="form-secao-titulo">Pontos para tu conferir</h3>
             <ul class="memorial-lista">
                 {% for pendencia in pendencias %}<li>{{ pendencia }}</li>{% endfor %}
             </ul>
@@ -100,8 +100,8 @@
     {% endif %}
 
     {% if fora_catalogo %}
-        <div class="ds-card memorial-secao">
-            <h3 class="ds-h3">Fora do catálogo, com valor zero</h3>
+        <div class="form-secao memorial-secao">
+            <h3 class="form-secao-titulo">Fora do catálogo, com valor zero</h3>
             <ul class="memorial-lista">
                 {% for item in fora_catalogo %}<li><strong>{{ item.nome }}</strong>: {{ item.quantidade_aplicada }} {{ item.unidade }}. {{ item.justificativa }}</li>{% endfor %}
             </ul>
@@ -110,7 +110,7 @@
 
     {% if itens_sugeridos %}
         <div class="memorial-secao">
-            <h3 class="ds-h3">O que a IA leu</h3>
+            <h3 class="form-secao-titulo">O que a IA leu</h3>
             <div class="ds-table-wrap">
                 <table class="ds-table memorial-tabela">
                     <caption class="visually-hidden">Itens sugeridos pela IA a partir do memorial</caption>
@@ -125,7 +125,7 @@
                     <tbody>
                         {% for item in itens_sugeridos %}
                             <tr>
-                                <td>
+                                <td class="col-principal">
                                     {% if item.catalogo_codigo %}{{ item.catalogo_codigo }} · {% endif %}{{ item.nome }}
                                     <small>{{ item.justificativa }}</small>
                                     {% if item.situacao == "ignorado" %}<small>Não adicionado: {{ item.motivo }}</small>{% endif %}

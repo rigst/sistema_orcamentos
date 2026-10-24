@@ -36,55 +36,8 @@
 }
 
 /* Estado de cards mode (alternância tabela/cards em mobile) */
-html.cards-mode .table-actions-col,
-html.cards-mode .table-status-col {
-  display: table-cell;
-}
 
-html.cards-mode .table-data-col {
-  display: none;
-}
-
-@media (max-width: 820px) {
-  html.cards-mode table tbody {
-    display: grid;
-  }
-
-  html.cards-mode table tbody tr {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 0;
-    border-bottom: var(--ds-line) 1px solid;
-    padding: 1rem 0;
-  }
-
-  html.cards-mode table tbody td {
-    display: grid;
-    grid-template-columns: 8rem 1fr;
-    gap: 1rem;
-    align-items: start;
-    padding: 0.5rem 1rem;
-    border-bottom: none;
-  }
-
-  html.cards-mode table tbody td::before {
-    content: attr(data-label);
-    font-weight: 500;
-    color: var(--ds-t-500);
-    font-size: 0.8rem;
-  }
-
-  html.cards-mode table tbody td.table-actions-col,
-  html.cards-mode table tbody td.table-status-col {
-    grid-template-columns: 1fr;
-    padding-top: 1rem;
-  }
-
-  html.cards-mode table tbody td.table-actions-col::before,
-  html.cards-mode table tbody td.table-status-col::before {
-    display: none;
-  }
-}
+/* Tabelas no celular: padrão único em padroes.css (seção 4). */
 
 /* Editor layout — coluna única: o shell tem vários filhos diretos (form,
    feedback, ações, tabela de itens, totais); com 2 colunas eles se espalham

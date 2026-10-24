@@ -19,7 +19,7 @@
     </div>
 
     <div class="memorial-grid">
-        <div class="ds-card">
+        <div class="form-secao">
             <form method="post" enctype="multipart/form-data" class="memorial-form" novalidate>
                 {% csrf_token %}
 
@@ -63,7 +63,7 @@
                 <label class="ds-check">{{ form.incluir_fora_catalogo }} <span>{{ form.incluir_fora_catalogo.label }}</span></label>
                 <label class="ds-check">{{ form.preencher_evento }} <span>{{ form.preencher_evento.label }}</span></label>
 
-                <div class="memorial-acoes">
+                <div class="memorial-acoes form-acoes">
                     <a class="ds-btn ds-btn--ghost" href="{% url 'orcamentos:editar' orcamento.pk %}">Cancelar</a>
                     <button class="ds-btn ds-btn--solid" type="submit" {% if restantes <= 0 %}disabled{% endif %}>
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
@@ -73,8 +73,8 @@
             </form>
         </div>
 
-        <aside class="ds-card">
-            <h3 class="ds-h3">Como funciona</h3>
+        <aside class="form-secao">
+            <h3 class="form-secao-titulo">Como funciona</h3>
             <ol class="memorial-lista">
                 <li>Os itens sugeridos são <strong>somados</strong> aos que já existem no orçamento. Nada é apagado.</li>
                 <li>Itens do catálogo entram com o <strong>valor do cadastro</strong>. A IA nunca define preço.</li>
@@ -84,7 +84,7 @@
             </ol>
 
             {% if anteriores %}
-                <h3 class="ds-h3">Importações anteriores</h3>
+                <h3 class="form-secao-titulo">Importações anteriores</h3>
                 <ul class="memorial-anteriores">
                     {% for anterior in anteriores %}
                         <li>

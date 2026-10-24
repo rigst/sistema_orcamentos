@@ -1,5 +1,6 @@
 from django.db import models
 
+from core.identificacao import cor_por_id, iniciais_de
 from core.tenancy import obter_grupo_empresa_padrao
 
 
@@ -54,3 +55,11 @@ class Cliente(models.Model):
         if self.empresa_id is None:
             self.empresa = obter_grupo_empresa_padrao()
         super().save(*args, **kwargs)
+
+    @property
+    def cor_identificacao(self) -> str:
+        return cor_por_id(self.pk)
+
+    @property
+    def iniciais(self) -> str:
+        return iniciais_de(self.nome_fantasia or self.nome_razao_social)

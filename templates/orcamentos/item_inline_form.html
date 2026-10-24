@@ -26,6 +26,9 @@
 
         <div class="item-builder-grid">
             <section class="item-block">
+                <div class="item-block-header">
+                    <h4>Item</h4>
+                </div>
                 <div class="catalog-picker">
                     <div class="full">
                         <label for="catalog-search-{{ item.pk|default:'novo' }}">Buscar item do catálogo</label>
@@ -131,7 +134,7 @@
             </section>
         </div>
 
-        <div class="inline-actions inline-actions-end" style="margin-top: 1rem;">
+        <div class="form-acoes">
             <button class="ds-btn ds-btn--solid" type="submit" title="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}" aria-label="{% if item %}Salvar item{% else %}Adicionar item ao orçamento{% endif %}">
                 {% if item %}
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19.5Z"/><path d="M8 4.5v5h8v-5"/><path d="M9 15h6"/></svg>

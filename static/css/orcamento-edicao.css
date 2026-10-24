@@ -90,30 +90,6 @@
 .itens-adicionar:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; }
 
 /* ---------- tabela de itens: espaçamento das linhas ---------- */
-#itens-tabela-region .ds-table th,
-#itens-tabela-region .ds-table td { padding: 0.8rem 0.75rem; vertical-align: middle; }
-#itens-tabela-region .ds-table th:first-child,
-#itens-tabela-region .ds-table td:first-child { padding-left: 1.1rem; }
-#itens-tabela-region .ds-table th:last-child,
-#itens-tabela-region .ds-table td:last-child { padding-right: 1.1rem; }
-#itens-tabela-region .item-col strong { display: block; line-height: 1.3; }
-#itens-tabela-region .item-col .table-subline { margin-top: 0.2rem; }
-#itens-tabela-region td[data-linha-subtotal] { text-align: right; white-space: nowrap; font-weight: 600; }
-
-/* ---------- ícone da categoria ---------- */
-.icone-col { width: 3rem; text-align: center; }
-.item-icone {
-  display: inline-grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.65rem;
-  color: var(--category-color, var(--ds-t-500));
-  background: color-mix(in srgb, var(--category-color, #94a3b8) 13%, transparent);
-}
-.item-icone--sm { width: 1.75rem; height: 1.75rem; border-radius: 0.5rem; }
-.item-icone--sem { --category-color: #94a3b8; }
-.categoria-icone { width: 60%; height: 60%; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------- ordem: setas discretas em volta do número ---------- */
 .ordem-col { width: 3.25rem; text-align: center; }
@@ -159,63 +135,15 @@ tr:focus-within .ordem-seta:not(:disabled),
 .item-nao-registrado { font-size: 0.72rem; }
 .ajuste-vazio { color: var(--ds-t-500); }
 
-/* ---------- itens no celular: um card por item ---------- */
+/* ---------- itens no celular: segue o padrão de tabela (padroes.css);
+   aqui só o que é próprio desta tabela ---------- */
 @media (max-width: 760px) {
   .orc-abas-barra { align-items: stretch; }
   .orc-abas-barra .autosave { margin: 0 0 0.4rem; }
-  #itens-tabela-region .ds-table-wrap { overflow: visible; border: 0; background: transparent; box-shadow: none; }
-  #itens-tabela-region table,
-  #itens-tabela-region tbody { display: block; width: 100%; }
-  #itens-tabela-region thead { display: none; }
-  #itens-tabela-region tbody { display: grid; gap: 0.6rem; }
-  #itens-tabela-region tr.item-row-summary {
-    display: grid;
-    grid-template-columns: 2rem 2.25rem minmax(0, 1fr) auto;
-    grid-template-areas:
-      "ordem icone item   subtotal"
-      "ordem base  base   base"
-      "ordem ajuste ajuste acoes";
-    gap: 0.4rem 0.6rem;
-    padding: 0.75rem 0.75rem 0.6rem 0.5rem;
-    border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.12));
-    border-radius: var(--ds-radius-md, 0.75rem);
-    background: var(--ds-surface, #fff);
-  }
-  html.cards-mode #itens-tabela-region tr.item-row-summary > td,
-  #itens-tabela-region tr.item-row-summary > td {
-    display: block;
-    padding: 0;
-    border: 0;
-    width: auto;
-    min-width: 0;
-    max-width: none;
-    background: transparent;
-  }
-  #itens-tabela-region tr.item-row-summary > td::before { content: none; }
-  #itens-tabela-region td.ordem-col { grid-area: ordem; align-self: center; }
-  #itens-tabela-region td.icone-col { grid-area: icone; align-self: start; }
-  #itens-tabela-region td.item-col { grid-area: item; }
-  #itens-tabela-region td.item-col strong { overflow-wrap: anywhere; }
-  #itens-tabela-region td.linha-rapida { grid-area: base; }
-  #itens-tabela-region td.ajustes-col { grid-area: ajuste; align-self: center; }
-  #itens-tabela-region td[data-linha-subtotal] { grid-area: subtotal; font-weight: 700; }
-  #itens-tabela-region td.actions-col { grid-area: acoes; justify-self: end; align-self: center; }
-  #itens-tabela-region td.actions-col .actions-stack { display: flex; gap: 0.35rem; }
-  #itens-tabela-region .linha-rapida-campos { justify-content: flex-start; flex-wrap: nowrap; }
-  #itens-tabela-region .linha-rapida-qtd { width: 4.75rem; }
-  #itens-tabela-region .linha-rapida-valor { flex: 1 1 auto; width: auto; min-width: 0; max-width: 9rem; }
-  #itens-tabela-region .table-subline { display: block; }
-  .ajuste-vazio { display: none; }
+  #itens-tabela-region .ordem-controle { display: inline-flex; align-items: center; gap: 0.25rem; }
+  #itens-tabela-region .ordem-seta { opacity: 0.6; }
   .itens-filtros select { flex: 1 1 45%; min-width: 0; }
 }
 @media (max-width: 520px) {
-  .fechamento-conta-itens { display: none; }
-  .fechamento-tabela .fc-nome { width: auto; }
-  .fechamento-tabela .fc-itens,
-  .fechamento-tabela .fc-pct { width: 0; }
-  .fechamento-tabela .fc-barra { width: 3.5rem; }
-  .fechamento-tabela .fc-valor { width: 7rem; }
-  .fechamento-percentual { display: none; }
-  .fechamento-valor { width: 7rem; }
   .autosave-status { min-width: 0; }
 }

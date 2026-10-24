@@ -47,20 +47,20 @@
   .header-user-meta { justify-content: space-between; width: 100%; }
 }
 
-/* ---------- página inicial: faixa com foto ---------- */
+/* ---------- página inicial: faixa com foto, de ponta a ponta ---------- */
+/* Sai do container e encosta nas bordas da tela; o cabeçalho flutua por cima. */
 .inicio-hero {
   position: relative;
   isolation: isolate;
+  width: 100vw;
+  margin: calc(-1 * var(--inicio-topo, 8.3rem)) 0 2.25rem calc(50% - 50vw);
+  padding: calc(var(--inicio-topo, 8.3rem) + 1.5rem) max(1rem, calc(50vw - var(--max-width, 1200px) / 2)) 2.5rem;
+  min-height: clamp(19rem, 34vw, 26rem);
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 1.5rem;
-  min-height: clamp(15rem, 30vw, 21rem);
-  margin: -0.5rem 0 2rem;
-  padding: clamp(1.5rem, 4vw, 2.75rem);
-  border-radius: var(--ds-radius-lg, 1rem);
-  overflow: hidden;
-  color: #fff;
+  color: var(--ds-t-900);
 }
 .inicio-hero-fundo,
 .inicio-hero-fundo img {
@@ -70,85 +70,69 @@
   height: 100%;
 }
 .inicio-hero-fundo { z-index: -2; }
-.inicio-hero-fundo img { object-fit: cover; object-position: center 40%; }
-/* Escurece à esquerda (onde fica o texto) e embaixo. */
+.inicio-hero-fundo img { object-fit: cover; object-position: center 45%; }
+/* Clareia à esquerda (texto) e funde com o fundo da página embaixo. */
 .inicio-hero::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   background:
-    linear-gradient(90deg, rgba(8, 12, 18, 0.82) 0%, rgba(8, 12, 18, 0.55) 45%, rgba(8, 12, 18, 0.1) 80%),
-    linear-gradient(0deg, rgba(8, 12, 18, 0.45) 0%, transparent 55%);
+    linear-gradient(90deg, rgba(238, 240, 244, 0.94) 0%, rgba(238, 240, 244, 0.72) 42%, rgba(238, 240, 244, 0.1) 78%),
+    linear-gradient(0deg, var(--ds-bg) 0%, transparent 38%);
 }
 .inicio-hero-conteudo { display: grid; gap: 0.75rem; max-width: 40rem; }
 .inicio-saudacao {
   margin: 0;
   font-family: var(--ds-font-display, inherit);
-  font-size: clamp(1.9rem, 4.2vw, 3rem);
+  font-size: clamp(2rem, 4.4vw, 3.2rem);
+  font-weight: 700;
   line-height: 1.05;
-  letter-spacing: -0.03em;
-  color: #fff;
+  letter-spacing: -0.035em;
+  color: var(--ds-t-900);
 }
 .inicio-frase { margin: 0; }
 .inicio-frase blockquote {
   margin: 0;
   font-size: clamp(1rem, 1.6vw, 1.2rem);
   font-style: italic;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--ds-t-700);
 }
 .inicio-frase blockquote::before { content: "“"; }
 .inicio-frase blockquote::after { content: "”"; }
-.inicio-frase figcaption { margin-top: 0.2rem; font-size: 0.85rem; color: rgba(255, 255, 255, 0.65); }
+.inicio-frase figcaption { margin-top: 0.2rem; font-size: 0.85rem; color: var(--ds-t-500); }
 .inicio-frase figcaption::before { content: "— "; }
 .inicio-resumo {
   margin: 0.4rem 0 0;
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--ds-t-500);
   font-variant-numeric: tabular-nums;
 }
-.inicio-novo { box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25); }
 .inicio-credito {
   position: absolute;
-  right: 0.75rem;
-  bottom: 0.4rem;
+  right: max(1rem, calc(50vw - var(--max-width, 1200px) / 2));
+  bottom: 0.5rem;
   margin: 0;
   font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--ds-t-400);
+}
+@media (max-width: 1024px) {
+  .inicio-hero { --inicio-topo: 7.55rem; }
 }
 @media (max-width: 640px) {
-  .inicio-hero { grid-template-columns: 1fr; align-items: start; }
+  .inicio-hero { grid-template-columns: 1fr; align-items: start; padding-bottom: 2rem; }
+  .inicio-hero::before {
+    background:
+      linear-gradient(90deg, rgba(238, 240, 244, 0.82) 0%, rgba(238, 240, 244, 0.35) 100%),
+      linear-gradient(0deg, var(--ds-bg) 0%, transparent 35%);
+  }
   .inicio-novo { justify-self: start; }
 }
 
-/* ---------- cor de identificação de cada orçamento ---------- */
-.recente {
-  border-top: 4px solid var(--orc-cor, var(--ds-accent));
-}
-.recente .recente-numero { color: var(--orc-cor, var(--ds-t-500)); font-weight: 600; }
-
-tr.linha-orcamento { cursor: pointer; }
-tr.linha-orcamento > td:first-child { box-shadow: inset 4px 0 0 var(--orc-cor, transparent); padding-left: 1.1rem; }
-tr.linha-orcamento:hover > td { background: color-mix(in srgb, var(--orc-cor, var(--ds-accent)) 6%, transparent); }
+/* ---------- orçamentos: a cor aparece só na marca (.orc-marca, padroes.css) ---------- */
+.recente-topo { justify-content: flex-start; align-items: center; gap: 0.65rem; }
+.recente-ident { display: grid; justify-items: start; gap: 0.2rem; min-width: 0; }
+.recente .recente-numero { color: var(--ds-t-500); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.recente-ident .badge { white-space: nowrap; }
 tr.linha-orcamento .linha-orcamento-link { color: inherit; text-decoration: none; }
-tr.linha-orcamento .linha-orcamento-link strong { color: var(--orc-cor, inherit); }
 tr.linha-orcamento .linha-orcamento-link:focus-visible { outline: 2px solid var(--ds-accent); outline-offset: 2px; border-radius: 4px; }
-
-/* ---------- Minha empresa: seções como cartões, sem caixa por fora ---------- */
-.empresa-pagina form { display: grid; gap: 1.25rem; }
-.empresa-secoes { border: 0; padding: 0; margin: 0; display: grid; gap: 1.25rem; min-width: 0; }
-.empresa-secao {
-  padding: clamp(1.1rem, 2.5vw, 1.6rem);
-  border: 1px solid var(--ds-line, rgba(0, 0, 0, 0.1));
-  border-radius: var(--ds-radius-lg, 1rem);
-  background: var(--ds-surface, #fff);
-}
-.empresa-secao-titulo {
-  margin: 0 0 1rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ds-t-500);
-}
-.empresa-pagina .inline-actions-end { justify-content: flex-end; }
