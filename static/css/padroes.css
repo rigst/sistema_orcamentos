@@ -181,7 +181,10 @@ legend.form-secao-titulo + * { clear: both; }
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(-45deg);
-  transition: transform 0.15s;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .form-secao details > summary::before,
+  .form-secoes details > summary::before { transition: transform 0.15s; }
 }
 .form-secao details[open] > summary::before,
 .form-secoes details[open] > summary::before { transform: rotate(45deg); }
@@ -260,8 +263,6 @@ legend.form-secao-titulo + * { clear: both; }
 .panel-modal form.form-secoes > .ds-alert { margin: 1.1rem 1.5rem 0; }
 @media (max-width: 700px) { .panel-modal form.form-secoes > .ds-alert { margin: 1rem 1.1rem 0; } }
 .item-modal .item-builder-grid { gap: 0; padding: 0; }
-.panel-modal .form-acoes,
-.item-modal .form-acoes { position: sticky; bottom: 0; margin-top: auto; }
 .panel-modal .form-secao,
 .item-modal .item-block {
   border: 0;
@@ -285,8 +286,11 @@ legend.form-secao-titulo + * { clear: both; }
 /* rodapé com as ações, sempre visível */
 .panel-modal .form-acoes,
 .item-modal .form-acoes {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
   flex: 0 0 auto;
-  margin: 0;
+  margin-bottom: 0;
   padding: 0.9rem 1.5rem;
   border-top: 1px solid var(--ds-line);
   background: var(--ds-panel);
@@ -368,6 +372,7 @@ tr[data-href] { cursor: pointer; }
   .ds-table-wrap > table tbody td {
     grid-column: 1 / -1;
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
@@ -395,7 +400,6 @@ tr[data-href] { cursor: pointer; }
   .ds-table-wrap > table tbody td > * { min-width: 0; }
   .ds-table-wrap > table tbody td input.ds-input { min-width: 0; }
   .ds-table-wrap > table tbody td .table-subline:empty { display: none; }
-  .ds-table-wrap > table tbody td { flex-wrap: wrap; }
   .ds-table-wrap > table tbody td:not(.col-principal) > .table-subline { flex-basis: 100%; text-align: right; }
   .ds-table-wrap > table tbody td.col-principal,
   .ds-table-wrap > table tbody td.col-principal .table-subline { text-align: left; }
@@ -484,10 +488,13 @@ tr[data-href] { cursor: pointer; }
   border-radius: 50%;
   background: var(--opcao-cor);
   cursor: pointer;
-  transition: transform 0.12s, box-shadow 0.12s;
+  transition: box-shadow 0.12s;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .cor-opcao { transition: transform 0.12s, box-shadow 0.12s; }
+  .cor-opcao:hover { transform: scale(1.08); }
 }
 .cor-opcao input { position: absolute; opacity: 0; pointer-events: none; }
-.cor-opcao:hover { transform: scale(1.08); }
 .cor-opcao:has(input:checked) { box-shadow: 0 0 0 3px var(--ds-surface), 0 0 0 5px var(--opcao-cor); }
 .cor-opcao:has(input:focus-visible) { outline: 2px solid var(--ds-accent); outline-offset: 5px; }
 
