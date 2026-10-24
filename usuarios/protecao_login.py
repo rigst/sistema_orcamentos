@@ -91,7 +91,7 @@ def registrar_falha(username: str | None, ip: str | None) -> None:
             )
 
 
-def limpar_falhas(username: str | None, ip: str | None) -> None:
+def limpar_falhas(username: str | None) -> None:
     """Login certo zera o contador do usuário (o do IP segue, de propósito:
     acertar uma conta não libera a tentativa em massa contra as outras)."""
     usuario = _normalizar(username)

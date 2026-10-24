@@ -18,5 +18,4 @@ def contar_falha_de_login(sender, credentials, request=None, **kwargs):
 def zerar_falhas_no_login(sender, request, user, **kwargs):
     if getattr(user, "eh_visitante", False):
         return
-    ip = ip_do_request(request) if request is not None else ""
-    limpar_falhas(user.get_username(), ip)
+    limpar_falhas(user.get_username())
