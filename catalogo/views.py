@@ -184,13 +184,15 @@ def item_lista(request):
 
 @require_capability("pode_visualizar_catalogo")
 def item_exportar_excel(request):
-    from .services import exportar_catalogo_excel
+    from relatorios.formatos import XLSX
+
+    from .exportacao import exportar_catalogo_xlsx
 
     itens, *_ = obter_queryset_itens_catalogo(request)
-    conteudo = exportar_catalogo_excel(itens)
+    conteudo = exportar_catalogo_xlsx(itens)
 
-    response = HttpResponse(conteudo, content_type="application/vnd.ms-excel")
-    response["Content-Disposition"] = 'attachment; filename="catalogo-itens.xls"'
+    response = HttpResponse(conteudo, content_type=XLSX)
+    response["Content-Disposition"] = 'attachment; filename="catalogo-itens.xlsx"'
     return response
 
 

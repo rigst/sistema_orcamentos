@@ -15,12 +15,13 @@ from core.tenancy import (
 from orcamentos.models import Orcamento
 
 from .exporters import (
+    gerar_docx_memorial_descritivo,
     gerar_excel_orcamento,
     gerar_pdf_memorial_descritivo,
     gerar_pdf_orcamento,
-    gerar_word_memorial_descritivo,
     obter_alerta_status,
 )
+from .formatos import DOCX, XLSX
 from .forms import ConfiguracaoEmpresaForm
 from .models import ConfiguracaoEmpresa
 
@@ -159,8 +160,8 @@ def orcamento_exportar_excel(request, pk):
     alerta_status = obter_alerta_status(orcamento)
     conteudo = gerar_excel_orcamento(orcamento, configuracao, alerta_status)
 
-    response = HttpResponse(conteudo, content_type="application/vnd.ms-excel")
-    response["Content-Disposition"] = f'attachment; filename="orcamento-{orcamento.numero}.xls"'
+    response = HttpResponse(conteudo, content_type=XLSX)
+    response["Content-Disposition"] = f'attachment; filename="orcamento-{orcamento.numero}.xlsx"'
     return response
 
 
@@ -208,10 +209,10 @@ def orcamento_exportar_memorial_word(request, pk):
         pk=pk,
     )
     configuracao = obter_configuracao_do_orcamento(orcamento, request.user)
-    conteudo = gerar_word_memorial_descritivo(orcamento, configuracao)
+    conteudo = gerar_docx_memorial_descritivo(orcamento, configuracao)
 
-    response = HttpResponse(conteudo, content_type="application/rtf")
+    response = HttpResponse(conteudo, content_type=DOCX)
     response["Content-Disposition"] = (
-        f'attachment; filename="memorial-descritivo-{orcamento.numero}.rtf"'
+        f'attachment; filename="memorial-descritivo-{orcamento.numero}.docx"'
     )
     return response

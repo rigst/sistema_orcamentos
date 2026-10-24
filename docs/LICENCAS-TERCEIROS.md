@@ -13,8 +13,10 @@ O código deste projeto é licenciado sob **AGPL-3.0** (ver `LICENSE`). As bibli
 | dj-database-url | 3.0.1 | BSD License |
 | Django | 6.0.3 | BSD-3-Clause |
 | gunicorn | 23.0.0 | MIT License |
+| openpyxl | 3.1.5 | MIT License |
 | pillow | 12.2.0 | MIT-CMU |
 | psycopg | 3.2.12 | LGPL-3.0-only |
+| python-docx | 1.2.0 | MIT License |
 | redis | 5.2.1 | MIT License |
 | reportlab | 4.4.10 | BSD License |
 | sqlparse | 0.5.5 | BSD License |
@@ -24,9 +26,18 @@ O código deste projeto é licenciado sob **AGPL-3.0** (ver `LICENSE`). As bibli
 | Pacote | Versão | Licença |
 |---|---|---|
 | charset-normalizer | 3.4.7 | MIT |
+| et-xmlfile | 2.0.0 | MIT License |
+| lxml | 6.1.3 | BSD-3-Clause |
 | packaging | 26.0 | Apache-2.0 OR BSD-2-Clause |
 | psycopg-binary | 3.2.12 | LGPL-3.0-only |
 | typing_extensions | 4.15.0 | PSF-2.0 |
+
+## Fontes embutidas nos relatórios
+
+| Fonte | Arquivos | Licença |
+|---|---|---|
+| Inter 4.1 | `relatorios/fontes/Inter-*.ttf` | SIL Open Font License 1.1 (`relatorios/fontes/OFL-Inter.txt`) |
+| Manrope | `relatorios/fontes/Manrope-*.ttf` (pesos 700 e 800 instanciados da fonte variável) | SIL Open Font License 1.1 (`relatorios/fontes/OFL-Manrope.txt`) |
 
 ## Componentes com licença recíproca (copyleft)
 

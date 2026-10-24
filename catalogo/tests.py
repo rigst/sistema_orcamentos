@@ -3,11 +3,15 @@ from io import BytesIO
 from zipfile import ZipFile
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
+from openpyxl import load_workbook
 
 from core.tenancy import obter_grupo_empresa_padrao
 from core.testing import SENHA_TESTE
+from relatorios.formatos import XLSX
 
 from .models import CategoriaItem, ItemCatalogo
 from .services import importar_catalogo_excel
@@ -308,15 +312,36 @@ class CatalogoListaTests(TestCase):
         response = self.client.get(reverse("catalogo:item_exportar_excel"))
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response["Content-Type"], "application/vnd.ms-excel")
-        self.assertIn('attachment; filename="catalogo-itens.xls"', response["Content-Disposition"])
-        conteudo = response.content.decode("utf-8")
-        self.assertIn("CATEGORIA", conteudo)
-        self.assertIn("ITEM", conteudo)
-        self.assertIn("UNIDADE", conteudo)
-        self.assertIn("Exportacao", conteudo)
-        self.assertIn("Painel", conteudo)
-        self.assertIn(">-<", conteudo)
+        self.assertEqual(response["Content-Type"], XLSX)
+        self.assertIn('attachment; filename="catalogo-itens.xlsx"', response["Content-Disposition"])
+        linhas = list(load_workbook(BytesIO(response.content)).active.iter_rows(values_only=True))
+        self.assertEqual(
+            linhas[0], ("CATEGORIA", "ITEM", "VALOR", "UNIDADE", "DESCRIÇÃO", "OBSERVAÇÃO")
+        )
+        self.assertIn(
+            ("Exportacao", "Painel", 25, "-", "Descricao exportada", "Observacao exportada"), linhas
+        )
+
+    def test_planilha_exportada_volta_pela_importacao(self):
+        categoria = CategoriaItem.objects.create(nome="Ida e volta")
+        ItemCatalogo.objects.create(
+            nome="Testeira",
+            categoria=categoria,
+            empresa=categoria.empresa,
+            unidade_medida="m2",
+            valor_unitario_padrao="180.50",
+            descricao_padrao="Adesivada",
+        )
+        exportado = self.client.get(reverse("catalogo:item_exportar_excel")).content
+
+        outra = Group.objects.create(name="Outra empresa ida e volta")
+        importar_catalogo_excel(SimpleUploadedFile("c.xlsx", exportado), outra)
+
+        copia = ItemCatalogo.objects.get(empresa=outra, nome="Testeira")
+        self.assertEqual(copia.categoria.nome, "Ida e volta")
+        self.assertEqual(copia.unidade_medida, "m2")
+        self.assertEqual(str(copia.valor_unitario_padrao), "180.50")
+        self.assertEqual(copia.descricao_padrao, "Adesivada")
 
 
 class CatalogoInativacaoTests(TestCase):
