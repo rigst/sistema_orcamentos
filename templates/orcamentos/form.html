@@ -197,7 +197,7 @@
             </fieldset>
         </form>
         {% if orcamento.cliente_id and not modo_somente_leitura %}
-            <form method="post" id="form-contrato-do-cliente" action="{% url 'orcamentos:contrato_do_cliente' orcamento.pk %}" data-confirm="Substituir os dados contratuais pelos do cadastro do cliente?">{% csrf_token %}</form>
+            <form method="post" id="form-contrato-do-cliente" action="{% url 'orcamentos:contrato_do_cliente' orcamento.pk %}" hidden data-confirm="Substituir os dados contratuais pelos do cadastro do cliente?">{% csrf_token %}</form>
         {% endif %}
 
         {% if orcamento %}
