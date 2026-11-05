@@ -309,7 +309,7 @@ class ImportacaoFalhasTests(BaseMemorialTests):
 
     def test_falha_de_api_vira_erro_legivel(self):
         import anthropic
-        import httpx
+        import httpx2 as httpx  # o SDK da anthropic 2.x trocou o httpx pelo httpx2
 
         erro = anthropic.APIConnectionError(request=httpx.Request("POST", "https://api"))
         self.importar(ClienteFalso(erro=erro))
