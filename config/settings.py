@@ -336,6 +336,15 @@ CONTENT_SECURITY_POLICY_ADMIN = os.getenv(
     "frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
 )
 
+# Mesmo valor padrão da frota (o dracma manda pelo nginx). Nenhuma tela usa
+# câmera, microfone, localização, pagamento ou USB (não há getUserMedia nem
+# MediaRecorder nos templates/JS), então tudo fica negado; `interest-cohort=()`
+# recusa o FLoC. Vazio desliga o cabeçalho.
+PERMISSIONS_POLICY = os.getenv(
+    "DJANGO_PERMISSIONS_POLICY",
+    "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+)
+
 if IS_PRODUCTION:
     SECURE_HSTS_SECONDS = int(os.getenv("DJANGO_SECURE_HSTS_SECONDS", "31536000"))
     SECURE_HSTS_INCLUDE_SUBDOMAINS = env_bool("DJANGO_SECURE_HSTS_INCLUDE_SUBDOMAINS", True)
